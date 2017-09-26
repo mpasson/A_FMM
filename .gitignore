@@ -2,3 +2,5 @@
 *.dat
 *.out
 *.gnu
+*.log
+*.aux
