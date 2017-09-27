@@ -356,7 +356,7 @@ class stack:
 
 
 
-    def plot_E(self,i=1,dz=0.01,pdf=None,N=100,y=0.0,func=np.real,s=1):
+    def plot_E(self,i=1,dz=0.01,pdf=None,pdfname=None,N=100,y=0.0,func=np.real,s=1):
         u1,d2=np.zeros((2*self.NPW),complex),np.zeros((2*self.NPW),complex)
         u1[np.argsort(self.layers[0].W)[-i]]=1.0+0.0j
         (u2,d1)=self.S.output(u1,d2)
@@ -405,7 +405,10 @@ class stack:
             Ex.append(np.dot(Em,Emx))
             Ey.append(np.dot(Em,Emy))
         if pdf==None:
-            out=PdfPages('E.pdf')
+            if pdfname!=None:
+                out=PdfPages(pdfname+'.pdf')
+            else:
+                out=PdfPages('E.pdf')
         else:
             out=pdf
         plt.figure()

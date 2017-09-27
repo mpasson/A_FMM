@@ -4,3 +4,4 @@
 *.gnu
 *.log
 *.aux
+examples/*.pdf
