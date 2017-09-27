@@ -228,7 +228,7 @@ class layer:
 
         save.close()
 
-    def plot_H(self,pdf):
+    def plot_Ham(self,pdf):
         N=np.shape(self.M)[0]
         plt.figure()
         plt.title('k0:%5.3f kx:%5.3f ky:%5.3f' % (self.k0,self.kx,self.ky))
