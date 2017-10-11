@@ -140,6 +140,22 @@ class stack:
             self.S.add_uniform(self.layers[i],self.d[i])
             self.S.add(self.int_matrices[self.int_list.index(self.interfaces[i])])
 
+    def solve_serial(self,k0,kx=0.0,ky=0.0):
+        lay1=self.layers[0]
+        lay1.mode(k0,kx=kx,ky=ky)
+        lay1.get_P_norm()
+        self.S=S_matrix(2*self.NPW)
+        for i in range(1,self.N):
+            lay2=self.layers[i]
+            lay2.mode(k0,kx=kx,ky=ky)
+            self.S.add(lay1.interface(lay2))
+            self.S.add_uniform(lay2,self.d[i])
+            if i!=1 and i!=self.N:
+                lay1.clear()
+            lay1=lay2
+        lay2.mode(k0,kx=kx,ky=ky)
+        lay2.get_P_norm()
+
 
     def solve_lay(self,k0,kx=0.0,ky=0.0):
         for lay in self.lay_list:

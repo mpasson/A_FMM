@@ -148,10 +148,14 @@ class layer:
             self.VH=np.dot(self.GH,self.V/self.gamma)
         else:
             self.W=linalg.eigvals(self.M)
-        
-        
 
 
+    def clear(self):
+        self.W=None
+        self.V=None
+        self.gamma=None
+
+                
     def mat_plot(self,name,N=100,s=1):
         save=PdfPages(name+'.pdf')
 
