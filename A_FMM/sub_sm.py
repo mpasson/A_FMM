@@ -167,5 +167,70 @@ def fou_complex_t(n,e,g):
     return 1.0*(n==0)-0.5*q*(-1)**n*((1.0+0.25*g)*np.sinc(n*q)+0.5*np.sinc(n*q-1)+0.5*np.sinc(n*q+1)-g/8.0*(np.sinc(n*q-2)+np.sinc(n*q+2)))
 
 
+def num_fou(func,args,G,NX=1024,NY=1024,Nyx=1.0):
+    [X,Y]=np.meshgrid(np.linspace(-0.5,0.5,NX),np.linspace(-0.5,0.5,NY))
+    F=func(X % 1.0-0.5,(Y % 1.0-0.5)/Nyx,*args)
+    FOU=np.fft.fft2(F)/NX/NY
+    EPS=np.zeros((len(G),len(G)),dtype=complex)
+    for i in range(len(G)):
+        for j in range(len(G)):
+            EPS[i,j]=FOU[G[i][0]-G[j][0],G[i][1]-G[j][1]]
+    return EPS
+
+def num_fou_xy(func,args,nx,ny,G,NX=1024,NY=1024,Nyx=1.0):
+    [X,Y]=np.meshgrid(np.linspace(-0.5,0.5,NX),np.linspace(-0.5,0.5,NY))
+    F=1.0/func(X % 1.0-0.5,(Y % 1.0-0.5)/Nyx,*args)
+    FOU=np.fft.fft(F,axis=0)/NX
+    #plt.figure()
+    #plt.imshow(np.abs(F),origin='lower')
+    #plt.colorbar()
+    #plt.savefig('F.png')
+    #plt.figure()
+    #plt.imshow(np.abs(FOU[:,:20]),aspect='auto',origin='lower')
+    #plt.colorbar()
+    #plt.savefig('FOU.png')
+    TEMP1=np.zeros((NY,2*nx+1,2*nx+1),dtype=complex)
+    for i in range(-nx,nx+1):
+        for j in range(-nx,nx+1):
+            TEMP1[:,i,j]=FOU[i-j,:]
+    #print TEMP1[900,:,:]
+    TEMP2=np.linalg.inv(TEMP1)
+    TEMP3=np.fft.fft(TEMP2,axis=0)/NY
+    EPS=np.zeros((len(G),len(G)),dtype=complex)
+    for i in range(len(G)):
+        for j in range(len(G)):
+            EPS[i,j]=TEMP3[G[i][1]-G[j][1],G[i][0],G[j][0]]
+    return EPS
+    #return None
+
+
+def num_fou_yx(func,args,nx,ny,G,NX=1024,NY=1024,Nyx=1.0):
+    [X,Y]=np.meshgrid(np.linspace(-0.5,0.5,NX),np.linspace(-0.5,0.5,NY))
+    F=1.0/func(X % 1.0-0.5,(Y % 1.0-0.5)/Nyx,*args)
+    FOU=np.fft.fft(F,axis=1)/NY
+    #plt.figure()
+    #plt.imshow(np.abs(F),origin='lower')
+    #plt.colorbar()
+    #plt.savefig('F.png')
+    #plt.figure()
+    #plt.imshow(np.abs(FOU[:,:20]),aspect='auto',origin='lower')
+    #plt.colorbar()
+    #plt.savefig('FOU.png')
+    TEMP1=np.zeros((NX,2*ny+1,2*ny+1),dtype=complex)
+    for i in range(-ny,ny+1):
+        for j in range(-ny,ny+1):
+            TEMP1[:,i,j]=FOU[:,i-j]
+    #print TEMP1[900,:,:]
+    TEMP2=np.linalg.inv(TEMP1)
+    TEMP3=np.fft.fft(TEMP2,axis=0)/NX
+    EPS=np.zeros((len(G),len(G)),dtype=complex)
+    for i in range(len(G)):
+        for j in range(len(G)):
+            EPS[i,j]=TEMP3[G[i][0]-G[j][0],G[i][1],G[j][1]]
+    return EPS
+    #return None
+
+
+
 
 

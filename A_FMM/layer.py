@@ -428,7 +428,111 @@ class layer_ani_diag(layer):
         self.TY=False
 
 
+class layer_num(layer):
+    def __init__(self,Nx,Ny,func,args=(),Nyx=1.0,NX=1024,NY=1024):
+        self.Nx=Nx
+        self.Ny=Ny
+        self.G=sub.createG(self.Nx,self.Ny)
+        self.D=len(self.G)
+        self.Nyx=Nyx
+        self.func=func
+        self.args=args
+        #print args
+        
+        self.FOUP=sub.num_fou(func,args,self.G,NX=NX,NY=NY,Nyx=self.Nyx)
+        self.INV=linalg.inv(self.FOUP)
 
+        #Still to be defined
+        self.EPS1=sub.num_fou_xy(self.func,self.args,self.Nx,self.Ny,self.G,NX=1024,NY=1024,Nyx=self.Nyx)
+        self.EPS2=sub.num_fou_yx(self.func,self.args,self.Nx,self.Ny,self.G,NX=1024,NY=1024,Nyx=self.Nyx)
+        
+
+        self.TX=False
+        self.TY=False
+
+
+    def eps_plot(self,pdf=None,N=200,s=1.0):
+        [X,Y]=np.meshgrid(np.linspace(-s*0.5,s*0.5,s*N),np.linspace(-s*0.5,s*0.5,int(s*N*self.Nyx)))
+        [XX,YY]=np.meshgrid(np.linspace(-0.5,0.5,1024),np.linspace(-0.5,0.5,1024))
+        #F=self.func(XX,YY)
+        F=self.func(XX % 1.0-0.5,(YY % 1.0-0.5)/self.Nyx,*self.args)
+        FOU=np.fft.fft2(F)/1024.0/1024.0
+        EPS=np.zeros((N,N),complex)
+        EPS=sum([FOU[self.G[i][0],self.G[i][1]]*np.exp((0+2j)*np.pi*(self.G[i][0]*X+self.G[i][1]*Y)) for i in range(self.D)])
+        plt.figure()
+        plt.imshow(np.real(EPS),extent=[-s*0.5,s*0.5,-self.Nyx*s*0.5,self.Nyx*s*0.5])
+        plt.colorbar()
+        if (pdf==None):
+            plt.show()
+        else:
+            a=PdfPages(pdf+'.pdf')
+            a.savefig()
+            a.close()
+        plt.close()
+
+
+    def mat_plot(self,name,N=100,s=1):
+        save=PdfPages(name+'.pdf')
+
+        [X,Y]=np.meshgrid(np.linspace(-s*0.5,s*0.5,s*N),np.linspace(-s*0.5,s*0.5,s*N))
+        [XX,YY]=np.meshgrid(np.linspace(-0.5,0.5,1024),np.linspace(-0.5,0.5,1024))
+        #F=self.func(XX,YY)
+        F=self.func(XX % 1.0-0.5,(YY % 1.0-0.5)/self.Nyx,*self.args)
+        FOU=np.fft.fft2(F)/1024.0/1024.0
+        EPS=np.zeros((N,N),complex)
+        EPS=sum([FOU[self.G[i][0],self.G[i][1]]*np.exp((0+2j)*np.pi*(self.G[i][0]*X+self.G[i][1]*Y)) for i in range(self.D)])
+
+        plt.figure()
+        plt.title('epsilon real')
+        plt.imshow(np.real(EPS),aspect=1,origin='lower')
+        plt.colorbar()
+        save.savefig()
+        plt.close()
+
+
+        plt.figure()
+        plt.title('epsilon')
+        plt.imshow(np.abs(self.FOUP),aspect='auto',interpolation='nearest')
+        plt.colorbar()
+        save.savefig()
+        plt.close()
+
+        #plt.figure()
+        #plt.title('epsilon_inv')
+        #plt.imshow(np.abs(self.EPS_INV),aspect='auto',interpolation='nearest')
+        #plt.colorbar()
+        #save.savefig()
+        #plt.close()
+
+        plt.figure()
+        plt.title('Epsilon 1')
+        plt.imshow(np.abs(self.EPS1),aspect='auto',interpolation='nearest')
+        plt.colorbar()
+        save.savefig()
+        plt.close()
+
+        plt.figure()
+        plt.title('Epsilon 2')
+        plt.imshow(np.abs(self.EPS2),aspect='auto',interpolation='nearest')
+        plt.colorbar()
+        save.savefig()
+        plt.close()
+
+
+        plt.figure()
+        plt.title('diff eps-eps1')
+        plt.imshow(np.abs(self.FOUP-self.EPS1),aspect='auto',interpolation='nearest')
+        plt.colorbar()
+        save.savefig()
+        plt.close()
+
+        plt.figure()
+        plt.title('INV')
+        plt.imshow(np.abs(np.abs(self.INV)),aspect='auto',interpolation='nearest')
+        plt.colorbar()
+        save.savefig()
+        plt.close()
+        save.close()
 
 
 
