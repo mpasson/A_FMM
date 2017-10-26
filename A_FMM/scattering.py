@@ -54,8 +54,8 @@ class S_matrix:
             j1=np.argsort(lay1.W)[-i1]
             j2=np.argsort(lay2.W)[-i2]
         else:
-            j1=i1-1
-            j2=i2-1
+            j1=i1
+            j2=i2
         #print 'T: %15.10f %15.10f' % (lay2.P_norm[j2],lay1.P_norm[j1])
         return np.abs(self.S11[j2,j1])**2*lay2.P_norm[j2]/lay1.P_norm[j1]
 #        return np.abs(self.S11[j1,j2])**2*np.real(lay2.P_norm[j2]/lay1.P_norm[j1])
@@ -67,8 +67,8 @@ class S_matrix:
             j1=np.argsort(lay.W)[-i1]
             j2=np.argsort(lay.W)[-i2]
         else:
-            j1=i1-1
-            j2=i2-1
+            j1=i1
+            j2=i2
 #        print j1,j2
 #        return np.abs(self.S21[j1,j2])**2
         #print 'R: %15.10f %15.10f' % (lay.P_norm[j2],lay.P_norm[j1])
@@ -79,8 +79,8 @@ class S_matrix:
             j1=np.argsort(lay.W)[-i1]
             j2=np.argsort(lay.W)[-i2]
         else:
-            j1=i1-1
-            j2=i2-1
+            j1=i1
+            j2=i2
         return np.angle(self.S21[j2,j1])
 
     def get_PT(self,i1,lay1,i2,lay2,ordered='yes'):
@@ -88,8 +88,8 @@ class S_matrix:
             j1=np.argsort(lay1.W)[-i1]
             j2=np.argsort(lay2.W)[-i2]
         else:
-            j1=i1-1
-            j2=i2-1
+            j1=i1
+            j2=i2
         return np.angle(self.S11[j2,j1])
 
 
