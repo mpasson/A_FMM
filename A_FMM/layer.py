@@ -555,6 +555,21 @@ class layer_uniform(layer):
         self.TY=False
 
 
+    def eps_plot(self,pdf=None,N=200,s=1.0):
+        [X,Y]=np.meshgrid(np.linspace(-s*0.5,s*0.5,s*N),np.linspace(-s*0.5,s*0.5,s*N))
+        EPS=np.zeros(np.shape(X))+self.eps.real
+        plt.figure()
+        plt.imshow(np.real(EPS),extent=[-s*0.5,s*0.5,-self.Nyx*s*0.5,self.Nyx*s*0.5])
+        plt.colorbar()
+        if (pdf==None):
+            plt.show()
+        else:
+            a=PdfPages(pdf+'.pdf')
+            a.savefig()
+            a.close()
+        plt.close()
+
+
     def mat_plot(self,name,N=100,s=1):
         save=PdfPages(name+'.pdf')
 
