@@ -535,13 +535,120 @@ class layer_num(layer):
         save.close()
 
 
+class layer_uniform(layer):
+    def __init__(self,Nx,Ny,eps,Nyx=1.0):
+        self.Nx=Nx
+        self.Ny=Ny
+        self.G=sub.createG(self.Nx,self.Ny)
+        self.D=len(self.G)
+        self.Nyx=Nyx
+        self.eps=eps
+        
+        self.FOUP=eps*np.identity(self.D,dtype='complex')
+        self.INV=1.0/eps*np.identity(self.D,dtype='complex')
+
+        #Still to be defined
+        self.EPS1=eps*np.identity(self.D,dtype='complex')
+        self.EPS2=eps*np.identity(self.D,dtype='complex')
+
+        self.TX=False
+        self.TY=False
 
 
+    def mat_plot(self,name,N=100,s=1):
+        save=PdfPages(name+'.pdf')
+
+        [X,Y]=np.meshgrid(np.linspace(-s*0.5,s*0.5,s*N),np.linspace(-s*0.5,s*0.5,s*N))
+        #F=self.func(XX,YY)
+        EPS=np.zeros(np.shape(X))+self.eps.real
+
+        plt.figure()
+        plt.title('epsilon real')
+        plt.imshow(np.real(EPS),aspect=1,origin='lower')
+        plt.colorbar()
+        save.savefig()
+        plt.close()
 
 
+        plt.figure()
+        plt.title('epsilon')
+        plt.imshow(np.abs(self.FOUP),aspect='auto',interpolation='nearest')
+        plt.colorbar()
+        save.savefig()
+        plt.close()
+
+        #plt.figure()
+        #plt.title('epsilon_inv')
+        #plt.imshow(np.abs(self.EPS_INV),aspect='auto',interpolation='nearest')
+        #plt.colorbar()
+        #save.savefig()
+        #plt.close()
+
+        plt.figure()
+        plt.title('Epsilon 1')
+        plt.imshow(np.abs(self.EPS1),aspect='auto',interpolation='nearest')
+        plt.colorbar()
+        save.savefig()
+        plt.close()
+
+        plt.figure()
+        plt.title('Epsilon 2')
+        plt.imshow(np.abs(self.EPS2),aspect='auto',interpolation='nearest')
+        plt.colorbar()
+        save.savefig()
+        plt.close()
 
 
+        plt.figure()
+        plt.title('diff eps-eps1')
+        plt.imshow(np.abs(self.FOUP-self.EPS1),aspect='auto',interpolation='nearest')
+        plt.colorbar()
+        save.savefig()
+        plt.close()
 
+        plt.figure()
+        plt.title('INV')
+        plt.imshow(np.abs(np.abs(self.INV)),aspect='auto',interpolation='nearest')
+        plt.colorbar()
+        save.savefig()
+        plt.close()
+        save.close()
+
+
+    def mode(self,k0,kx=0.0,ky=0.0):
+        self.k0=k0
+        self.kx=kx
+        self.ky=ky
+        if (self.TX or self.TY):
+            (k1,k2)=sub.createK(self.G,k0,kx=kx,ky=ky,Nyx=self.Nyx)
+            if self.TX:
+                #print np.shape(self.FX),np.shape(self.k1)
+                k1=np.dot(self.FX,k1)
+            if self.TY:
+                k2=np.dot(self.FY,k2)
+            self.GH,self.M=sub.create_2order_new(self.D,k1,k2,self.INV,self.EPS1,self.EPS2)
+            [self.W,self.V]=linalg.eig(self.M)
+            self.gamma=np.sqrt(self.W)*np.sign(np.angle(self.W)+0.5*np.pi)
+            if np.any(np.real(self.gamma)+np.imag(self.gamma)<=0.0):
+                print 'Warining: wrong complex root'
+            if np.any(np.abs(self.gamma)<=0.0):
+                print 'Warining: gamma=0'
+            self.VH=np.dot(self.GH,self.V/self.gamma)
+        else:
+            W=2*[self.eps-((1+0j)*(self.G[i][0]+kx)/k0)**2-((1+0j)*(self.G[i][1]+ky)/k0/self.Nyx)**2 for i in self.G]
+            self.W=np.array(W)
+            self.V=np.identity(2*self.D,dtype=complex)
+            self.gamma=np.sqrt(self.W)*np.sign(np.angle(self.W)+0.5*np.pi)
+            if np.any(np.real(self.gamma)+np.imag(self.gamma)<=0.0):
+                print 'Warining: wrong complex root'
+            if np.any(np.abs(self.gamma)<=0.0):
+                print 'Warining: gamma=0'       
+            self.M=np.diag(self.V)
+            GH_11=[-(1+0j)*(self.G[i][1]+ky)/k0/self.Nyx*(self.G[i][0]+kx)/k0 for i in self.G]
+            GH_22=[(1+0j)*(self.G[i][1]+ky)/k0/self.Nyx*(self.G[i][0]+kx)/k0 for i in self.G]
+            GH_12=[((1+0j)*(self.G[i][0]+kx)/k0)**2-self.eps for i in self.G]
+            GH_21=[self.eps-((1+0j)*(self.G[i][1]+ky)/k0/self.Nyx)**2 for i in self.G]
+            self.GH=np.vstack([np.hstack([np.diag(GH_11),np.diag(GH_12)]),np.hstack([np.diag(GH_21),np.diag(GH_22)])])
 
 
 

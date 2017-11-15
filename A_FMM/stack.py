@@ -78,7 +78,8 @@ class stack:
         X=np.linspace(-0.5,0.5,N)
         EPS=[]
         for (lay,d) in zip(self.layers,self.d):
-            EPSt=sum([sub.fou(lay.G[i][0],lay.G[i][1],lay.creator.x_list,lay.creator.y_list,lay.creator.eps_lists)*np.exp((0+2j)*np.pi*(lay.G[i][0]*X+lay.G[i][1]*y)) for i in range(lay.D)])
+            #EPSt=sum([sub.fou(lay.G[i][0],lay.G[i][1],lay.creator.x_list,lay.creator.y_list,lay.creator.eps_lists)*np.exp((0+2j)*np.pi*(lay.G[i][0]*X+lay.G[i][1]*y)) for i in range(lay.D)])
+            EPSt=sum([lay.FOUP[i,lay.D/2]*np.exp((0+2j)*np.pi*(lay.G[i][0]*X+lay.G[i][1]*y)) for i in range(lay.D)])
             for i in range(int(d/dx)):
                 EPS.append(EPSt)
         EPS=np.array(EPS)
@@ -372,9 +373,12 @@ class stack:
 
 
 
-    def plot_E(self,i=1,dz=0.01,pdf=None,pdfname=None,N=100,y=0.0,func=np.real,s=1):
+    def plot_E(self,i=1,dz=0.01,pdf=None,pdfname=None,N=100,y=0.0,func=np.real,s=1,ordered='yes',title=None):
         u1,d2=np.zeros((2*self.NPW),complex),np.zeros((2*self.NPW),complex)
-        u1[np.argsort(self.layers[0].W)[-i]]=1.0+0.0j
+        if ordered=='yes':
+            u1[np.argsort(self.layers[0].W)[-i]]=1.0+0.0j
+        else:
+            u1[i]=1.0+0.0j
         (u2,d1)=self.S.output(u1,d2)
         x=np.linspace(-s*0.5,s*0.5,s*N)
         ind=range(2*self.NPW)
@@ -428,6 +432,8 @@ class stack:
         else:
             out=pdf
         plt.figure()
+        if title!=None:
+            plt.suptitle(title)
         plt.subplot(211)
         plt.title('Ex')
         plt.imshow(func(Ex).T,origin='lower',extent=[0.0,sum(self.d),-0.5,0.5],cmap='jet')
@@ -444,9 +450,70 @@ class stack:
         return None
 
 
-    def plot_EY(self,i=1,dz=0.01,pdf=None,N=100,x=0.0,func=np.real,s=1):
+    def plot_E_plane(self,i,jlay,z,N=100,pdf=None,pdfname=None,func=np.real,s=1,ordered='yes',title=None):
         u1,d2=np.zeros((2*self.NPW),complex),np.zeros((2*self.NPW),complex)
-        u1[np.argsort(self.layers[0].W)[-i]]=1.0+0.0j
+        if ordered=='yes':
+            u1[np.argsort(self.layers[0].W)[-i]]=1.0+0.0j
+        else:
+            u1[i]=1.0+0.0j
+        (u2,d1)=self.S.output(u1,d2)
+        [X,Y]=np.meshgrid(np.linspace(-s*0.5,s*0.5,s*N),np.linspace(-s*0.5*self.layers[jlay].Nyx,s*0.5*self.layers[jlay].Nyx,s*N))
+        S1=copy.deepcopy(self.int_matrices[self.int_list.index(self.interfaces[0])])
+        S2=S_matrix(S1.N)
+        for l in range(1,jlay):
+            S1.add_uniform(self.layers[l],self.d[l])
+            S1.add(self.int_matrices[self.int_list.index(self.interfaces[l])])
+        for l in range(jlay,self.N-1):
+            S2.add_uniform(self.layers[l],self.d[l])
+            S2.add(self.int_matrices[self.int_list.index(self.interfaces[l])])
+        (ul,dl)=S1.int_f(S2,u1)
+        Emx_l,Emy_l=[],[]
+        for i in range(2*self.NPW):
+            Emx,Emy=np.zeros(np.shape(X),complex),np.zeros(np.shape(X),complex)
+            for j in range(self.NPW):
+                Emx=np.add(Emx,self.layers[jlay].V[j,i]*np.exp((0.0+2.0j)*np.pi*((self.layers[jlay].G[j][0]+self.layers[jlay].kx)*X+(self.layers[jlay].G[j][1]+self.layers[jlay].ky)*Y)))
+                Emy=np.add(Emy,self.layers[jlay].V[j+self.NPW,i]*np.exp((0.0+2.0j)*np.pi*((self.layers[jlay].G[j][0]+self.layers[jlay].kx)*X+(self.layers[jlay].G[j][1]+self.layers[jlay].ky)*Y)))
+            Emx_l.append(Emx)
+            Emy_l.append(Emy)         
+        Em=np.add(ul*np.exp((0.0+2.0j)*np.pi*self.layers[jlay].k0*self.layers[jlay].gamma*z*self.d[jlay]),dl*np.exp(-(0.0+2.0j)*np.pi*self.layers[jlay].k0*self.layers[jlay].gamma*z*self.d[jlay]))
+        Ex,Ey=np.zeros(np.shape(X),complex),np.zeros(np.shape(X),complex)
+        for i in range(2*self.NPW):
+            Ex=np.add(Ex,Em[i]*Emx_l[i])
+            Ey=np.add(Ey,Em[i]*Emy_l[i])
+        if pdf==None:
+            if pdfname!=None:
+                out=PdfPages(pdfname+'.pdf')
+            else:
+                out=PdfPages('E_plane.pdf')
+        else:
+            out=pdf
+        plt.figure()
+        if title!=None:
+            plt.suptitle(title)
+        plt.subplot(211)
+        plt.title('Ex')
+        plt.imshow(func(Ex),origin='lower',extent=[-0.5,0.5,-0.5,0.5],cmap='jet')
+        plt.colorbar()
+        plt.subplot(212)
+        plt.title('Ey')
+        plt.imshow(func(Ey),origin='lower',extent=[-0.5,0.5,-0.5,0.5],cmap='jet')
+        plt.colorbar()
+        #plt.savefig('field.png',dpi=900)
+        out.savefig(dpi=900)
+        plt.close()
+        if pdf==None:
+            out.close()
+        return None
+
+
+
+
+    def plot_EY(self,i=1,dz=0.01,pdf=None,pdfname=None,N=100,x=0.0,func=np.real,s=1,ordered='yes',title=None):
+        u1,d2=np.zeros((2*self.NPW),complex),np.zeros((2*self.NPW),complex)
+        if ordered=='yes':
+            u1[np.argsort(self.layers[0].W)[-i]]=1.0+0.0j
+        else:
+            u1[i]=1.0+0.0j
         (u2,d1)=self.S.output(u1,d2)
         y=np.linspace(-s*0.5,s*0.5,s*N)
         ind=range(2*self.NPW)
@@ -493,17 +560,20 @@ class stack:
             Ex.append(np.dot(Em,Emx))
             Ey.append(np.dot(Em,Emy))
         if pdf==None:
-            out=PdfPages('E.pdf')
+            out=PdfPages('EY.pdf')
         else:
             out=pdf
         plt.figure()
+        if title!=None:
+            plt.suptitle(title)
         plt.subplot(211)
         plt.title('Ex')
         plt.imshow(func(Ex).T,origin='lower',extent=[0.0,sum(self.d),-0.5,0.5],cmap='jet')
-        #plt.colorbar()
+        plt.colorbar()
         plt.subplot(212)
         plt.title('Ey')
         plt.imshow(func(Ey).T,origin='lower',extent=[0.0,sum(self.d),-0.5,0.5],cmap='jet')
+        plt.colorbar()
         #plt.savefig('field.png',dpi=900)
         out.savefig(dpi=900)
         plt.close()
