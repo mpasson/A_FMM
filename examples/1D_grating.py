@@ -3,9 +3,9 @@
 #  |                              |       Data   
 #  |        Silicon Oxide         |       Period:              650 nm
 #  |        (epsilon=2.0)         |       Si Thickness:        220 nm
-#  |          __________          |       Etching Depth:       70 nm
-#  |         |          |         |       Duty Cycle:          50 %
-#  |_________|          |_________|       Wavelenght Interval: 0.9-1.1 microns
+#  |        ______________        |       Etching Depth:       70 nm
+#  |       |              |       |       Duty Cycle:          50 %
+#  |_______|              |_______|       Wavelenght Interval: 0.9-1.1 microns
 #  |                              |       Angles Interval:     0-89 degrees
 #  |     Silicon (epsilon=12.0)   |
 #  |______________________________|

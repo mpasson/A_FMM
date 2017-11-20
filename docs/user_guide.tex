@@ -96,16 +96,41 @@ Same as \texttt{add\_uniform} but joins to the left.
 \section{Layer Module}
 \subsection{Layer class}
 \subsubsection{Initialization}
-This module contain the layer class, which is responsable for definition of the single layer inside the scattering matrix approach. It also contains the methods for adding the coordinate transform an plotting of the mode fields. It is initialized as: 
+This module contains several implementation of the layer class, which is responsable for definition of the single layer inside the scattering matrix approach. It also contains the methods for adding the coordinate transform an plotting of the mode fields. The different layer are:
 \begin{lstlisting}[language=Python]
 lay=layer(Nx,Ny,creator,Nyx=1.0)
 \end{lstlisting}
-with the following parameters:
+which is the standard implementation of the class. A \texttt{creator} object is needed for the creation, and all the calculation for the Fourier transform are done analytically. The parameter for the initialization are:
 \begin{itemize}[noitemsep,topsep=0pt,parsep=0pt,partopsep=0pt]
 \item \texttt{Nx,Ny}: Trucation order respectively in $x$ and $y$ direction. Actual number of plane waves is $(2N_x+1)(2N_y+1)$.
 \item \texttt{creator}: The creator instance describing the dielectric function.
 \item \texttt{Nyx}: Ratio between the cell period in $y$ and $x$ direction (default is 1.0).
 \end{itemize}
+
+\begin{lstlisting}[language=Python]
+lay=layer_num(Nx,Ny,func,args=(),Nyx=1.0,NX=1024,NY=1024)
+\end{lstlisting}
+Implementation in which the Fourier transforms for the layer are handled numerically. It is more versatile than the standard implementation, albeit should be less precise. The profile of the dielectric is obtained from the function \texttt{func}. The objects needed are:
+\begin{itemize}[noitemsep,topsep=0pt,parsep=0pt,partopsep=0pt]
+\item \texttt{Nx,Ny}: Integers, trucation order respectively in $x$ and $y$ direction. Actual number of plane waves is $(2N_x+1)(2N_y+1)$.
+\item \texttt{func}: Function which defines the dielectric constant. It has to be in the form \texttt{func=func(x,y,..)}. After x and y additional parameters can be defined in the function and passed in \texttt{args}. Domain of the function in -0.5:0.5 in x and -0.5*Nyx:0.5*Nyx in y. 
+\item \texttt{Nyx}: Ratio between the cell period in $y$ and $x$ direction (default is 1.0).
+\item \texttt{args}: Tuple containing eventual additional parameters for \texttt{func}.
+\item \texttt{NX,NY}: Integers, number of point in each direction used for numerical integration in the Fourier transforms.
+\end{itemize}
+
+\begin{lstlisting}[language=Python]
+lay=layer_uniform(Nx,Ny,eps,Nyx=1.0)
+\end{lstlisting}
+Implementation of the uniform layer. It is implemented on is own because in this way its definition and solution are much faster. The parameters are:
+\begin{itemize}[noitemsep,topsep=0pt,parsep=0pt,partopsep=0pt]
+\item \texttt{Nx,Ny}: Trucation order respectively in $x$ and $y$ direction. Actual number of plane waves is $(2N_x+1)(2N_y+1)$.
+\item \texttt{eps}: The dielectric constant of the uniform layer. Can be complex. 
+\item \texttt{Nyx}: Ratio between the cell period in $y$ and $x$ direction (default is 1.0).
+\end{itemize}
+ 
+
+
 When initializing the layer class all the matrices involve in the eigenvalue problem for the layer are created.
 \subsubsection{Methods}
 \begin{lstlisting}[language=Python,basicstyle=\ttfamily\Large]
