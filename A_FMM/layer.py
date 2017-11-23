@@ -151,6 +151,9 @@ class layer:
 
 
     def clear(self):
+        self.VH=None
+        self.M=None
+        self.GH=None
         self.W=None
         self.V=None
         self.gamma=None
