@@ -670,7 +670,7 @@ class layer_uniform(layer):
 
 
 
-class layer_empy_st(layer):
+class layer_empty_st(layer):
     def __init__(self,Nx,Ny,creator,Nyx=1.0):
         self.Nx=Nx
         self.Ny=Ny
@@ -682,16 +682,16 @@ class layer_empy_st(layer):
         self.TX=False
         self.TY=False
 
-        self.FOUP=np.zeros((D,D),dtye=complex)
-        self.INV=np.zeros((D,D),dtye=complex)
-        self.EPS1=np.zeros((D,D),dtye=complex)
-        self.EPS2=np.zeros((D,D),dtye=complex)
+        self.FOUP=np.zeros((self.D,self.D),dtype=np.complex128)
+        self.INV=np.zeros((self.D,self.D),dtype=np.complex128)
+        self.EPS1=np.zeros((self.D,self.D),dtype=np.complex128)
+        self.EPS2=np.zeros((self.D,self.D),dtype=np.complex128)
 
     def fourier(self):
-        self.FOUP=sub.create_epsilon(self.G,self.creator.x_list,self.creator.y_list,self.creator.eps_lists)
+        self.FOUP=sub.create_epsilon(self.G,self.creator.x_list,self.creator.y_list,self.creator.eps_lists)*(1.0+0.0j)
         self.INV=linalg.inv(self.FOUP)
-        self.EPS1=sub.fou_xy(self.Nx,self.Ny,self.G,self.creator.x_list,self.creator.y_list,self.creator.eps_lists)
-        self.EPS2=sub.fou_yx(self.Nx,self.Ny,self.G,self.creator.x_list,self.creator.y_list,self.creator.eps_lists)
+        self.EPS1=sub.fou_xy(self.Nx,self.Ny,self.G,self.creator.x_list,self.creator.y_list,self.creator.eps_lists)*(1.0+0.0j)
+        self.EPS2=sub.fou_yx(self.Nx,self.Ny,self.G,self.creator.x_list,self.creator.y_list,self.creator.eps_lists)*(1.0+0.0j)
         
 
 
