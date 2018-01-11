@@ -682,10 +682,10 @@ class layer_empty_st(layer):
         self.TX=False
         self.TY=False
 
-        self.FOUP=np.zeros((self.D,self.D),dtype=np.complex128)
-        self.INV=np.zeros((self.D,self.D),dtype=np.complex128)
-        self.EPS1=np.zeros((self.D,self.D),dtype=np.complex128)
-        self.EPS2=np.zeros((self.D,self.D),dtype=np.complex128)
+        self.FOUP=np.zeros((self.D,self.D),dtype=complex)
+        self.INV=np.zeros((self.D,self.D),dtype=complex)
+        self.EPS1=np.zeros((self.D,self.D),dtype=complex)
+        self.EPS2=np.zeros((self.D,self.D),dtype=complex)
 
     def fourier(self):
         self.FOUP=sub.create_epsilon(self.G,self.creator.x_list,self.creator.y_list,self.creator.eps_lists)*(1.0+0.0j)
