@@ -174,6 +174,40 @@ class stack:
             self.S.add_uniform(self.layers[i],self.d[i])
             self.S.add(self.int_matrices[self.int_list.index(self.interfaces[i])])
 
+    def get_prop(self,u,list_lay,d=None):
+        dic={}
+        u1,d2=np.zeros((2*self.NPW),complex),np.zeros((2*self.NPW),complex)
+        u1=u
+        if d!=None:
+            d2=d
+        (u2,d1)=self.S.output(u1,d2)
+        lay=self.layers[0]
+        d=self.d[0]
+        if 0 in list_lay:
+            P=lay.get_Poynting(u1,d1)
+            dic[0]=(u1,d1,P)
+        #intermediate layers
+        S1=copy.deepcopy(self.int_matrices[self.int_list.index(self.interfaces[0])])
+        for i in range(1,self.N-1):
+            S2=S_matrix(S1.N)
+            for l in range(i,self.N-1):
+                S2.add_uniform(self.layers[l],self.d[l])
+                S2.add(self.int_matrices[self.int_list.index(self.interfaces[l])])
+            if i in list_lay:
+                (ul,dl)=S1.int_f_tot(S2,u1,d2)
+                P=self.layers[i].get_Poynting(ul,dl)
+                #dl=dl*np.exp((0.0+2.0j)*np.pi*self.layers[i].k0*self.layers[i].gamma*self.d[i])
+                dic[i]=(ul,dl,P)
+            S1.add_uniform(self.layers[i],self.d[i])
+            S1.add(self.int_matrices[self.int_list.index(self.interfaces[i])])
+        lay=self.layers[-1]
+        d=self.d[-1]
+        if self.N-1 in list_lay:
+            P=lay.get_Poynting(u2,d2)
+            dic[self.N-1]=(u2,d2,P)
+        return dic
+        
+
     def get_R(self,i,j,ordered='yes'):
         return self.S.get_R(i,j,self.layers[0],ordered=ordered)
 

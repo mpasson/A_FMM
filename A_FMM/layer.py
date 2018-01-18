@@ -144,7 +144,6 @@ class layer:
 #                print 'Warining: negative imaginary part'
             if np.any(np.abs(self.gamma)<=0.0):
                 print 'Warining: gamma=0'
-            
             self.VH=np.dot(self.GH,self.V/self.gamma)
         else:
             self.W=linalg.eigvals(self.M)
@@ -374,6 +373,14 @@ class layer:
         [VEx,VEy]=np.split(self.V,2)
         [VHx,VHy]=np.split(self.VH,2)
         self.P_norm=np.sum(VEx*np.conj(VHy)-VEy*np.conj(VHx),0).real
+
+    def get_Poynting(self,u,d):
+        self.get_P_norm()
+        P_down=np.dot(self.P_norm,np.abs(u)**2.0)
+        P_up=np.dot(self.P_norm,np.abs(d)**2.0)
+        P_tot=P_down-P_up
+        return [P_down,P_up,P_tot]
+                    
     
  
     def T_interface(self,lay):
@@ -667,6 +674,7 @@ class layer_uniform(layer):
             GH_12=[((1+0j)*(self.G[i][0]+kx)/k0)**2-self.eps for i in self.G]
             GH_21=[self.eps-((1+0j)*(self.G[i][1]+ky)/k0/self.Nyx)**2 for i in self.G]
             self.GH=np.vstack([np.hstack([np.diag(GH_11),np.diag(GH_12)]),np.hstack([np.diag(GH_21),np.diag(GH_22)])])
+            self.VH=np.dot(self.GH,self.V/self.gamma)
 
 
 
