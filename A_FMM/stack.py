@@ -195,8 +195,9 @@ class stack:
                 S2.add(self.int_matrices[self.int_list.index(self.interfaces[l])])
             if i in list_lay:
                 (ul,dl)=S1.int_f_tot(S2,u1,d2)
-                P=self.layers[i].get_Poynting(ul,dl)
+                #dl=np.zeros((2*self.NPW),complex)
                 #dl=dl*np.exp((0.0+2.0j)*np.pi*self.layers[i].k0*self.layers[i].gamma*self.d[i])
+                P=self.layers[i].get_Poynting(ul,dl)
                 dic[i]=(ul,dl,P)
             S1.add_uniform(self.layers[i],self.d[i])
             S1.add(self.int_matrices[self.int_list.index(self.interfaces[i])])

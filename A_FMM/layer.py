@@ -453,8 +453,8 @@ class layer_num(layer):
         self.INV=linalg.inv(self.FOUP)
 
         #Still to be defined
-        self.EPS1=sub.num_fou_xy(self.func,self.args,self.Nx,self.Ny,self.G,NX=1024,NY=1024,Nyx=self.Nyx)
-        self.EPS2=sub.num_fou_yx(self.func,self.args,self.Nx,self.Ny,self.G,NX=1024,NY=1024,Nyx=self.Nyx)
+        self.EPS1=sub.num_fou_xy(self.func,self.args,self.Nx,self.Ny,self.G,NX=NX,NY=NY,Nyx=self.Nyx)
+        self.EPS2=sub.num_fou_yx(self.func,self.args,self.Nx,self.Ny,self.G,NX=NX,NY=NY,Nyx=self.Nyx)
         
 
         self.TX=False

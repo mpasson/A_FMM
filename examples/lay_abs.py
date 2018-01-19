@@ -9,12 +9,12 @@ import A_FMM
 cr=A_FMM.creator()
 
 #Computational cell for the layer is assumed 1D with period of 1 micron, only NX is set
-NX=5
+NX=0
 k0=1.0/1.55 #Setting energy (in unit of period/labda) (lambda_0=975 nm)
 
 #Creting layers involved in structure
 l1=A_FMM.layer_uniform(NX,0,1.0)
-l2=A_FMM.layer_uniform(NX,0,12.0+0.5j)
+l2=A_FMM.layer_uniform(NX,0,12.0)
 l3=A_FMM.layer_uniform(NX,0,1.0)
 l4=A_FMM.layer_uniform(NX,0,4.0)
 
