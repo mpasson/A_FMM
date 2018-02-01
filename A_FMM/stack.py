@@ -73,7 +73,7 @@ class stack:
             lay.mat_plot('layer_%i' % (n),N=N,s=s)
             n+=1
 
-    def plot_stack(self,nome='cross_section_X',N=100,dx=0.01,y=0.0):
+    def plot_stack(self,nome='cross_section_X',N=100,dx=0.01,y=0.0,func=np.abs):
         nome=nome+'_y=%3.2f.pdf' % (y)
         X=np.linspace(-0.5,0.5,N)
         EPS=[]
@@ -85,7 +85,7 @@ class stack:
         EPS=np.array(EPS)
         out=PdfPages(nome)
         plt.figure()
-        plt.imshow(np.abs(EPS).T,origin='lower',extent=[0.0,sum(self.d),-0.5,0.5])
+        plt.imshow(func(EPS).T,origin='lower',extent=[0.0,sum(self.d),-0.5,0.5])
         plt.colorbar()
         out.savefig(dpi=900)
         plt.close()
@@ -207,7 +207,22 @@ class stack:
             P=lay.get_Poynting(u2,d2)
             dic[self.N-1]=(u2,d2,P)
         return dic
-        
+
+    def get_inout(self,u,d=None):
+        u1,d2=np.zeros((2*self.NPW),complex),np.zeros((2*self.NPW),complex)
+        u1=u
+        if d!=None:
+            d2=d
+        (u2,d1)=self.S.output(u1,d2)
+        dic={}        
+        P=self.layers[0].get_Poynting(u1,d1)
+        dic['in']=(u1,d1,P)
+        P=self.layers[-1].get_Poynting(u2,d2)
+        dic['out']=(u2,d2,P)
+        return dic
+
+
+
 
     def get_R(self,i,j,ordered='yes'):
         return self.S.get_R(i,j,self.layers[0],ordered=ordered)
