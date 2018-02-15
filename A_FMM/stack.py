@@ -185,7 +185,7 @@ class stack:
         d=self.d[0]
         if 0 in list_lay:
             P=lay.get_Poynting(u1,d1)
-            dic[0]=(u1,d1,P)
+            dic[0]=P
         #intermediate layers
         S1=copy.deepcopy(self.int_matrices[self.int_list.index(self.interfaces[0])])
         for i in range(1,self.N-1):
@@ -195,17 +195,15 @@ class stack:
                 S2.add(self.int_matrices[self.int_list.index(self.interfaces[l])])
             if i in list_lay:
                 (ul,dl)=S1.int_f_tot(S2,u1,d2)
-                #dl=np.zeros((2*self.NPW),complex)
-                #dl=dl*np.exp((0.0+2.0j)*np.pi*self.layers[i].k0*self.layers[i].gamma*self.d[i])
                 P=self.layers[i].get_Poynting(ul,dl)
-                dic[i]=(ul,dl,P)
+                dic[i]=P
             S1.add_uniform(self.layers[i],self.d[i])
             S1.add(self.int_matrices[self.int_list.index(self.interfaces[i])])
         lay=self.layers[-1]
         d=self.d[-1]
         if self.N-1 in list_lay:
             P=lay.get_Poynting(u2,d2)
-            dic[self.N-1]=(u2,d2,P)
+            dic[self.N-1]=P
         return dic
 
     def get_inout(self,u,d=None):

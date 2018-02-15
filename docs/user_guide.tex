@@ -16,6 +16,54 @@
 
 \maketitle
 
+
+\chapter{Algorithm}
+In this chapter the theory behind this implementation of Aperiodic-Fourier Modal Method is discussed. The discussion is divided into three parts. The first part describes the theory behind the resolution of the Maxwell equation in the single 2D layer by expansion on Fourier basis. The second part explains the theory behind the scattering matrix algorithm, which links together the solutions of Maxwell equation of each 2D layer to get the solution for the complete structure. Both these parts follow the formulation developed by Lifeng Li for application of Fourier methods to crossed gratings, with very little modification. The third part describes the real and complex coordinate Fourier transform which allow the treatment of aperiodic structures with Fourier modal methods, following the work of P. Lalanne and J. P. Hugonin. In all the following treatment we will assume plane $xy$ as the plane in which the 2D periodic layer extends, and $z$ direction the stacking direction. Field Vector will be indicated with Bold $\mathbf{F}$. Italic $E$ will indicate both field components and vectors of the Fourier coefficient of the corresponding fields, specifying it when necessary. 
+
+\section{Maxwell equation in 2D layers: the eigenvalue problem}
+The aim of this section is to describe the theory behind the solution of the Maxwell equation in a single 2D layer which could be patterned in a periodic way. Leaning on the periodicity of the structure is it possible to expand an arbitrary component of the field $\mathbf{F}$ in pseudo-fourier basis:
+\begin{equation}
+F_\sigma = \sum_\mathbf{k}F_\sigma^{(\mathbf{k})}(z)\exp{i(k_xx+k_yy)}
+\end{equation} 
+where $\mathbf(k)=\mathbf{k}_0 + \mathbf{K}$ wavevector of the pseudo Fourier expansion, composed by the the in plane wavevector $\mathbf{k}_0$ plus any vector $\mathbf{K}$ of the reciprocal lattice. The $z$ dependence of the coefficients of the expansion has to be calculated from Maxwell equations which, when expanding the components, take the form:
+\begin{equation} \label{eq:Maxwell}
+\left\{\begin{array}{c}
+\partial_y E_z - \partial_z E_y = ik_0 \mu H_x \\
+\partial_z E_x - \partial_x E_z = ik_0 \mu H_y \\
+\partial_x E_y - \partial_y E_x = ik_0 \mu H_z \\
+\end{array} \right.
+\qquad
+\left\{\begin{array}{c}
+\partial_y H_z - \partial_z H_y = -ik_0 \varepsilon E_x \\
+\partial_z H_x - \partial_x H_z = -ik_0 \varepsilon E_y \\
+\partial_x H_y - \partial_y H_x = -ik_0 \varepsilon E_z \\
+\end{array} \right.
+\end{equation}  
+where $k_0,\mu,\varepsilon$ are respectively the wavevector in vacuum of the radiation ($\omega/c$), magnetic permeability and the dielectric constant. From now on we will make the assumption of non magnetic ($\mu=1$), linear and isotropic material (although generalization to anisotropic material with principal axis coincident with the reference axis will be discussed later).
+At this point we can write equation \ref{eq:Maxwell} in Fourier space, being careful to employ the right factorization rule when concurrent jumps in the function involved are present. After doing this we can recast the Maxwell equation in matrix form involving only the in-plane components of the fields in the following manner:
+\begin{equation}
+-\frac{i}{k_0} \partial_z \left[ \begin{array}{c} E_x \\ E_y \end{array} \right] =
+\left[ \begin{array}{cc} K_x \hat{\varepsilon}^{-1} K_y & I - K_x \hat{\varepsilon}^{-1} K_x \\ K_y \hat{\varepsilon}^{-1} K_y - I & -K_y \hat{\varepsilon}^{-1} K_x \end{array} \right]
+\left[ \begin{array}{c} H_x \\ H_y \end{array} \right] =
+F \left[ \begin{array}{c} H_x \\ H_y \end{array} \right]
+\end{equation}
+
+\begin{equation}
+-\frac{i}{k_0} \partial_z \left[ \begin{array}{c} H_x \\ H_y \end{array} \right] =
+\left[ \begin{array}{cc} -K_xK_y & K_x^2 - \hat{\varepsilon}_{y,x} \\ \hat{\varepsilon}_{x,y} - K_y^2 & K_yK_x \end{array} \right]
+\left[ \begin{array}{c} E_x \\ E_y \end{array} \right]= 
+G \left[ \begin{array}{c} E_x \\ E_y \end{array} \right]
+\end{equation}
+Here a little of explanation on the notation is needed. First, $E_x,E_y,H_x,H_y$ are the vector of the Fourier coefficient of the Fourier components. If the expansion is truncated with $N$ reciprocal lattice vector, these vector has dimension $N$. All the others terms are $N \times N$ matrices composed as follow. The matrix $K_x$ is a diagonal matrix composed with the $x$ component of the wavevector of the expansion $K_x(\mathbf{k},\mathbf{k}') = k_x \delta_{\mathbf{k}\mathbf{k}'}$, and similar for $K_y$. $I$ is the $N \times N$ identity matrix.  The matrix $\hat{\varepsilon}$ is a Toeplitz matrix composed with the Fourier transform of the dielectric constant:
+\begin{equation}
+\hat{\varepsilon}(\mathbf{k},\mathbf{k}') = \frac{1}{A_c} \int_{A_c} \varepsilon(x,y)\exp(-i[(k_x-k_x')x+(k_y-k_y')y]) dxdy
+\end{equation}
+The other two matrices, $\hat{\varepsilon}_{x,y}$ and $\hat{\varepsilon}_{x,y}$ are other matrices related to the Fourier transform of the dielectric constant, but are not simple Toeplitz matrices. 
+To understand these matrices we have first to define the matrices $\hat{\varepsilon}_{x}$ and $\hat{\varepsilon}_{y}$, which are the Fourier transform of $1/\varepsilon$, but only along one direction (therefore remaining function of the other coordinate):
+\begin{align}
+
+\end{align}
+
 \chapter{Reference Guide}
 In this chapter a detailed explanation of the module is provided. For each sub-module a summary of the classes and function involved can be found, together with details on the most common functions.
 \section{Module composition}
