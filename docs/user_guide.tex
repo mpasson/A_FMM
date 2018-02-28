@@ -17,12 +17,12 @@
 \maketitle
 
 
-\chapter{Algorithm}
+\chapter{Algorithm} 
 In this chapter the theory behind this implementation of Aperiodic-Fourier Modal Method is discussed. The discussion is divided into three parts. The first part describes the theory behind the resolution of the Maxwell equation in the single 2D layer by expansion on Fourier basis. The second part explains the theory behind the scattering matrix algorithm, which links together the solutions of Maxwell equation of each 2D layer to get the solution for the complete structure. Both these parts follow the formulation developed by Lifeng Li for application of Fourier methods to crossed gratings, with very little modification. The third part describes the real and complex coordinate Fourier transform which allow the treatment of aperiodic structures with Fourier modal methods, following the work of P. Lalanne and J. P. Hugonin. In all the following treatment we will assume plane $xy$ as the plane in which the 2D periodic layer extends, and $z$ direction the stacking direction. Field Vector will be indicated with Bold $\mathbf{F}$. Italic $E$ will indicate both field components and vectors of the Fourier coefficient of the corresponding fields, specifying it when necessary. 
 
-\section{Maxwell equation in 2D layers: the eigenvalue problem}
+\section{Maxwell equation in 2D layers: the eigenvalue problem} \label{sec:eigenploblem}
 The aim of this section is to describe the theory behind the solution of the Maxwell equation in a single 2D layer which could be patterned in a periodic way. Leaning on the periodicity of the structure is it possible to expand an arbitrary component of the field $\mathbf{F}$ in pseudo-fourier basis:
-\begin{equation}
+\begin{equation} \label{eq_Fourier_exp}
 F_\sigma = \sum_\mathbf{k}F_\sigma^{(\mathbf{k})}(z)\exp{i(k_xx+k_yy)}
 \end{equation} 
 where $\mathbf(k)=\mathbf{k}_0 + \mathbf{K}$ wavevector of the pseudo Fourier expansion, composed by the the in plane wavevector $\mathbf{k}_0$ plus any vector $\mathbf{K}$ of the reciprocal lattice. The $z$ dependence of the coefficients of the expansion has to be calculated from Maxwell equations which, when expanding the components, take the form:
@@ -41,14 +41,14 @@ where $\mathbf(k)=\mathbf{k}_0 + \mathbf{K}$ wavevector of the pseudo Fourier ex
 \end{equation}  
 where $k_0,\mu,\varepsilon$ are respectively the wavevector in vacuum of the radiation ($\omega/c$), magnetic permeability and the dielectric constant. From now on we will make the assumption of non magnetic ($\mu=1$), linear and isotropic material (although generalization to anisotropic material with principal axis coincident with the reference axis will be discussed later).
 At this point we can write equation \ref{eq:Maxwell} in Fourier space, being careful to employ the right factorization rule when concurrent jumps in the function involved are present. After doing this we can recast the Maxwell equation in matrix form involving only the in-plane components of the fields in the following manner:
-\begin{equation}
+\begin{equation} \label{eq:def_F}
 -\frac{i}{k_0} \partial_z \left[ \begin{array}{c} E_x \\ E_y \end{array} \right] =
 \left[ \begin{array}{cc} K_x \hat{\varepsilon}^{-1} K_y & I - K_x \hat{\varepsilon}^{-1} K_x \\ K_y \hat{\varepsilon}^{-1} K_y - I & -K_y \hat{\varepsilon}^{-1} K_x \end{array} \right]
 \left[ \begin{array}{c} H_x \\ H_y \end{array} \right] =
 F \left[ \begin{array}{c} H_x \\ H_y \end{array} \right]
 \end{equation}
 
-\begin{equation}
+\begin{equation} \label{eq:def_G}
 -\frac{i}{k_0} \partial_z \left[ \begin{array}{c} H_x \\ H_y \end{array} \right] =
 \left[ \begin{array}{cc} -K_xK_y & K_x^2 - \hat{\varepsilon}_{y,x} \\ \hat{\varepsilon}_{x,y} - K_y^2 & K_yK_x \end{array} \right]
 \left[ \begin{array}{c} E_x \\ E_y \end{array} \right]= 
@@ -60,9 +60,69 @@ Here a little of explanation on the notation is needed. First, $E_x,E_y,H_x,H_y$
 \end{equation}
 The other two matrices, $\hat{\varepsilon}_{x,y}$ and $\hat{\varepsilon}_{x,y}$ are other matrices related to the Fourier transform of the dielectric constant, but are not simple Toeplitz matrices. 
 To understand these matrices we have first to define the matrices $\hat{\varepsilon}_{x}$ and $\hat{\varepsilon}_{y}$, which are the Fourier transform of $1/\varepsilon$, but only along one direction (therefore remaining function of the other coordinate):
-\begin{align}
+\begin{equation}
+\begin{array}{c}
+\hat{\varepsilon}_x(k_x,k'_x)(y) = \frac{1}{L_x} \int_{L_x} \frac{1}{\varepsilon(x,y)} \exp[-i(k_x-k_x')x] dx \\
+\quad \\
+\hat{\varepsilon}_y(k_y,k'_y)(x) = \frac{1}{L_y} \int_{L_y} \frac{1}{\varepsilon(x,y)} \exp[-i(k_y-k_y')y] dy \\
+\end{array}
+\end{equation}
+The matrices $\hat{\varepsilon}_{x,y}$ and $\hat{\varepsilon}_{y,x}$ are are obtained taking the Fourier transform of the inverse of the matrices $\hat{\varepsilon}_{x}$ and $\hat{\varepsilon}_{y}$ along the other direction:
+\begin{equation}
+\begin{array}{c}
+\hat{\varepsilon}_{x,y}(\mathbf{k},\mathbf{k}') = \frac{1}{L_y} \int_{L_y} [\hat{\varepsilon}_x(y)]^{-1}(k_x,k'_x) \exp[-i(k_y-k_y')y] dy \\
+\quad \\
+\hat{\varepsilon}_{y,x}(\mathbf{k},\mathbf{k}') = \frac{1}{L_x} \int_{L_x} [\hat{\varepsilon}_y(x)]^{-1}(k_y,k'_y) \exp[-i(k_x-k_x')x] dx. \\
+\end{array}
+\end{equation}
+This added complexity over using only the matrix $\hat{\varepsilon}$ is to ensure the correct handling of the boundary condition when discontinuous filed are involved.
 
-\end{align}
+To get the propagating solution inside the structure we have to solve an eigenvalue problem. To do this we combine the two first-order equation \ref{eq:def_F} and \ref{eq:def_G} into the second-order form:
+\begin{equation}
+-\frac{1}{k_0^2} \partial_z^2 \left[ \begin{array}{c} E_x \\ E_y \end{array} \right] = FG \left[ \begin{array}{c} E_x \\ E_y \end{array} \right]
+\end{equation}
+which, when assuming for the $z$ dependence the form $e^{i\gamma z}$, can be cast in the final eigenvalue problem:
+\begin{equation}
+FG \left[ \begin{array}{c} E_x \\ E_y \end{array} \right] = \frac{\gamma^2}{k_0^2} \left[ \begin{array}{c} E_x \\ E_y \end{array} \right]
+\end{equation}
+Solve this this eigenvalue problem gives a collection of $2N$ eigenvalues (representing the propagation constants of the modes) and $2N$ eigenvectors (representing the coefficient of the Fourier expansion for the electric filed). The eigenvectors corresponding to the magnetic field are obtained from the electric ones using a reformulation of eq. \ref{eq:def_G}:
+\begin{equation}
+\left[ \begin{array}{c} H_x \\ H_y \end{array} \right]_n = \frac{k_0}{\gamma} G \left[ \begin{array}{c} E_x \\ E_y \end{array} \right]_n
+\end{equation}
+where we chose the branch in which $Re[\gamma] + Im[\gamma]>0$ when taking the square root of $\gamma^2$, and eliminating the possibility of $\gamma=0$.
+Assuming now a new notation, in which we use $E$ to indicate the $2N$ vector containing Fourier expansion of the electric field for both polarization:
+\begin{equation}
+E = \left[ \begin{array}{c} E_x \\ E_y \end{array} \right]
+\end{equation} 
+and similar for the magnetic field, we can indicate with $\tilde{E}$ and $\tilde{H}$ the $2N \times 2N$ matrices containing the eigenvector of the electric and magnetic filed, respectively. 
+
+If we now assume that the filed in the layer is composed by a superposition of propagating forward and backward modes, which coefficient are stored in the $2N$ vectors $u$ and $d$, respectively, we can relate the Fourier expansion of the fields at position $z$ to the modes expansion as:
+\begin{equation}
+\left[ \begin{array}{c} E \\ H \\ \end{array} \right] (z) = 
+\left[ \begin{array}{cc} \tilde{E} & \tilde{E} \\ \tilde{H} & -\tilde{H} \\ \end{array} \right] \times
+\left[ \begin{array}{cc} e^{i\Gamma z} & 0 \\ 0 & e^{-i\Gamma z} \\ \end{array} \right] \times
+\left[ \begin{array}{c} u \\ d \\ \end{array} \right]
+\end{equation}
+Where we have indicated with $\Gamma$ the $2N$ vector containing the collection of the propagation constant $\gamma$ of the modes. Once the Fourier coefficient of the fields are known, the spatial profile is recovered with eq. \ref{eq_Fourier_exp}.
+
+\section{Scattering matrix formulation}
+The Scattering Matrix algorithm is a very commonly used to solve linear systems involving Maxwell equations. In this kind of approach the structure to be solved is represented as a stack of layers that can be periodically patterned. The only geometric constraint is that the the patterning of the various layers has to be on the same lattice (for the present formulation in fact it has to be a square or rectangular lattice). The algorithms (see also Fig. ) expands the fields in each layer as a superposition of backward and forward propagating modes, then, recursively enforcing the boundary conditions at each interface, can link the outgoing and incoming modes in the first and last layer by a simple matrix:
+\begin{equation}
+\left[ \begin{array}{c} u_n \\ d_0 \\ \end{array} \right] = 
+\left[ \begin{array}{cc} S_{11} & S_{12} \\ S_{21} & S_{22} \\ \end{array} \right]
+\left[ \begin{array}{c} u_0 \\ d_n \\ \end{array} \right]
+\end{equation}
+
+\begin{figure}
+\centering
+\includegraphics[width=0.25\textwidth]{figures/multilayer.pdf}
+\caption{Schematic representation of the structure assumed by the scattering }
+\end{figure}
+
+
+
+
+
 
 \chapter{Reference Guide}
 In this chapter a detailed explanation of the module is provided. For each sub-module a summary of the classes and function involved can be found, together with details on the most common functions.
