@@ -144,7 +144,6 @@ class layer:
 #                print 'Warining: negative imaginary part'
             if np.any(np.abs(self.gamma)<=0.0):
                 print 'Warining: gamma=0'
-            
             self.VH=np.dot(self.GH,self.V/self.gamma)
         else:
             self.W=linalg.eigvals(self.M)
@@ -374,6 +373,34 @@ class layer:
         [VEx,VEy]=np.split(self.V,2)
         [VHx,VHy]=np.split(self.VH,2)
         self.P_norm=np.sum(VEx*np.conj(VHy)-VEy*np.conj(VHx),0).real
+
+
+    def get_Poyinting_norm(self):
+        [VEx,VEy]=np.split(self.V,2)
+        [VHx,VHy]=np.conj(np.split(self.VH,2))        
+        self.PP_norm=np.zeros((2*self.D,2*self.D),dtype=complex)
+        for i in range(self.D):
+            VEX,VHY=np.meshgrid(VEx[i,:],VHy[i,:])
+            VEY,VHX=np.meshgrid(VEy[i,:],VHx[i,:])
+            P1=np.multiply(VEX,VHY)
+            P2=-np.multiply(VEY,VHX)
+            P=np.add(P1,P2)
+            self.PP_norm=np.add(self.PP_norm,P)
+        #print self.PP_norm
+            
+    def get_Poynting(self,u,d):
+        #    d=np.zeros(self.D,dtype=complex)
+        self.get_Poyinting_norm()
+        Cn=np.add(u,d)
+        Cnp=np.add(u,-d)
+        [Cn,Cnp]=np.meshgrid(Cn,np.conj(Cnp))
+        C=np.multiply(Cn,Cnp)
+        PP=np.multiply(C,self.PP_norm)
+        return np.sum(PP).real
+
+
+
+                    
     
  
     def T_interface(self,lay):
@@ -446,8 +473,8 @@ class layer_num(layer):
         self.INV=linalg.inv(self.FOUP)
 
         #Still to be defined
-        self.EPS1=sub.num_fou_xy(self.func,self.args,self.Nx,self.Ny,self.G,NX=1024,NY=1024,Nyx=self.Nyx)
-        self.EPS2=sub.num_fou_yx(self.func,self.args,self.Nx,self.Ny,self.G,NX=1024,NY=1024,Nyx=self.Nyx)
+        self.EPS1=sub.num_fou_xy(self.func,self.args,self.Nx,self.Ny,self.G,NX=NX,NY=NY,Nyx=self.Nyx)
+        self.EPS2=sub.num_fou_yx(self.func,self.args,self.Nx,self.Ny,self.G,NX=NX,NY=NY,Nyx=self.Nyx)
         
 
         self.TX=False
@@ -667,6 +694,7 @@ class layer_uniform(layer):
             GH_12=[((1+0j)*(self.G[i][0]+kx)/k0)**2-self.eps for i in self.G]
             GH_21=[self.eps-((1+0j)*(self.G[i][1]+ky)/k0/self.Nyx)**2 for i in self.G]
             self.GH=np.vstack([np.hstack([np.diag(GH_11),np.diag(GH_12)]),np.hstack([np.diag(GH_21),np.diag(GH_22)])])
+            self.VH=np.dot(self.GH,self.V/self.gamma)
 
 
 
