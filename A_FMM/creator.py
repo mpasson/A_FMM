@@ -3,8 +3,6 @@ from scipy import linalg
 import matplotlib.pyplot as plt
 import sub_sm as sub
 from matplotlib.backends.backend_pdf import PdfPages
-from docopt import docopt
-
 
 class creator:
     def __init__(self,x_list=[],y_list=[],eps_lists=[]):
