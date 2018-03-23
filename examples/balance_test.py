@@ -14,8 +14,9 @@ d=[0.0,0.2,0.0]
 st=A_FMM.stack(mat,d)
 st.count_interface()
 
-for l in np.linspace(0.1,0.9,500):
-    st.solve(1.0/l)
+l=0.5
+for k in np.linspace(0.01,0.99,500):
+    st.solve(1.0/l,kx=k/l)
     RE=st.get_R(0,0,ordered='no')
     RM=st.get_R(1,1,ordered='no')
     TE=st.get_T(0,0,ordered='no')
@@ -24,4 +25,4 @@ for l in np.linspace(0.1,0.9,500):
     [P1E,P2E,AE]=st.get_energybalance(u)
     u=[0.0,1.0]
     [P1M,P2M,AM]=st.get_energybalance(u)
-    print 12*'%8.4f' % (l,0,RE,TE,P1E,P2E,AE,RM,TM,P1M,P2M,AM)
+    print 12*'%8.4f' % (l,k,RE,TE,P1E,P2E,AE,RM,TM,P1M,P2M,AM)
