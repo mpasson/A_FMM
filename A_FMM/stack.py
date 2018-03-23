@@ -206,6 +206,16 @@ class stack:
             dic[self.N-1]=P
         return dic
 
+    def get_energybalance(self,u,d=None):
+        u1,d2=np.zeros((2*self.NPW),complex),np.zeros((2*self.NPW),complex)
+        u1=u
+        if d!=None:
+            d2=d
+        (u2,d1)=self.S.output(u1,d2)
+        P1=self.layers[0].get_Poynting(u1,d1)
+        P2=self.layers[-1].get_Poynting(u2,d2)
+        return [P1,P2,P1-P2]
+
     def get_inout(self,u,d=None):
         u1,d2=np.zeros((2*self.NPW),complex),np.zeros((2*self.NPW),complex)
         u1=u
