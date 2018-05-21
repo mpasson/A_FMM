@@ -209,10 +209,11 @@ class stack:
     def get_energybalance(self,u,d=None):
         u1,d2,e=np.zeros((2*self.NPW),complex),np.zeros((2*self.NPW),complex),np.zeros((2*self.NPW),complex)
         u1=u
-        if d!=None:
-            d2=d
-        (u2,d1)=self.S.output(u1,d2)
         PN=self.layers[0].get_Poynting(u1,e)
+        if d is not None:
+            d2=d
+            PN-=self.layers[-1].get_Poynting(e,d2)
+        (u2,d1)=self.S.output(u1,d2)
         P1=self.layers[0].get_Poynting(u1,d1)
         P2=self.layers[-1].get_Poynting(u2,d2)
         return [P1/PN,P2/PN,(P1-P2)/PN]
@@ -225,13 +226,10 @@ class stack:
         (u2,d1)=self.S.output(u1,d2)
         dic={}        
         P=self.layers[0].get_Poynting(u1,d1)
-        dic['in']=(u1,d1,P)
+        dic['top']=(u1,d1,P)
         P=self.layers[-1].get_Poynting(u2,d2)
-        dic['out']=(u2,d2,P)
+        dic['bottom']=(u2,d2,P)
         return dic
-
-
-
 
     def get_R(self,i,j,ordered='yes'):
         return self.S.get_R(i,j,self.layers[0],ordered=ordered)
