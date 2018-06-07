@@ -33,6 +33,11 @@ class creator:
         self.y_list=[-0.5,-0.5*h,-0.5*h+y_offset,-0.5*h+t+y_offset,0.5*h]
         self.eps_lists=[[eps_uc,eps_lc,eps_lc,eps_core,eps_uc],[eps_uc,eps_lc,eps_core,eps_core,eps_core]]
 
+    def ridge_double(self,eps_core,eps_lc,eps_uc,w1,w2,h,t1,t2,y_offset=0.0,x_offset=0.0):
+        self.x_list=[-0.5*w2+x_offset,-0.5*w1+x_offset,0.5*w1+x_offset,0.5*w2+x_offset]
+        self.y_list=[-0.5,-0.5*h,-0.5*h+y_offset,-0.5*h+t2+y_offset,-0.5*h+t1+y_offset,0.5*h]
+        self.eps_lists=[[eps_uc,eps_lc,eps_lc,eps_core,eps_uc,eps_uc],[eps_uc,eps_lc,eps_lc,eps_core,eps_core,eps_uc],[eps_uc,eps_lc,eps_core,eps_core,eps_core,eps_core],[eps_uc,eps_lc,eps_lc,eps_core,eps_core,eps_uc]]
+
     def rect(self,eps_core,eps_clad,w,h,off_x=0.0,off_y=0.0):
         self.x_list=[-0.5*w+off_x,0.5*w+off_x]
         self.y_list=[-0.5*h+off_y,0.5*h+off_y]
