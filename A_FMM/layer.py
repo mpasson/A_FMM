@@ -459,7 +459,7 @@ class layer_ani_diag(layer):
 
 
 class layer_num(layer):
-    def __init__(self,Nx,Ny,func,args=(),Nyx=1.0,NX=1024,NY=1024):
+    def __init__(self,Nx,Ny,func,args=(),Nyx=1.0,NX=2048,NY=2048):
         self.Nx=Nx
         self.Ny=Ny
         self.G=sub.createG(self.Nx,self.Ny)
@@ -467,14 +467,16 @@ class layer_num(layer):
         self.Nyx=Nyx
         self.func=func
         self.args=args
+        self.NX=NX
+        self.NY=NY
         #print args
         
-        self.FOUP=sub.num_fou(func,args,self.G,NX=NX,NY=NY,Nyx=self.Nyx)
+        self.FOUP=sub.num_fou(func,args,self.G,NX,NY,self.Nyx)
         self.INV=linalg.inv(self.FOUP)
 
         #Still to be defined
-        self.EPS1=sub.num_fou_xy(self.func,self.args,self.Nx,self.Ny,self.G,NX=NX,NY=NY,Nyx=self.Nyx)
-        self.EPS2=sub.num_fou_yx(self.func,self.args,self.Nx,self.Ny,self.G,NX=NX,NY=NY,Nyx=self.Nyx)
+        self.EPS1=sub.num_fou_xy(self.func,self.args,self.Nx,self.Ny,self.G,NX,NY,self.Nyx)
+        self.EPS2=sub.num_fou_yx(self.func,self.args,self.Nx,self.Ny,self.G,NX,NY,self.Nyx)
         
 
         self.TX=False
@@ -482,15 +484,16 @@ class layer_num(layer):
 
 
     def eps_plot(self,pdf=None,N=200,s=1.0):
-        [X,Y]=np.meshgrid(np.linspace(-s*0.5,s*0.5,s*N),np.linspace(-s*0.5,s*0.5,int(s*N*self.Nyx)))
-        [XX,YY]=np.meshgrid(np.linspace(-0.5,0.5,1024),np.linspace(-0.5,0.5,1024))
+        [X,Y]=np.meshgrid(np.linspace(-s*0.5,s*0.5,s*N),np.linspace(-s*0.5,s*0.5,s*N))
+        [YY,XX]=np.meshgrid(np.linspace(-0.5,0.5,self.NY),np.linspace(-0.5,0.5,self.NX))
         #F=self.func(XX,YY)
-        F=self.func(XX % 1.0-0.5,(YY % 1.0-0.5)/self.Nyx,*self.args)
-        FOU=np.fft.fft2(F)/1024.0/1024.0
+        F=self.func(XX,YY/self.Nyx,*self.args)
+        F=np.fft.fftshift(F)
+        FOU=np.fft.fft2(F)/self.NX/self.NY
         EPS=np.zeros((N,N),complex)
         EPS=sum([FOU[self.G[i][0],self.G[i][1]]*np.exp((0+2j)*np.pi*(self.G[i][0]*X+self.G[i][1]*Y)) for i in range(self.D)])
         plt.figure()
-        plt.imshow(np.real(EPS),extent=[-s*0.5,s*0.5,-self.Nyx*s*0.5,self.Nyx*s*0.5])
+        plt.imshow(np.real(EPS),origin='lower',extent=[-s*0.5,s*0.5,-self.Nyx*s*0.5,self.Nyx*s*0.5])
         plt.colorbar()
         if (pdf==None):
             plt.show()
@@ -505,10 +508,11 @@ class layer_num(layer):
         save=PdfPages(name+'.pdf')
 
         [X,Y]=np.meshgrid(np.linspace(-s*0.5,s*0.5,s*N),np.linspace(-s*0.5,s*0.5,s*N))
-        [XX,YY]=np.meshgrid(np.linspace(-0.5,0.5,1024),np.linspace(-0.5,0.5,1024))
+        [YY,XX]=np.meshgrid(np.linspace(-0.5,0.5,self.NY),np.linspace(-0.5,0.5,self.NX))
         #F=self.func(XX,YY)
-        F=self.func(XX % 1.0-0.5,(YY % 1.0-0.5)/self.Nyx,*self.args)
-        FOU=np.fft.fft2(F)/1024.0/1024.0
+        F=self.func(XX,YY/self.Nyx,*self.args)
+        F=np.fft.fftshift(F)
+        FOU=np.fft.fft2(F)/self.NX/self.NY
         EPS=np.zeros((N,N),complex)
         EPS=sum([FOU[self.G[i][0],self.G[i][1]]*np.exp((0+2j)*np.pi*(self.G[i][0]*X+self.G[i][1]*Y)) for i in range(self.D)])
 
