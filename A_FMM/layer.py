@@ -61,7 +61,7 @@ class layer:
         EPS=sum([sub.fou(self.G[i][0],self.G[i][1],self.creator.x_list,self.creator.y_list,self.creator.eps_lists)*np.exp((0+2j)*np.pi*(self.G[i][0]*X+self.G[i][1]*Y)) for i in range(self.D)])
         plt.figure()
         #plt.imshow(np.real(EPS),aspect='auto',extent=[-s*0.5,s*0.5,-self.Nyx*s*0.5,self.Nyx*s*0.5])
-        plt.imshow(np.real(EPS),extent=[-s*0.5,s*0.5,-self.Nyx*s*0.5,self.Nyx*s*0.5])
+        plt.imshow(np.real(EPS),extent=[-s*0.5,s*0.5,-self.Nyx*s*0.5,self.Nyx*s*0.5],origin='lower')
         plt.colorbar()
         if (pdf==None):
             plt.show()
@@ -593,7 +593,7 @@ class layer_uniform(layer):
         [X,Y]=np.meshgrid(np.linspace(-s*0.5,s*0.5,s*N),np.linspace(-s*0.5,s*0.5,s*N))
         EPS=np.zeros(np.shape(X))+self.eps.real
         plt.figure()
-        plt.imshow(np.real(EPS),extent=[-s*0.5,s*0.5,-self.Nyx*s*0.5,self.Nyx*s*0.5])
+        plt.imshow(np.real(EPS),extent=[-s*0.5,s*0.5,-self.Nyx*s*0.5,self.Nyx*s*0.5],origin='lower')
         plt.colorbar()
         if (pdf==None):
             plt.show()
