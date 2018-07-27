@@ -20,7 +20,7 @@ ridge=A_FMM.layer(Nx,Ny,cr)
 ridge.trasform(ex=0.8,ey=0.8)
 ridge.eps_plot('ridge')
 
-
+'''
 for k0 in k0_l:
     ridge.mode(k0)
     neff=np.sort(ridge.gamma)[-10:]
@@ -70,3 +70,11 @@ a=PdfPages('k='+str(k0)+'.pdf')
 for i in range(1,11):
     ridge.plot_field(a,i)
 a.close()
+'''
+
+k0=0.763359    
+ridge.mode(k0)
+ridge.write_field(2,N=500)
+
+
+

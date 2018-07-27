@@ -325,6 +325,29 @@ class layer:
         plt.close()
 
 
+    def write_field(self,i,N=100,func=np.abs):
+        j=np.argsort(self.W)[-i]
+        [X,Y]=np.meshgrid(np.linspace(-0.5,0.5,N),np.linspace(-0.5,0.5,N))
+        [WEx,WEy]=np.split(self.V[:,j],2)
+        [WHx,WHy]=np.split(self.VH[:,j],2)
+        Ex,Ey=np.zeros((N,N),dtype='complex'),np.zeros((N,N),dtype='complex')
+        Hx,Hy=np.zeros((N,N),dtype='complex'),np.zeros((N,N),dtype='complex')
+        for i in range(self.D):
+            EXP=np.exp((0+2j)*np.pi*((self.G[i][0]+self.kx)*X+(self.G[i][1]+self.ky)*Y))
+#            Ex+=WEx[i]*EXP
+#            Ey+=WEy[i]*EXP
+#            Hx+=WHx[i]*EXP
+#            Hy+=WHy[i]*EXP
+            Ex=np.add(Ex,np.dot(WEx[i],EXP))
+            Ey=np.add(Ey,np.dot(WEy[i],EXP))
+            Hx=np.add(Hx,np.dot(WHx[i],EXP))
+            Hy=np.add(Hy,np.dot(WHy[i],EXP))
+        for i in range(N):    
+            for j in range(N):
+                print 6*'%12.6f' % (X[i,j],Y[i,j],func(Ex[i,j]),func(Ey[i,j]),func(Hx[i,j]),func(Hy[i,j]))
+            print ''
+
+
     def get_field(self,x,y,i,func=np.abs):
         j=np.argsort(self.W)[-i]
         [WEx,WEy]=np.split(self.V[:,j],2)
