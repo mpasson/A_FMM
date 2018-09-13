@@ -738,7 +738,8 @@ class layer_empty_st(layer):
         self.TY=False
 
         self.FOUP=np.zeros((self.D,self.D),dtype=complex)
-        self.INV=np.zeros((self.D,self.D),dtype=complex)
+        #self.INV=np.zeros((self.D,self.D),dtype=complex)
+        self.INV=linalg.inv(np.eye(self.D,dtype=complex))
         self.EPS1=np.zeros((self.D,self.D),dtype=complex)
         self.EPS2=np.zeros((self.D,self.D),dtype=complex)
 
