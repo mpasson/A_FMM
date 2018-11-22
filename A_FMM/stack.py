@@ -73,14 +73,14 @@ class stack:
             lay.mat_plot('layer_%i' % (n),N=N,s=s)
             n+=1
 
-    def plot_stack(self,nome='cross_section_X',N=100,dx=0.01,y=0.0,func=np.abs):
+    def plot_stack(self,nome='cross_section_X',N=100,dz=0.01,y=0.0,func=np.abs):
         nome=nome+'_y=%3.2f.pdf' % (y)
         X=np.linspace(-0.5,0.5,N)
         EPS=[]
         for (lay,d) in zip(self.layers,self.d):
             #EPSt=sum([sub.fou(lay.G[i][0],lay.G[i][1],lay.creator.x_list,lay.creator.y_list,lay.creator.eps_lists)*np.exp((0+2j)*np.pi*(lay.G[i][0]*X+lay.G[i][1]*y)) for i in range(lay.D)])
             EPSt=sum([lay.FOUP[i,lay.D/2]*np.exp((0+2j)*np.pi*(lay.G[i][0]*X+lay.G[i][1]*y)) for i in range(lay.D)])
-            for i in range(int(d/dx)):
+            for i in range(int(d/dz)):
                 EPS.append(EPSt)
         EPS=np.array(EPS)
         out=PdfPages(nome)
@@ -92,18 +92,18 @@ class stack:
         out.close()
 
 
-    def plot_stack_y(self,nome='cross_section_Y',N=100,dx=0.01,x=0.0):
+    def plot_stack_y(self,nome='cross_section_Y',N=100,dz=0.01,x=0.0,func=np.abs):
         nome=nome+'_y=%3.2f.pdf' % (x)
         Y=np.linspace(-0.5,0.5,N)
         EPS=[]
         for (lay,d) in zip(self.layers,self.d):
             EPSt=sum([sub.fou(lay.G[i][0],lay.G[i][1],lay.creator.x_list,lay.creator.y_list,lay.creator.eps_lists)*np.exp((0+2j)*np.pi*(lay.G[i][0]*x+lay.G[i][1]*Y)) for i in range(lay.D)])
-            for i in range(int(d/dx)):
+            for i in range(int(d/dz)):
                 EPS.append(EPSt)
         EPS=np.array(EPS)
         out=PdfPages(nome)
         plt.figure()
-        plt.imshow(np.abs(EPS).T,origin='lower',extent=[0.0,sum(self.d),-0.5,0.5])
+        plt.imshow(func(EPS).T,origin='lower',extent=[0.0,sum(self.d),-0.5,0.5])
         plt.colorbar()
         out.savefig()
         plt.close()

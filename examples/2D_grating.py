@@ -30,7 +30,8 @@ cr=A_FMM.creator()
 
 #Computational cell for the layer is assumed 1D with period of 650 nanometers, only NX is set
 NX,NY=3,3
-k0=0.65/1.55 #Setting energy (in unit of period/lambda) (lambda_0=1.55 microns)
+theta_l=np.linspace(0.0,89.0,90)    # Setting vector of angles
+k0_l=np.linspace(0.9,1.1,201)       # Setting vector of wavelenght
 
 #Creting layers involved in structure
 cr.slab(2.0,2.0,2.0,0.5)       #Setting creator for Silicon Oxide
@@ -49,17 +50,10 @@ st.count_interface()                         #Calling count_interface, always do
 st.plot_stack()                              #Plotting stack epsilon
 Pat.eps_plot('Pat')                          #Plotting horizontal cross-section of patterned region
 
-
-theta_l=np.linspace(0.0,89.0,90)    # Setting vector of angles
-k0_l=np.linspace(0.9,1.1,201)       # Setting vector of wavelenght
-
 #Possible printing of G to see diffraction orders
 #for g in SiO.G:
 #    print g,SiO.G[g][0],SiO.G[g][1]
 
-
-
-#for theta in theta_l:
 for l in k0_l:
     for theta in theta_l:
         k0=0.65/l                                                          # Setting k0 as P/lambda

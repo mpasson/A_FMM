@@ -1,5 +1,7 @@
 # Calculate reflection and transmission for TE and TM for 1D PhC slab
 # Structure as following
+#
+#
 #  |                              |       Data   
 #  |        Silicon Oxide         |       Period:              650 nm
 #  |        (epsilon=2.0)         |       Si Thickness:        220 nm
@@ -27,8 +29,9 @@ import A_FMM
 cr=A_FMM.creator()
 
 #Computational cell for the layer is assumed 1D with period of 650 nanometers, only NX is set
-NX=20
-k0=0.65/1.55 #Setting energy (in unit of period/lambda) (lambda_0=1.55 microns)
+NX=20                               # Setting X truncation order
+theta_l=np.linspace(0.0,85.0,86)    # Setting vector of angles
+k0_l=np.linspace(0.9,1.1,201)       # Setting vector of wavelenght
 
 #Creting layers involved in structure
 cr.slab(2.0,2.0,2.0,0.5)       #Setting creator for Silicon Oxide
@@ -46,18 +49,10 @@ st=A_FMM.stack(mat,d)                        #Creating stack
 st.count_interface()                         #Calling count_interface, always do this right after stack creation
 st.plot_stack()                              #Plotting stack epsilon
 
-
-
-theta_l=np.linspace(0.0,85.0,86)    # Setting vector of angles
-k0_l=np.linspace(0.9,1.1,201)       # Setting vector of wavelenght
-
-#Possible printing of G to see diffraction orders
+#Possible printing of G to see diffraction orderr
 #for g in SiO.G:
 #    print g,SiO.G[g][0],SiO.G[g][1]
 
-
-
-#for theta in theta_l:
 for l in k0_l:
     for theta in theta_l:
         k0=0.65/l                                                          # Setting k0 as P/lambda

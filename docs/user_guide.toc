@@ -1,0 +1,21 @@
+\select@language {english}
+\contentsline {chapter}{\numberline {1}Algorithm}{2}
+\contentsline {chapter}{\numberline {2}The software}{7}
+\contentsline {section}{\numberline {2.1}examples}{7}
+\contentsline {subsection}{\numberline {2.1.1}Mode of a slab waveguide}{7}
+\contentsline {subsection}{\numberline {2.1.2}Mode of a ridge waveguide}{7}
+\contentsline {subsection}{\numberline {2.1.3}Reflection and transmission of a 1D grating. Wavelenght and angle}{7}
+\contentsline {subsection}{\numberline {2.1.4}Reflection and transmission of a 1D grating. Wavelenght and angle}{8}
+\contentsline {subsection}{\numberline {2.1.5}PML implementation test: reflection and transmission in waveguide}{9}
+\contentsline {chapter}{\numberline {3}Reference Guide}{10}
+\contentsline {section}{\numberline {3.1}Module composition}{10}
+\contentsline {section}{\numberline {3.2}S\_matrix class}{10}
+\contentsline {subsection}{\numberline {3.2.1}Initialization}{10}
+\contentsline {subsection}{\numberline {3.2.2}Method}{11}
+\contentsline {section}{\numberline {3.3}Layer Class}{11}
+\contentsline {subsection}{\numberline {3.3.1}Initialization}{11}
+\contentsline {subsection}{\numberline {3.3.2}Fundamental Methods}{12}
+\contentsline {section}{\numberline {3.4}Stack Class}{14}
+\contentsline {subsection}{\numberline {3.4.1}Initialization}{14}
+\contentsline {subsection}{\numberline {3.4.2}Fundamental Methods}{14}
+\contentsline {subsection}{\numberline {3.4.3}Manipulation methods}{16}
