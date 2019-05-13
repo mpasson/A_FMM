@@ -6,3 +6,4 @@
 *.aux
 examples/*.pdf
 test*
+examples/slow_mod

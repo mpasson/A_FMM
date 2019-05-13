@@ -13,6 +13,13 @@
 \author{Marco Passoni}
 \date{}
 
+
+\newenvironment{absolutelynopagebreak}
+  {\par\nobreak\vfil\penalty0\vfilneg
+   \vtop\bgroup}
+  {\par\xdef\tpd{\the\prevdepth}\egroup
+   \prevdepth=\tpd}
+
 \begin{document}
 
 \maketitle
@@ -300,6 +307,60 @@ The A-FMM module in turn composed by different submodules:
 \item satck module: Contain the stack class, used to calculate the Scattering Matrix and related quantities of the hole structure. It is initialize from a collection of layer instances.
 \item sub\_sm module: Contains auxiliary function that are called in more than one module. It is non loaded by default when loading A\_FMM.
 \end{itemize}
+
+\section{Creator class}
+This section contains the predefined structure for the layer class. The usage of the creator class is as follows:
+\begin{enumerate}
+\item A instance of the creator class is created as \texttt{cr=A\_FMM.creator()};
+\item One of the predefined structure is created calling the corresponding function (es. \texttt{cr.slab(eps\_core, eps\_lc,eps\_uc,w)});
+\item The creator object is fed in the initialization of a layer instance. 
+\end{enumerate}
+
+The predefined structure are the following. The name of the structure is the title (all lowercase). The argument to be passed to the function are described for each one. The order is the one in which they appear in the guide. Here in the guide the parameters are classified eps, geo or op. The eps are dielectric constant, while the geo are geometrical parameter. The op parameters are optional and can be omitted, in which case the default values are chose. For each structure two figures are included, one with only the non optional parameter, the other one with everything.
+
+
+\begin{absolutelynopagebreak}
+\paragraph{Slab}
+\begin{itemize}[noitemsep,topsep=0pt,parsep=0pt,partopsep=0pt]
+\item \texttt{[eps] eps\_core}
+\item \texttt{[eps] eps\_lc}
+\item \texttt{[eps] eps\_uc}
+\item \texttt{[geo] w}
+\item \texttt{[op] offset (default 0.0)} 
+\end{itemize}
+\includegraphics[width=\textwidth]{figures/cr_slab.pdf}
+\end{absolutelynopagebreak}
+
+\begin{absolutelynopagebreak}
+\paragraph{Rect}
+\begin{itemize}[noitemsep,topsep=0pt,parsep=0pt,partopsep=0pt]
+\item \texttt{[eps] eps\_core}
+\item \texttt{[eps] eps\_clad}
+\item \texttt{[geo] w}
+\item \texttt{[geo] h}
+\item \texttt{[op] off\_x (default 0.0)} 
+\item \texttt{[op] off\_y (default 0.0)} 
+\end{itemize}
+\includegraphics[width=\textwidth]{figures/cr_rect.pdf}
+\end{absolutelynopagebreak}
+
+\begin{absolutelynopagebreak}
+\paragraph{Ridge}
+\begin{itemize}[noitemsep,topsep=0pt,parsep=0pt,partopsep=0pt]
+\item \texttt{[eps] eps\_core}
+\item \texttt{[eps] eps\_lc}
+\item \texttt{[eps] eps\_uc}
+\item \texttt{[geo] w}
+\item \texttt{[geo] h}
+\item \texttt{[geo] t}
+\item \texttt{[op] x\_offset (default 0.0)} 
+\item \texttt{[op] y\_offset (default 0.0)} 
+\end{itemize}
+\includegraphics[width=\textwidth]{figures/cr_ridge.pdf}
+\end{absolutelynopagebreak}
+
+\newpage
+
 
 \section{S\_matrix class}
 \subsection{Initialization}

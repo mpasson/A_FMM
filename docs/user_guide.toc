@@ -9,13 +9,17 @@
 \contentsline {subsection}{\numberline {2.1.5}PML implementation test: reflection and transmission in waveguide}{9}
 \contentsline {chapter}{\numberline {3}Reference Guide}{10}
 \contentsline {section}{\numberline {3.1}Module composition}{10}
-\contentsline {section}{\numberline {3.2}S\_matrix class}{10}
-\contentsline {subsection}{\numberline {3.2.1}Initialization}{10}
-\contentsline {subsection}{\numberline {3.2.2}Method}{11}
-\contentsline {section}{\numberline {3.3}Layer Class}{11}
-\contentsline {subsection}{\numberline {3.3.1}Initialization}{11}
-\contentsline {subsection}{\numberline {3.3.2}Fundamental Methods}{12}
-\contentsline {section}{\numberline {3.4}Stack Class}{14}
+\contentsline {section}{\numberline {3.2}Creator class}{10}
+\contentsline {paragraph}{Slab}{11}
+\contentsline {paragraph}{Rect}{12}
+\contentsline {paragraph}{Ridge}{12}
+\contentsline {section}{\numberline {3.3}S\_matrix class}{13}
+\contentsline {subsection}{\numberline {3.3.1}Initialization}{13}
+\contentsline {subsection}{\numberline {3.3.2}Method}{13}
+\contentsline {section}{\numberline {3.4}Layer Class}{14}
 \contentsline {subsection}{\numberline {3.4.1}Initialization}{14}
 \contentsline {subsection}{\numberline {3.4.2}Fundamental Methods}{14}
-\contentsline {subsection}{\numberline {3.4.3}Manipulation methods}{16}
+\contentsline {section}{\numberline {3.5}Stack Class}{16}
+\contentsline {subsection}{\numberline {3.5.1}Initialization}{16}
+\contentsline {subsection}{\numberline {3.5.2}Fundamental Methods}{17}
+\contentsline {subsection}{\numberline {3.5.3}Manipulation methods}{18}
