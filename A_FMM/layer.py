@@ -325,7 +325,7 @@ class layer:
         plt.close()
 
 
-    def write_field(self,i,N=100,func=np.abs):
+    def write_field(self,i,filename='field.out',N=100,func=np.abs):
         j=np.argsort(self.W)[-i]
         [X,Y]=np.meshgrid(np.linspace(-0.5,0.5,N),np.linspace(-0.5,0.5,N))
         [WEx,WEy]=np.split(self.V[:,j],2)
@@ -342,10 +342,57 @@ class layer:
             Ey=np.add(Ey,np.dot(WEy[i],EXP))
             Hx=np.add(Hx,np.dot(WHx[i],EXP))
             Hy=np.add(Hy,np.dot(WHy[i],EXP))
+        f=open(filename,'w')
+        f.write('#    x           y          Ex          Ey          Hx          Hy \n')
         for i in range(N):    
             for j in range(N):
-                print 6*'%12.6f' % (X[i,j],Y[i,j],func(Ex[i,j]),func(Ey[i,j]),func(Hx[i,j]),func(Hy[i,j]))
-            print ''
+                #print 6*'%12.6f' % (X[i,j],Y[i,j],func(Ex[i,j]),func(Ey[i,j]),func(Hx[i,j]),func(Hy[i,j]))
+                f.write(6*'%12.6f' % (X[i,j],Y[i,j],func(Ex[i,j]),func(Ey[i,j]),func(Hx[i,j]),func(Hy[i,j])) + '\n')
+            #print ''
+            f.write('\n')
+        f.close()
+
+    def writeE(self,i,filename='fieldE.out',N=100):
+        j=np.argsort(self.W)[-i]
+        [X,Y]=np.meshgrid(np.linspace(-0.5,0.5,N),np.linspace(-0.5,0.5,N))
+        [WEx,WEy]=np.split(self.V[:,j],2)
+        [WHx,WHy]=np.split(self.VH[:,j],2)
+        Ex,Ey=np.zeros((N,N),dtype='complex'),np.zeros((N,N),dtype='complex')
+        for i in range(self.D):
+            EXP=np.exp((0+2j)*np.pi*((self.G[i][0]+self.kx)*X+(self.G[i][1]+self.ky)*Y))
+#            Ex+=WEx[i]*EXP
+#            Ey+=WEy[i]*EXP
+            Ex=np.add(Ex,np.dot(WEx[i],EXP))
+            Ey=np.add(Ey,np.dot(WEy[i],EXP))
+        f=open(filename,'w')
+        f.write('#    x           y          ReEx        ImEx        AbsEx       ReEy        ImEy        AbsEy \n')
+        for i in range(N):    
+            for j in range(N):
+                f.write(8*'%12.6f' % (X[i,j],Y[i,j],Ex[i,j].real,Ex[i,j].imag,abs(Ex[i,j]),Ey[i,j].real,Ey[i,j].imag,abs(Ey[i,j])) + '\n')
+            f.write('\n')
+        f.close()
+
+    def writeH(self,i,filename='fieldH.out',N=100):
+        j=np.argsort(self.W)[-i]
+        [X,Y]=np.meshgrid(np.linspace(-0.5,0.5,N),np.linspace(-0.5,0.5,N))
+        [WEx,WEy]=np.split(self.V[:,j],2)
+        [WHx,WHy]=np.split(self.VH[:,j],2)
+        Hx,Hy=np.zeros((N,N),dtype='complex'),np.zeros((N,N),dtype='complex')
+        for i in range(self.D):
+            EXP=np.exp((0+2j)*np.pi*((self.G[i][0]+self.kx)*X+(self.G[i][1]+self.ky)*Y))
+#            Ex+=WEx[i]*EXP
+#            Ey+=WEy[i]*EXP
+#            Hx+=WHx[i]*EXP
+#            Hy+=WHy[i]*EXP
+            Hx=np.add(Hx,np.dot(WHx[i],EXP))
+            Hy=np.add(Hy,np.dot(WHy[i],EXP))
+        f=open(filename,'w')
+        f.write('#    x           y          ReHx        ImHx        AbsHx       ReHy        ImHy        AbsHy \n')
+        for i in range(N):    
+            for j in range(N):
+                f.write(8*'%12.6f' % (X[i,j],Y[i,j],Hx[i,j].real,Hx[i,j].imag,abs(Hx[i,j]),Hy[i,j].real,Hy[i,j].imag,abs(Hy[i,j])) + '\n')
+            f.write('\n')
+        f.close()
 
 
     def get_field(self,x,y,i,func=np.abs):
@@ -361,6 +408,29 @@ class layer:
             Hx+=WHx[i]*EXP
             Hy+=WHy[i]*EXP
         return func(np.array([Ex,Ey,Hx,Hy]))
+
+    def get_field2(self,X,Y,i,func=np.abs):
+        if np.shape(X)!=np.shape(Y):
+            raise ValueError('X and Y arrays have different shapes')
+        j=np.argsort(self.W)[-i]
+        [WEx,WEy]=np.split(self.V[:,j],2)
+        [WHx,WHy]=np.split(self.VH[:,j],2)
+        Ex=np.zeros_like(X,dtype=complex)
+        Ey=np.zeros_like(X,dtype=complex)
+        Hx=np.zeros_like(X,dtype=complex)
+        Hy=np.zeros_like(X,dtype=complex)        
+        for i in range(self.D):
+            EXP=np.exp((0+2j)*np.pi*((self.G[i][0]+self.kx)*X+(self.G[i][1]+self.ky)*X))
+            Ex=np.add(Ex,np.dot(WEx[i],EXP))
+            Ey=np.add(Ey,np.dot(WEy[i],EXP))
+            Hx=np.add(Hx,np.dot(WHx[i],EXP))
+            Hy=np.add(Hy,np.dot(WHy[i],EXP))
+        return func(np.array([Ex,Ey,Hx,Hy]))
+        #Ex=func(Ex)
+        #Ey=func(Ey)
+        #Hx=func(Hx)
+        #Hy=func(Hy)
+        #return (Ex,Ey,Hx,Hy)
 
 
     def plot_Et(self,pdf,i,N=100,sx=1,sy=1,func=np.abs):
@@ -423,9 +493,6 @@ class layer:
 
 
 
-                    
-    
- 
     def T_interface(self,lay):
         T1=np.dot(linalg.inv(lay.V),self.V)
         T2=np.dot(linalg.inv(lay.VH),self.VH)

@@ -507,6 +507,71 @@ class stack:
         return None
 
 
+    def writeE(self,i=1,filename='field.out',dz=0.01,N=100,y=0.0,func=np.real,s=1,ordered='yes'):
+        f=open(filename,'w')
+        u1,d2=np.zeros((2*self.NPW),complex),np.zeros((2*self.NPW),complex)
+        if ordered=='yes':
+            u1[np.argsort(self.layers[0].W)[-i]]=1.0+0.0j
+        else:
+            u1[i]=1.0+0.0j
+        (u2,d1)=self.S.output(u1,d2)
+        x=np.linspace(-s*0.5,s*0.5,s*N)
+        ind=range(2*self.NPW)
+        [X,I]=np.meshgrid(x,ind)
+        Ex,Ey=[],[]
+        #first layer
+        lay=self.layers[0]
+        d=self.d[0]
+        Emx,Emy=np.zeros(np.shape(X),complex),np.zeros(np.shape(X),complex)
+        zz=0.0
+        for j in range(self.NPW):
+            Emx=np.add(Emx,lay.V[j,I]*np.exp((0.0+2.0j)*np.pi*((lay.G[j][0]+lay.kx)*X+(lay.G[j][1]+lay.ky)*y)))
+            Emy=np.add(Emy,lay.V[j+self.NPW,I]*np.exp((0.0+2.0j)*np.pi*((lay.G[j][0]+lay.kx)*X+(lay.G[j][1]+lay.ky)*y)))
+        for z in np.arange(-d,0.0,dz):
+            Em=np.add(u1*np.exp((0.0+2.0j)*np.pi*lay.k0*lay.gamma*z),d1*np.exp(-(0.0+2.0j)*np.pi*lay.k0*lay.gamma*z))
+            Ex=np.dot(Em,Emx)
+            Ey=np.dot(Em,Emy)
+            for i in range(len(x)):
+                f.write(8*'%12.6f' % (x[i],zz,Ex[i].real,Ex[i].imag,abs(Ex[i]),Ey[i].real,Ey[i].imag,abs(Ey[i]))+'\n')
+            f.write('\n')
+            zz+=dz
+        #intermediate layers
+        S1=copy.deepcopy(self.int_matrices[self.int_list.index(self.interfaces[0])])
+        for i in range(1,self.N-1):
+            S2=S_matrix(S1.N)
+            for l in range(i,self.N-1):
+                S2.add_uniform(self.layers[l],self.d[l])
+                S2.add(self.int_matrices[self.int_list.index(self.interfaces[l])])
+            (ul,dl)=S1.int_f(S2,u1)
+            Emx,Emy=np.zeros(np.shape(X),complex),np.zeros(np.shape(X),complex)
+            for j in range(self.NPW):
+                Emx=np.add(Emx,self.layers[i].V[j,I]*np.exp((0.0+2.0j)*np.pi*((self.layers[i].G[j][0]+self.layers[i].kx)*X+(self.layers[i].G[j][1]+self.layers[i].ky)*y)))
+                Emy=np.add(Emy,self.layers[i].V[j+self.NPW,I]*np.exp((0.0+2.0j)*np.pi*((self.layers[i].G[j][0]+self.layers[i].kx)*X+(self.layers[i].G[j][1]+self.layers[i].ky)*y)))
+            for z in np.arange(0.0,self.d[i],dz):
+                Em=np.add(ul*np.exp((0.0+2.0j)*np.pi*self.layers[i].k0*self.layers[i].gamma*z),dl*np.exp(-(0.0+2.0j)*np.pi*self.layers[i].k0*self.layers[i].gamma*z))
+                Ex=np.dot(Em,Emx)
+                Ey=np.dot(Em,Emy)
+                for ii in range(len(x)):
+                    f.write(8*'%12.6f' % (x[ii],zz,Ex[ii].real,Ex[ii].imag,abs(Ex[ii]),Ey[ii].real,Ey[ii].imag,abs(Ey[ii]))+'\n')
+                f.write('\n')
+                zz+=dz
+            S1.add_uniform(self.layers[i],self.d[i])
+            S1.add(self.int_matrices[self.int_list.index(self.interfaces[i])])
+        #last layer
+        lay=self.layers[-1]
+        d=self.d[-1]
+        Emx,Emy=np.zeros(np.shape(X),complex),np.zeros(np.shape(X),complex)
+        for j in range(self.NPW):
+            Emx=np.add(Emx,lay.V[j,I]*np.exp((0.0+2.0j)*np.pi*((lay.G[j][0]+lay.kx)*X+(lay.G[j][1]+lay.ky)*y)))
+            Emy=np.add(Emy,lay.V[j+self.NPW,I]*np.exp((0.0+2.0j)*np.pi*((lay.G[j][0]+lay.kx)*X+(lay.G[j][1]+lay.ky)*y)))
+        for z in np.arange(0.0,d,dz):
+            Em=np.add(u2*np.exp((0.0+2.0j)*np.pi*lay.k0*lay.gamma*z),d2*np.exp(-(0.0+2.0j)*np.pi*lay.k0*lay.gamma*z))
+            for i in range(len(x)):
+                f.write(8*'%12.6f' % (x[i],zz,Ex[i].real,Ex[i].imag,abs(Ex[i]),Ey[i].real,Ey[i].imag,abs(Ey[i]))+'\n')
+            f.write('\n')
+            zz+=dz
+        f.close()
+
     def plot_E_plane(self,i,jlay,z,N=100,pdf=None,pdfname=None,func=np.real,s=1,ordered='yes',title=None):
         u1,d2=np.zeros((2*self.NPW),complex),np.zeros((2*self.NPW),complex)
         if ordered=='yes':
@@ -688,6 +753,44 @@ class stack:
             out.close()
         return None
 
+    def writeE_periodic(self,ii,r=1,filename='fieldE.out',dz=0.01,N=100,y=0.0,s=1):
+        [u,d]=np.split(self.BV[:,ii],2)
+        d=d*self.BW[ii]
+        x=np.linspace(-s*0.5,s*0.5,s*N)
+        ind=range(2*self.NPW)
+        [X,I]=np.meshgrid(x,ind)
+        Ex,Ey=[],[]
+        #intermediate layers
+        S1=copy.deepcopy(self.int_matrices[self.int_list.index(self.interfaces[0])])
+        for i in range(1,self.N-1):
+            S2=S_matrix(S1.N)
+            for l in range(i,self.N-1):
+                S2.add_uniform(self.layers[l],self.d[l])
+                S2.add(self.int_matrices[self.int_list.index(self.interfaces[l])])
+            (ul,dl)=S1.int_complete(S2,u,d)
+            Emx,Emy=np.zeros(np.shape(X),complex),np.zeros(np.shape(X),complex)
+            for j in range(self.NPW):
+                Emx=np.add(Emx,self.layers[i].V[j,I]*np.exp((0.0+2.0j)*np.pi*((self.layers[i].G[j][0]+self.layers[i].kx)*X+(self.layers[i].G[j][1]+self.layers[i].ky)*y)))
+                Emy=np.add(Emy,self.layers[i].V[j+self.NPW,I]*np.exp((0.0+2.0j)*np.pi*((self.layers[i].G[j][0]+self.layers[i].kx)*X+(self.layers[i].G[j][1]+self.layers[i].ky)*y)))
+            for z in np.arange(0.0,self.d[i],dz):
+                Em=np.add(ul*np.exp((0.0+2.0j)*np.pi*self.layers[i].k0*self.layers[i].gamma*z),dl*np.exp(-(0.0+2.0j)*np.pi*self.layers[i].k0*self.layers[i].gamma*z))
+                Ex.append(np.dot(Em,Emx))
+                Ey.append(np.dot(Em,Emy))
+            S1.add_uniform(self.layers[i],self.d[i])
+            S1.add(self.int_matrices[self.int_list.index(self.interfaces[i])])
+        Ex,Ey=np.array(Ex),np.array(Ey)
+        #print ii,np.abs([self.BW[ii]**k for k in range(r)])
+        Ex=np.vstack([self.BW[ii]**k*Ex for k in range(r)])
+        Ey=np.vstack([self.BW[ii]**k*Ey for k in range(r)])
+        f=open(filename,'w')
+        f.write('#    x           z          ReEx        ImEx        AbsEx       ReEy        ImEy        AbsEy \n')
+        for i in range(np.shape(Ex)[0]):
+            for j in range(np.shape(Ex)[1]):
+                f.write(8*'%12.6f' % (x[j],dz*i,Ex[i,j].real,Ex[i,j].imag,abs(Ex[i,j]),Ey[i,j].real,Ey[i,j].imag,abs(Ey[i,j])) +'\n')
+            f.write('\n')
+        f.close()
+
+        
     def create_input(self,dic):
         u=np.zeros((2*self.NPW),complex)
         for i in dic:
