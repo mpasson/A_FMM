@@ -15,6 +15,7 @@ class stack:
         self.d=d
         self.NPW=self.layers[0].D
         self.G=self.layers[0].G
+        self.Nyx=self.layers[0].Nyx
 
     def add_layer(lay,d):
         self.layers.append(lay)
@@ -35,6 +36,7 @@ class stack:
 
     def transform(self,ex=0.0,ey=0.0):
         if (ex!=0.0):
+            self.ex=ex
             FX=np.zeros((self.NPW,self.NPW),complex)
             for i in range(self.NPW):
                 for j in range(self.NPW):
@@ -42,6 +44,7 @@ class stack:
             for lay in self.lay_list:
                 lay.add_transform_matrix(ex=ex,FX=FX)
         if (ey!=0.0):
+            self.ey=ey
             FY=np.zeros((self.NPW,self.NPW),complex)
             for i in range(self.NPW):
                 for j in range(self.NPW):
@@ -52,6 +55,7 @@ class stack:
     def transform_complex(self,ex=0.0,ey=0.0):
         g=1.0/(1-1j)
         if (ex!=0.0):
+            self.ex=ex
             FX=np.zeros((self.NPW,self.NPW),complex)
             for i in range(self.NPW):
                 for j in range(self.NPW):
@@ -59,6 +63,7 @@ class stack:
             for lay in self.lay_list:
                 lay.add_transform_matrix(ex=ex,FX=FX)
         if (ey!=0.0):
+            self.ey=ey
             FY=np.zeros((self.NPW,self.NPW),complex)
             for i in range(self.NPW):
                 for j in range(self.NPW):
@@ -720,19 +725,18 @@ class stack:
                 S2.add(self.int_matrices[self.int_list.index(self.interfaces[l])])
             (ul,dl)=S1.int_complete(S2,u,d)
             Emx,Emy=np.zeros(np.shape(X),complex),np.zeros(np.shape(X),complex)
+        for i in range(2*self.NPW):
+            Emx,Emy=np.zeros(np.shape(X),complex),np.zeros(np.shape(X),complex)
             for j in range(self.NPW):
-                Emx=np.add(Emx,self.layers[i].V[j,I]*np.exp((0.0+2.0j)*np.pi*((self.layers[i].G[j][0]+self.layers[i].kx)*X+(self.layers[i].G[j][1]+self.layers[i].ky)*y)))
-                Emy=np.add(Emy,self.layers[i].V[j+self.NPW,I]*np.exp((0.0+2.0j)*np.pi*((self.layers[i].G[j][0]+self.layers[i].kx)*X+(self.layers[i].G[j][1]+self.layers[i].ky)*y)))
-            for z in np.arange(0.0,self.d[i],dz):
-                Em=np.add(ul*np.exp((0.0+2.0j)*np.pi*self.layers[i].k0*self.layers[i].gamma*z),dl*np.exp(-(0.0+2.0j)*np.pi*self.layers[i].k0*self.layers[i].gamma*z))
-                Ex.append(np.dot(Em,Emx))
-                Ey.append(np.dot(Em,Emy))
-            S1.add_uniform(self.layers[i],self.d[i])
-            S1.add(self.int_matrices[self.int_list.index(self.interfaces[i])])
-        Ex,Ey=np.array(Ex),np.array(Ey)
-        #print ii,np.abs([self.BW[ii]**k for k in range(r)])
-        Ex=np.vstack([self.BW[ii]**k*Ex for k in range(r)])
-        Ey=np.vstack([self.BW[ii]**k*Ey for k in range(r)])
+                Emx=np.add(Emx,self.layers[jlay].V[j,i]*np.exp((0.0+2.0j)*np.pi*((self.layers[jlay].G[j][0]+self.layers[jlay].kx)*X+(self.layers[jlay].G[j][1]+self.layers[jlay].ky)*Y)))
+                Emy=np.add(Emy,self.layers[jlay].V[j+self.NPW,i]*np.exp((0.0+2.0j)*np.pi*((self.layers[jlay].G[j][0]+self.layers[jlay].kx)*X+(self.layers[jlay].G[j][1]+self.layers[jlay].ky)*Y)))
+            Emx_l.append(Emx)
+            Emy_l.append(Emy)         
+        Em=np.add(ul*np.exp((0.0+2.0j)*np.pi*self.layers[jlay].k0*self.layers[jlay].gamma*z*self.d[jlay]),dl*np.exp(-(0.0+2.0j)*np.pi*self.layers[jlay].k0*self.layers[jlay].gamma*z*self.d[jlay]))
+        Ex,Ey=np.zeros(np.shape(X),complex),np.zeros(np.shape(X),complex)
+        for i in range(2*self.NPW):
+            Ex=np.add(Ex,Em[i]*Emx_l[i])
+            Ey=np.add(Ey,Em[i]*Emy_l[i])        
         if pdf==None:
             out=PdfPages('E.pdf')
         else:
@@ -753,10 +757,20 @@ class stack:
             out.close()
         return None
 
-    def writeE_periodic(self,ii,r=1,filename='fieldE.out',dz=0.01,N=100,y=0.0,s=1):
+    def writeE_periodic_XZ(self,ii,r=1,filename='fieldE_XZ.out',dz=0.01,N=100,y=0.0,s=1.0):
         [u,d]=np.split(self.BV[:,ii],2)
         d=d*self.BW[ii]
-        x=np.linspace(-s*0.5,s*0.5,s*N)
+        try:
+            ex=self.ex
+            if s==1.0:
+                x=np.linspace(-0.5,0.5,N)
+                xl=sub.t_dir(x,ex)
+            else:
+                xl=np.linspace(-s*0.5,s*0.5,N)
+                x=sub.t_inv(xl,ex)
+        except AttributeError:
+                x=np.linspace(-0.5,0.5,N)
+                xl=np.linspace(-0.5,0.5,N)
         ind=range(2*self.NPW)
         [X,I]=np.meshgrid(x,ind)
         Ex,Ey=[],[]
@@ -783,12 +797,123 @@ class stack:
         Ex=np.vstack([self.BW[ii]**k*Ex for k in range(r)])
         Ey=np.vstack([self.BW[ii]**k*Ey for k in range(r)])
         f=open(filename,'w')
-        f.write('#    x           z          ReEx        ImEx        AbsEx       ReEy        ImEy        AbsEy \n')
+        f.write('#    x           xt         z           ReEx        ImEx        AbsEx       ReEy        ImEy        AbsEy \n')
         for i in range(np.shape(Ex)[0]):
             for j in range(np.shape(Ex)[1]):
-                f.write(8*'%12.6f' % (x[j],dz*i,Ex[i,j].real,Ex[i,j].imag,abs(Ex[i,j]),Ey[i,j].real,Ey[i,j].imag,abs(Ey[i,j])) +'\n')
+                f.write(9*'%15.6e' % (x[j],xl[j],dz*i,Ex[i,j].real,Ex[i,j].imag,abs(Ex[i,j]),Ey[i,j].real,Ey[i,j].imag,abs(Ey[i,j])) +'\n')
             f.write('\n')
         f.close()
+
+
+    def writeE_periodic_YZ(self,ii,r=1,filename='fieldE_YZ.out',dz=0.01,N=100,x=0.0,s=1.0):
+        [u,d]=np.split(self.BV[:,ii],2)
+        d=d*self.BW[ii]
+        try:
+            ey=self.ey
+            if s==1.0:
+                y=np.linspace(-0.5,0.5,N)
+                yl=sub.t_dir(y,ey)
+            else:
+                yl=np.linspace(-s*0.5,s*0.5,N)
+                y=sub.t_inv(yl,ey)
+        except AttributeError:
+                y=np.linspace(-0.5,0.5,N)
+                yl=np.linspace(-0.5,0.5,N)
+        ind=range(2*self.NPW)
+        [Y,I]=np.meshgrid(y,ind)
+        Ex,Ey=[],[]
+        #intermediate layers
+        S1=copy.deepcopy(self.int_matrices[self.int_list.index(self.interfaces[0])])
+        for i in range(1,self.N-1):
+            S2=S_matrix(S1.N)
+            for l in range(i,self.N-1):
+                S2.add_uniform(self.layers[l],self.d[l])
+                S2.add(self.int_matrices[self.int_list.index(self.interfaces[l])])
+            (ul,dl)=S1.int_complete(S2,u,d)
+            Emx,Emy=np.zeros(np.shape(Y),complex),np.zeros(np.shape(Y),complex)
+            for j in range(self.NPW):
+                Emx=np.add(Emx,self.layers[i].V[j,I]*np.exp((0.0+2.0j)*np.pi*((self.layers[i].G[j][0]+self.layers[i].kx)*x+(self.layers[i].G[j][1]+self.layers[i].ky)*Y)))
+                Emy=np.add(Emy,self.layers[i].V[j+self.NPW,I]*np.exp((0.0+2.0j)*np.pi*((self.layers[i].G[j][0]+self.layers[i].kx)*x+(self.layers[i].G[j][1]+self.layers[i].ky)*Y)))
+            for z in np.arange(0.0,self.d[i],dz):
+                Em=np.add(ul*np.exp((0.0+2.0j)*np.pi*self.layers[i].k0*self.layers[i].gamma*z),dl*np.exp(-(0.0+2.0j)*np.pi*self.layers[i].k0*self.layers[i].gamma*z))
+                Ex.append(np.dot(Em,Emx))
+                Ey.append(np.dot(Em,Emy))
+            S1.add_uniform(self.layers[i],self.d[i])
+            S1.add(self.int_matrices[self.int_list.index(self.interfaces[i])])
+        Ex,Ey=np.array(Ex),np.array(Ey)
+        #print ii,np.abs([self.BW[ii]**k for k in range(r)])
+        Ex=np.vstack([self.BW[ii]**k*Ex for k in range(r)])
+        Ey=np.vstack([self.BW[ii]**k*Ey for k in range(r)])
+        f=open(filename,'w')
+        f.write('#    y           yt         z           ReEx        ImEx        AbsEx       ReEy        ImEy        AbsEy \n')
+        for i in range(np.shape(Ex)[0]):
+            for j in range(np.shape(Ex)[1]):
+                f.write(9*'%15.6e' % (y[j]*self.Nyx,yl[j]*self.Nyx,dz*i,Ex[i,j].real,Ex[i,j].imag,abs(Ex[i,j]),Ey[i,j].real,Ey[i,j].imag,abs(Ey[i,j])) +'\n')
+            f.write('\n')
+        f.close()
+
+
+    def writeE_periodic_XY(self,ii,jlay,z,filename='fieldE_XY.out',N=100,s=1.0):
+        [u,d]=np.split(self.BV[:,ii],2)
+        d=d*self.BW[ii]
+        try:
+            ex=self.ex
+            if s==1.0:
+                x=np.linspace(-0.5,0.5,N)
+                xl=sub.t_dir(x,ex)
+            else:
+                xl=np.linspace(-s*0.5,s*0.5,N)
+                x=sub.t_inv(xl,ex)
+        except AttributeError:
+                x=np.linspace(-0.5,0.5,N)
+                xl=np.linspace(-0.5,0.5,N)
+        try:
+            ey=self.ey
+            if s==1.0:
+                y=np.linspace(-0.5,0.5,N)
+                yl=sub.t_dir(y,ey)
+            else:
+                yl=np.linspace(-s*0.5,s*0.5,N)
+                y=sub.t_inv(yl,ey)
+        except AttributeError:
+                y=np.linspace(-0.5,0.5,N)
+                yl=np.linspace(-0.5,0.5,N)
+        ind=range(2*self.NPW)
+        [X,Y]=np.meshgrid(x,y)
+        S1=copy.deepcopy(self.int_matrices[self.int_list.index(self.interfaces[0])])
+        S2=S_matrix(S1.N)
+        for l in range(1,jlay):
+            S1.add_uniform(self.layers[l],self.d[l])
+            S1.add(self.int_matrices[self.int_list.index(self.interfaces[l])])
+        for l in range(jlay,self.N-1):
+            S2.add_uniform(self.layers[l],self.d[l])
+            S2.add(self.int_matrices[self.int_list.index(self.interfaces[l])])
+        (ul,dl)=S1.int_complete(S2,u,d)
+        Emx_l,Emy_l=[],[]
+        for i in range(2*self.NPW):
+            Emx,Emy=np.zeros(np.shape(X),complex),np.zeros(np.shape(X),complex)
+            for j in range(self.NPW):
+                Emx=np.add(Emx,self.layers[jlay].V[j,i]*np.exp((0.0+2.0j)*np.pi*((self.layers[jlay].G[j][0]+self.layers[jlay].kx)*X+(self.layers[jlay].G[j][1]+self.layers[jlay].ky)*Y)))
+                Emy=np.add(Emy,self.layers[jlay].V[j+self.NPW,i]*np.exp((0.0+2.0j)*np.pi*((self.layers[jlay].G[j][0]+self.layers[jlay].kx)*X+(self.layers[jlay].G[j][1]+self.layers[jlay].ky)*Y)))
+            Emx_l.append(Emx)
+            Emy_l.append(Emy)         
+        Em=np.add(ul*np.exp((0.0+2.0j)*np.pi*self.layers[jlay].k0*self.layers[jlay].gamma*z*self.d[jlay]),dl*np.exp(-(0.0+2.0j)*np.pi*self.layers[jlay].k0*self.layers[jlay].gamma*z*self.d[jlay]))
+        Ex,Ey=np.zeros(np.shape(X),complex),np.zeros(np.shape(X),complex)
+        for i in range(2*self.NPW):
+            Ex=np.add(Ex,Em[i]*Emx_l[i])
+            Ey=np.add(Ey,Em[i]*Emy_l[i])
+        f=open(filename,'w')
+        #f.write('#    y           yt         z           ReEx        ImEx        AbsEx       ReEy        ImEy        AbsEy \n')
+        f.write('#    x           xt         y           yt          ReEx        ImEx        AbsEx       ReEy        ImEy        AbsEy \n')
+        for i in range(np.shape(Ex)[0]):
+            for j in range(np.shape(Ex)[1]):
+                f.write(10*'%15.6e' % (x[i],xl[i],y[j]*self.Nyx,yl[j]*self.Nyx,Ex[i,j].real,Ex[i,j].imag,abs(Ex[i,j]),Ey[i,j].real,Ey[i,j].imag,abs(Ey[i,j])) +'\n')
+            f.write('\n')
+        f.close()
+
+
+
+
 
         
     def create_input(self,dic):

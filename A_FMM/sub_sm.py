@@ -162,6 +162,16 @@ def t_inv(x,e):
     return xr
 
 
+def t_dir(x,e):
+    q=1.0-e
+    e=0.5*e
+    xr=np.copy(x)
+    ind=np.abs(x)>e
+    xr[ind]=np.sign(x[ind])*(e+q/np.pi*np.tan(np.pi/q*(np.abs(x[ind])-e)))
+    return xr
+
+
+
 def fou_complex_t(n,e,g):
     q=1.0-e
     return 1.0*(n==0)-0.5*q*(-1)**n*((1.0+0.25*g)*np.sinc(n*q)+0.5*np.sinc(n*q-1)+0.5*np.sinc(n*q+1)-g/8.0*(np.sinc(n*q-2)+np.sinc(n*q+2)))

@@ -288,7 +288,7 @@ class layer:
         plt.close()
 
 
-    def plot_field(self,pdf,i,N=100,s=1,func=np.abs):
+    def plot_field(self,pdf,i,N=100,s=1,func=np.abs,title=None):
         j=np.argsort(self.W)[-i]
         [X,Y]=np.meshgrid(np.linspace(-s*0.5,s*0.5,s*N),np.linspace(-s*0.5,s*0.5,s*N))
         [WEx,WEy]=np.split(self.V[:,j],2)
@@ -321,6 +321,8 @@ class layer:
         plt.imshow(func(Hy),aspect=1,extent=[-s*0.5,s*0.5,-s*0.5,s*0.5],origin='lower')
         plt.title('Hy')
         plt.colorbar()
+        if title!=None:
+            plt.suptitle(title)
         pdf.savefig()
         plt.close()
 
