@@ -11,6 +11,7 @@ class layer:
     def __init__(self,Nx,Ny,creator,Nyx=1.0):
         self.Nx=Nx
         self.Ny=Ny
+        self.NPW=(2*Nx+1)*(2*Ny+1)
         self.G=sub.createG(self.Nx,self.Ny)
         self.D=len(self.G)
         self.creator=copy.deepcopy(creator)
@@ -157,6 +158,16 @@ class layer:
         self.V=None
         self.gamma=None
 
+    def slim(self):
+        self.EPS1=None
+        self.EPS2=None
+        self.FOUP=None
+        self.FX=None
+        self.FY=None
+        self.GH=None
+        self.INV=None
+        self.M=None
+
                 
     def mat_plot(self,name,N=100,s=1):
         save=PdfPages(name+'.pdf')
@@ -288,8 +299,11 @@ class layer:
         plt.close()
 
 
-    def plot_field(self,pdf,i,N=100,s=1,func=np.abs,title=None):
-        j=np.argsort(self.W)[-i]
+    def plot_field(self,pdf,i,N=100,s=1,func=np.abs,title=None,ordered='yes'):
+        if ordered=='yes':
+            j=np.argsort(self.W)[-i]
+        else:
+            j=i
         [X,Y]=np.meshgrid(np.linspace(-s*0.5,s*0.5,s*N),np.linspace(-s*0.5,s*0.5,s*N))
         [WEx,WEy]=np.split(self.V[:,j],2)
         [WHx,WHy]=np.split(self.VH[:,j],2)
@@ -327,9 +341,33 @@ class layer:
         plt.close()
 
 
-    def write_field(self,i,filename='field.out',N=100,func=np.abs):
+    def write_field(self,i,filename='field.out',N=100,s=1.0,func=None):
+        if self.TX:
+            ex=self.ex
+            if s==1.0:
+                x=np.linspace(-0.5,0.5,N)
+                xl=sub.t_dir(x,ex)
+            else:
+                xl=np.linspace(-s*0.5,s*0.5,N)
+                x=sub.t_inv(xl,ex)
+        else:
+            x=np.linspace(-0.5,0.5,N)
+            xl=np.linspace(-0.5,0.5,N)
+
+        if self.TY:
+            ey=self.ey
+            if s==1.0:
+                y=np.linspace(-0.5,0.5,N)
+                yl=sub.t_dir(y,ey)
+            else:
+                yl=np.linspace(-s*0.5,s*0.5,N)
+                y=sub.t_inv(yl,ey)
+        else:
+            y=np.linspace(-0.5,0.5,N)
+            yl=np.linspace(-0.5,0.5,N)
+
         j=np.argsort(self.W)[-i]
-        [X,Y]=np.meshgrid(np.linspace(-0.5,0.5,N),np.linspace(-0.5,0.5,N))
+        [X,Y]=np.meshgrid(x,y,indexing='ij')
         [WEx,WEy]=np.split(self.V[:,j],2)
         [WHx,WHy]=np.split(self.VH[:,j],2)
         Ex,Ey=np.zeros((N,N),dtype='complex'),np.zeros((N,N),dtype='complex')
@@ -344,15 +382,27 @@ class layer:
             Ey=np.add(Ey,np.dot(WEy[i],EXP))
             Hx=np.add(Hx,np.dot(WHx[i],EXP))
             Hy=np.add(Hy,np.dot(WHy[i],EXP))
-        f=open(filename,'w')
-        f.write('#    x           y          Ex          Ey          Hx          Hy \n')
-        for i in range(N):    
-            for j in range(N):
-                #print 6*'%12.6f' % (X[i,j],Y[i,j],func(Ex[i,j]),func(Ey[i,j]),func(Hx[i,j]),func(Hy[i,j]))
-                f.write(6*'%12.6f' % (X[i,j],Y[i,j],func(Ex[i,j]),func(Ey[i,j]),func(Hx[i,j]),func(Hy[i,j])) + '\n')
-            #print ''
-            f.write('\n')
-        f.close()
+        if func==None:
+            f=open(filename,'w')
+            f.write('#    x           xl          y           yl          ReEx        ImEx        ReEy        ImEy        ReHx        ImHx        ReHy        ImHy\n')
+            for i in range(N):    
+                for j in range(N):
+                    #print 6*'%12.6f' % (X[i,j],Y[i,j],func(Ex[i,j]),func(Ey[i,j]),func(Hx[i,j]),func(Hy[i,j]))
+                    f.write(12*'%12.6f' % (x[i],xl[i],y[j]*self.Nyx,yl[j]*self.Nyx,Ex[i,j].real,Ex[i,j].imag,Ey[i,j].real,Ey[i,j].imag,Hx[i,j].real,Hx[i,j].imag,Hy[i,j].real,Hy[i,j].imag) + '\n')
+                #print ''
+                f.write('\n')
+            f.close()
+
+        else:
+            f=open(filename,'w')
+            f.write('#    x           xl          y           yl          Ex          Ey          Hx          Hy \n')
+            for i in range(N):    
+                for j in range(N):
+                    #print 6*'%12.6f' % (X[i,j],Y[i,j],func(Ex[i,j]),func(Ey[i,j]),func(Hx[i,j]),func(Hy[i,j]))
+                    f.write(8*'%12.6f' % (x[i],xl[i],y[j]*self.Nyx,yl[j]*self.Nyx,func(Ex[i,j]),func(Ey[i,j]),func(Hx[i,j]),func(Hy[i,j])) + '\n')
+                #print ''
+                f.write('\n')
+            f.close()
 
     def writeE(self,i,filename='fieldE.out',N=100):
         j=np.argsort(self.W)[-i]
@@ -393,6 +443,54 @@ class layer:
         for i in range(N):    
             for j in range(N):
                 f.write(8*'%12.6f' % (X[i,j],Y[i,j],Hx[i,j].real,Hx[i,j].imag,abs(Hx[i,j]),Hy[i,j].real,Hy[i,j].imag,abs(Hy[i,j])) + '\n')
+            f.write('\n')
+        f.close()
+
+
+    def write_fieldgeneral(self,u,d=None,filename='field_general.out',N=100,s=1.0):
+        if d is None:
+            d=np.zeros(2*self.D,dtype=complex)
+
+        try:
+            ex=self.ex
+            if s==1.0:
+                x=np.linspace(-0.5,0.5,N)
+                xl=sub.t_dir(x,ex)
+            else:
+                xl=np.linspace(-s*0.5,s*0.5,N)
+                x=sub.t_inv(xl,ex)
+        except AttributeError:
+                x=np.linspace(-0.5,0.5,N)
+                xl=np.linspace(-0.5,0.5,N)
+        try:
+            ey=self.ey
+            if s==1.0:
+                y=np.linspace(-0.5,0.5,N)
+                yl=sub.t_dir(y,ey)
+            else:
+                yl=np.linspace(-s*0.5,s*0.5,N)
+                y=sub.t_inv(yl,ey)
+        except AttributeError:
+                y=np.linspace(-0.5,0.5,N)
+                yl=np.linspace(-0.5,0.5,N)
+
+        [X,Y]=np.meshgrid(x,y,indexing='ij')
+        Ef=np.dot(self.V,u+d)
+        [WEx,WEy]=np.split(Ef,2)
+        #[WEx,WEy]=np.split(self.V[:,j],2)
+        #[WHx,WHy]=np.split(self.VH[:,j],2)
+        Ex,Ey=np.zeros((N,N),dtype='complex'),np.zeros((N,N),dtype='complex')
+        for i in range(self.D):
+            EXP=np.exp((0+2j)*np.pi*((self.G[i][0]+self.kx)*X+(self.G[i][1]+self.ky)*Y))
+#            Ex+=WEx[i]*EXP
+#            Ey+=WEy[i]*EXP
+            Ex=np.add(Ex,np.dot(WEx[i],EXP))
+            Ey=np.add(Ey,np.dot(WEy[i],EXP))
+        f=open(filename,'w')
+        f.write('#    x           y          ReEx        ImEx        AbsEx       ReEy        ImEy        AbsEy \n')
+        for i in range(N):    
+            for j in range(N):
+                f.write(10*'%12.6f' % (x[i],xl[i],y[j]*self.Nyx,yl[j]*self.Nyx,Ex[i,j].real,Ex[i,j].imag,abs(Ex[i,j]),Ey[i,j].real,Ey[i,j].imag,abs(Ey[i,j])) + '\n')
             f.write('\n')
         f.close()
 
@@ -469,22 +567,43 @@ class layer:
         [VHx,VHy]=np.split(self.VH,2)
         self.P_norm=np.sum(VEx*np.conj(VHy)-VEy*np.conj(VHx),0).real
 
+    def get_Poynting_single(self,i,u,ordered='yes'):
+        if ordered=='yes':
+            j=np.argsort(self.W)[-i]
+        else:
+            j=i
+        #self.get_Poyinting_norm()
+        #return self.PP_norm[j,j].real*np.abs(u[j])**2.0
+        self.get_P_norm()
+        return self.P_norm[j].real*np.abs(u[j])**2.0
 
+   
     def get_Poyinting_norm(self):
         [VEx,VEy]=np.split(self.V,2)
         [VHx,VHy]=np.conj(np.split(self.VH,2))        
-        self.PP_norm=np.zeros((2*self.D,2*self.D),dtype=complex)
-        for i in range(self.D):
-            VEX,VHY=np.meshgrid(VEx[i,:],VHy[i,:])
-            VEY,VHX=np.meshgrid(VEy[i,:],VHx[i,:])
-            P1=np.multiply(VEX,VHY)
-            P2=-np.multiply(VEY,VHX)
-            P=np.add(P1,P2)
-            self.PP_norm=np.add(self.PP_norm,P)
+        #old version (working) 
+        #self.PP_norm=np.zeros((2*self.D,2*self.D),dtype=complex)
+        #for i in range(self.D):
+        #    VEX,VHY=np.meshgrid(VEx[i,:],VHy[i,:])
+        #    VEY,VHX=np.meshgrid(VEy[i,:],VHx[i,:])
+        #    P1=np.multiply(VEX,VHY)
+        #    P2=-np.multiply(VEY,VHX)
+        #    P=np.add(P1,P2)
+        #    self.PP_norm=np.add(self.PP_norm,P)
         #print self.PP_norm
-            
-    def get_Poynting(self,u,d):
-        #    d=np.zeros(self.D,dtype=complex)
+        #new version. should be equivalent bit faster
+        P1=np.dot(np.transpose(VEx),VHy)        
+        P2=np.dot(np.transpose(VEy),VHx)
+        self.PP_norm=np.add(P1,-P2)
+
+    
+    def get_Poynting(self,u,d=None):
+        if d is None:
+            d=np.zeros(2*self.D,dtype=complex)
+        #try:
+        #    self.PP_norm
+        #except AttributeError:
+        #    self.get_Poyinting_norm()
         self.get_Poyinting_norm()
         Cn=np.add(u,d)
         Cnp=np.add(u,-d)
@@ -530,11 +649,99 @@ class layer:
         return S
 
 
+    def get_input(self,func,args=(),Nxp=1024,Nyp=None,fileprint=None):
+        if Nyp==None:
+            if self.Ny==0:
+                Nyp=1
+                y=np.array([0.0])
+            else:
+                Nyp=Nxp
+                y=np.linspace(-0.5,0.5,Nyp)
+        else:
+            y=np.linspace(-0.5,0.5,Nyp)
+        x=np.linspace(-0.5,0.5,Nxp)
+        if self.TX:
+            ex=self.ex
+            x=sub.t_dir(x,ex)
+        if self.TY:
+            ey=self.ey
+            y=sub.t_dir(y,ey)
+
+        y=y*self.Nyx
+
+        [X,Y]=np.meshgrid(x,y,indexing='ij')
+        [Fx,Fy]=func(X,Y,*args)
+
+        try:
+            f=open(fileprint,'w')
+            for i in range(Nxp):
+                for j in range(Nyp):
+                    f.write(6*'%18.8e' % (x[i],y[j],Fx[i,j].real,Fx[i,j].imag,Fy[i,j].real,Fy[i,j].imag))
+                    f.write('\n')
+                f.write('\n')
+        except TypeError:
+            pass
+
+        Fx=np.fft.fftshift(Fx)/(Nxp*Nyp)
+        Fy=np.fft.fftshift(Fy)/(Nxp*Nyp)
+
+        FOUx=np.fft.fft2(Fx)
+        FOUy=np.fft.fft2(Fy)
+
+        Estar=np.zeros(2*self.NPW,dtype=complex)
+        for i in range(self.NPW):
+            #print self.G[i][0], self.G[i][1],FOUx[self.G[i][0],self.G[i][1]]              
+            Estar[i]=FOUx[self.G[i][0],self.G[i][1]]
+            Estar[i+self.NPW]=FOUy[self.G[i][0],self.G[i][1]]
+
+        #for i in range(-self.Nx,self.Nx+1):
+        #    for j in range(-self.Ny,self.Ny+1):
+        #        print '%4i %4i %15.8e %15.8e' % (i,j,np.abs(FOUx[i,j]),np.abs(FOUy[i,j]))
+        #    print ''
+
+        u=linalg.solve(self.V,Estar)
+        return u
+
+    def create_input(self,dic):
+        u=np.zeros((2*self.NPW),complex)
+        for i in dic:
+            u[np.argsort(self.W)[-i]]=dic[i]
+        return u
+
+    def get_Enorm(self):
+        [VEx,VEy]=np.split(self.V,2)
+        self.ENx=np.dot(np.transpose(VEx),np.conj(VEx))
+        self.ENy=np.dot(np.transpose(VEy),np.conj(VEy))
+
+    def overlap(self,u,up=None):
+        if up is None:
+           up=u
+        try:
+            self.ENx
+        except AttributeError:
+            self.get_Enorm()
+        #print np.shape(u),np.shape(self.ENx)
+        tx=np.dot(self.ENx,np.conj(up))
+        ty=np.dot(self.ENy,np.conj(up))
+        tx=np.dot(np.transpose(u),tx)
+        ty=np.dot(np.transpose(u),ty)
+        #print tx,ty
+        return [tx,ty]
+
+
+    def coupling(self,u,up):
+        self.get_Enorm()
+        [tx1,ty1]=self.overlap(u)
+        [tx2,ty2]=self.overlap(up)
+        [txc,tyc]=self.overlap(u,up)
+        return [txc/np.sqrt(tx1*tx2),tyc/np.sqrt(ty1*ty2)]
+
 
 class layer_ani_diag(layer):
     def __init__(self,Nx,Ny,creator_x,creator_y,creator_z,Nyx=1.0):
         self.Nx=Nx
         self.Ny=Ny
+        self.NPW=(2*Nx+1)*(2*Ny+1)
         self.G=sub.createG(self.Nx,self.Ny)
         self.D=len(self.G)
         self.creator=[copy.deepcopy(creator_x),copy.deepcopy(creator_y),copy.deepcopy(creator_z)]
@@ -554,6 +761,7 @@ class layer_num(layer):
     def __init__(self,Nx,Ny,func,args=(),Nyx=1.0,NX=2048,NY=2048):
         self.Nx=Nx
         self.Ny=Ny
+        self.NPW=(2*Nx+1)*(2*Ny+1)
         self.G=sub.createG(self.Nx,self.Ny)
         self.D=len(self.G)
         self.Nyx=Nyx
@@ -665,6 +873,7 @@ class layer_uniform(layer):
     def __init__(self,Nx,Ny,eps,Nyx=1.0):
         self.Nx=Nx
         self.Ny=Ny
+        self.NPW=(2*Nx+1)*(2*Ny+1)
         self.G=sub.createG(self.Nx,self.Ny)
         self.D=len(self.G)
         self.Nyx=Nyx
@@ -798,6 +1007,7 @@ class layer_empty_st(layer):
     def __init__(self,Nx,Ny,creator,Nyx=1.0):
         self.Nx=Nx
         self.Ny=Ny
+        self.NPW=(2*Nx+1)*(2*Ny+1)
         self.G=sub.createG(self.Nx,self.Ny)
         self.D=len(self.G)
         self.creator=copy.deepcopy(creator)

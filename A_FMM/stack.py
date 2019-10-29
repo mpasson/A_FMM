@@ -786,7 +786,8 @@ class stack:
             for j in range(self.NPW):
                 Emx=np.add(Emx,self.layers[i].V[j,I]*np.exp((0.0+2.0j)*np.pi*((self.layers[i].G[j][0]+self.layers[i].kx)*X+(self.layers[i].G[j][1]+self.layers[i].ky)*y)))
                 Emy=np.add(Emy,self.layers[i].V[j+self.NPW,I]*np.exp((0.0+2.0j)*np.pi*((self.layers[i].G[j][0]+self.layers[i].kx)*X+(self.layers[i].G[j][1]+self.layers[i].ky)*y)))
-            for z in np.arange(0.0,self.d[i],dz):
+            start=0.0 if i==1 else dz
+            for z in np.arange(start,self.d[i],dz):
                 Em=np.add(ul*np.exp((0.0+2.0j)*np.pi*self.layers[i].k0*self.layers[i].gamma*z),dl*np.exp(-(0.0+2.0j)*np.pi*self.layers[i].k0*self.layers[i].gamma*z))
                 Ex.append(np.dot(Em,Emx))
                 Ey.append(np.dot(Em,Emy))
@@ -834,7 +835,8 @@ class stack:
             for j in range(self.NPW):
                 Emx=np.add(Emx,self.layers[i].V[j,I]*np.exp((0.0+2.0j)*np.pi*((self.layers[i].G[j][0]+self.layers[i].kx)*x+(self.layers[i].G[j][1]+self.layers[i].ky)*Y)))
                 Emy=np.add(Emy,self.layers[i].V[j+self.NPW,I]*np.exp((0.0+2.0j)*np.pi*((self.layers[i].G[j][0]+self.layers[i].kx)*x+(self.layers[i].G[j][1]+self.layers[i].ky)*Y)))
-            for z in np.arange(0.0,self.d[i],dz):
+            start=0.0 if i==1 else dz
+            for z in np.arange(start,self.d[i],dz):
                 Em=np.add(ul*np.exp((0.0+2.0j)*np.pi*self.layers[i].k0*self.layers[i].gamma*z),dl*np.exp(-(0.0+2.0j)*np.pi*self.layers[i].k0*self.layers[i].gamma*z))
                 Ex.append(np.dot(Em,Emx))
                 Ey.append(np.dot(Em,Emy))
