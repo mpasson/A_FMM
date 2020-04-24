@@ -1,9 +1,9 @@
 import numpy as np
 from scipy import linalg
 import matplotlib.pyplot as plt
-import sub_sm as sub
+import A_FMM.sub_sm as sub
 from matplotlib.backends.backend_pdf import PdfPages
-from scattering import S_matrix
+from A_FMM.scattering import S_matrix
 import copy
 
 
@@ -31,30 +31,30 @@ class layer:
 
     def inspect(self,st=''):
         att=sub.get_user_attributes(self)
-        print st
-        print 22*'_'
-        print '| INT argument'
+        print(st)
+        print(22*'_')
+        print('| INT argument')
         for i in att:
             if type(i[1]) is int:
-                print '|%10s%10s' % (i[0],str(i[1]))
-        print '| Float argument'
+                print('|%10s%10s' % (i[0],str(i[1])))
+        print('| Float argument')
         for i in att:
             if type(i[1]) is float:
-                print '|%10s%10s' % (i[0],str(i[1]))
+                print('|%10s%10s' % (i[0],str(i[1])))
         for i in att:
             if type(i[1]) is np.float64:
-                print '|%10s%10s' % (i[0],str(i[1]))
-        print '| BOOL argument'
+                print('|%10s%10s' % (i[0],str(i[1])))
+        print('| BOOL argument')
         for i in att:
             if type(i[1]) is bool:
-                print '|%10s%10s' % (i[0],str(i[1]))
-        print '| Array argument'
+                print('|%10s%10s' % (i[0],str(i[1])))
+        print('| Array argument')
         for i in att:
             if type(i[1]) is np.ndarray:
-                print '|%10s%10s' % (i[0],str(np.shape(i[1])))
-        print ''
+                print('|%10s%10s' % (i[0],str(np.shape(i[1]))))
+        print('')
 
-    def eps_plot(self,pdf=None,N=200,s=1.0):
+    def eps_plot(self,pdf=None,N=200,s=1):
         [X,Y]=np.meshgrid(np.linspace(-s*0.5,s*0.5,s*N),np.linspace(-s*0.5,s*0.5,int(s*N*self.Nyx)))
         EPS=np.zeros((N,N),complex)
 #        for i in range(self.D):
@@ -138,13 +138,13 @@ class layer:
             [self.W,self.V]=linalg.eig(self.M)
             self.gamma=np.sqrt(self.W)*np.sign(np.angle(self.W)+0.5*np.pi)
             if np.any(np.real(self.gamma)+np.imag(self.gamma)<=0.0):
-                print 'Warining: wrong complex root'
+                print('Warining: wrong complex root')
 #            self.gamma=np.sqrt(self.W)
 #            self.gamma=self.gamma*np.sign(np.imag(self.gamma))
 #            if np.any(np.imag(self.gamma)<=0.0):
 #                print 'Warining: negative imaginary part'
             if np.any(np.abs(self.gamma)<=0.0):
-                print 'Warining: gamma=0'
+                print('Warining: gamma=0')
             self.VH=np.dot(self.GH,self.V/self.gamma)
         else:
             self.W=linalg.eigvals(self.M)
@@ -980,9 +980,9 @@ class layer_uniform(layer):
             [self.W,self.V]=linalg.eig(self.M)
             self.gamma=np.sqrt(self.W)*np.sign(np.angle(self.W)+0.5*np.pi)
             if np.any(np.real(self.gamma)+np.imag(self.gamma)<=0.0):
-                print 'Warining: wrong complex root'
+                print('Warining: wrong complex root')
             if np.any(np.abs(self.gamma)<=0.0):
-                print 'Warining: gamma=0'
+                print('Warining: gamma=0')
             self.VH=np.dot(self.GH,self.V/self.gamma)
         else:
             W=2*[self.eps-((1+0j)*(self.G[i][0]+kx)/k0)**2-((1+0j)*(self.G[i][1]+ky)/k0/self.Nyx)**2 for i in self.G]
@@ -990,9 +990,9 @@ class layer_uniform(layer):
             self.V=np.identity(2*self.D,dtype=complex)
             self.gamma=np.sqrt(self.W)*np.sign(np.angle(self.W)+0.5*np.pi)
             if np.any(np.real(self.gamma)+np.imag(self.gamma)<=0.0):
-                print 'Warining: wrong complex root'
+                print('Warining: wrong complex root')
             if np.any(np.abs(self.gamma)<=0.0):
-                print 'Warining: gamma=0'       
+                print('Warining: gamma=0')       
             self.M=np.diag(self.V)
             GH_11=[-(1+0j)*(self.G[i][1]+ky)/k0/self.Nyx*(self.G[i][0]+kx)/k0 for i in self.G]
             GH_22=[(1+0j)*(self.G[i][1]+ky)/k0/self.Nyx*(self.G[i][0]+kx)/k0 for i in self.G]

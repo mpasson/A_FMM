@@ -1,6 +1,6 @@
 import numpy as np
-import sub_sm as sub
-from scattering import S_matrix
+import A_FMM.sub_sm as sub
+from A_FMM.scattering import S_matrix
 import matplotlib.pyplot as plt
 import copy
 from matplotlib.backends.backend_pdf import PdfPages
@@ -1057,47 +1057,47 @@ class stack:
 
     def inspect(self,st='',details='no'):
         att=sub.get_user_attributes(self)
-        print st
-        print 22*'_'
-        print '| INT argument'
+        print(st)
+        print(22*'_')
+        print('| INT argument')
         for i in att:
             if type(i[1]) is int:
-                print '|%10s%10s' % (i[0],str(i[1]))
-        print '| Float argument'
+                print('|%10s%10s' % (i[0],str(i[1])))
+        print('| Float argument')
         for i in att:
             if type(i[1]) is float:
-                print '|%10s%10s' % (i[0],str(i[1]))
+                print('|%10s%10s' % (i[0],str(i[1])))
         for i in att:
             if type(i[1]) is np.float64:
-                print '|%10s%10s' % (i[0],str(i[1]))
-        print '| BOOL argument'
+                print('|%10s%10s' % (i[0],str(i[1])))
+        print('| BOOL argument')
         for i in att:
             if type(i[1]) is bool:
-                print '|%10s%10s' % (i[0],str(i[1]))
-        print '| Array argument'
+                print('|%10s%10s' % (i[0],str(i[1])))
+        print('| Array argument')
         for i in att:
             if type(i[1]) is np.ndarray:
-                print '|%10s%10s' % (i[0],str(np.shape(i[1])))
-        print '| List argument'
+                print('|%10s%10s' % (i[0],str(np.shape(i[1]))))
+        print('| List argument')
         for i in att:
             if type(i[1]) is list:
-                print '|%12s%8s' % (i[0],str(len(i[1])))
-        print ''
+                print('|%12s%8s' % (i[0],str(len(i[1]))))
+        print('')
         try:
-            print 'lay list:'
+            print('lay list:')
             for s in self.lay_list:
-                print s
+                print(s)
 
-            print 'layers:'
+            print('layers:')
             for s in self.layers:
-                print s
+                print(s)
 
-            print 'int_list:'
+            print('int_list:')
             for s in self.int_list:
-                print s
+                print(s)
 
-            print 'interfaces:'
+            print('interfaces:')
             for s in self.interfaces:
-                print s
+                print(s)
         except AttributeError:
-            print 'No list yet, call conut_interface before inspect'
+            print('No list yet, call conut_interface before inspect')

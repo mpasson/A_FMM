@@ -1,7 +1,7 @@
 import numpy as np
 from scipy import linalg
 import matplotlib.pyplot as plt
-import sub_sm as sub
+import A_FMM.sub_sm as sub
 from matplotlib.backends.backend_pdf import PdfPages
 
 class creator:
@@ -91,5 +91,34 @@ class creator:
         ind= np.sqrt(X**2+Y**2)<r
         #eps=np.array([e_out,e_in])
         self.eps_lists=e_out+ind*(e_in-e_out)
+
+    def etched_stack(self,eps_uc,eps_lc,w,etch,eps_stack,d_stack):
+        h=sum(d_stack)
+        self.x_list=[-0.5*w,0.5*w]
+        self.y_list=[-0.5]
+        eps1=[eps_uc,eps_lc]
+        eps2=[eps_uc,eps_lc]
+        dd=np.cumsum(d_stack)
+        if (etch>h):
+                self.y_list.append(0.5*h-etch)
+                eps1.append(eps1[-1])
+                eps2.append(eps_uc)
+                dec=1
+        else:            
+            dec=0
+        for d,eps in zip(reversed(dd),reversed(eps_stack)):
+            if (d<etch) and (dec==0):
+                self.y_list.append(0.5*h-etch)
+                eps1.append(eps1[-1])
+                eps2.append(eps_uc)
+                dec=1   
+            self.y_list.append(0.5*h-d)
+            eps1.append(eps)
+            if dec==0:
+                eps2.append(eps)
+            else:
+                eps2.append(eps_uc)
+        self.y_list.append(0.5*h)
+        self.eps_lists=[eps2,eps1] 
         
 

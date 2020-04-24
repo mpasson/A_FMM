@@ -99,7 +99,7 @@ class S_matrix:
         else:
             j=i if j==None else j
             S=np.vstack([np.hstack([self.S11[i,j],self.S12[i,j]]),np.hstack([self.S21[i,j],self.S22[i,j]])])
-        print S
+        print(S)
 
     def det(self):
         return linalg.det(np.vstack([np.hstack([self.S11,self.S12]),np.hstack([self.S21,self.S22])]))
