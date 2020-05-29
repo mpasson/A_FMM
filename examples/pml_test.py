@@ -39,7 +39,7 @@ R2=st.get_R(2,2)        #Get reflection of second mode (TM)
 T2=st.get_T(2,2)        #Get transmission of second mode (TM)
 
 #Printing results
-print 5*'%15.9f' % (k0,R1,T1,R2,T2)
+print(5*'%15.9f' % (k0,R1,T1,R2,T2))
 
 #Plotting filed, comment in not wanted
 st.plot_E(i=1,pdfname='pml_mode1')    #Plotting fundamental mode

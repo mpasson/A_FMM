@@ -84,7 +84,7 @@ class stack:
         EPS=[]
         for (lay,d) in zip(self.layers,self.d):
             #EPSt=sum([sub.fou(lay.G[i][0],lay.G[i][1],lay.creator.x_list,lay.creator.y_list,lay.creator.eps_lists)*np.exp((0+2j)*np.pi*(lay.G[i][0]*X+lay.G[i][1]*y)) for i in range(lay.D)])
-            EPSt=sum([lay.FOUP[i,lay.D/2]*np.exp((0+2j)*np.pi*(lay.G[i][0]*X+lay.G[i][1]*y)) for i in range(lay.D)])
+            EPSt=sum([lay.FOUP[i,lay.D//2]*np.exp((0+2j)*np.pi*(lay.G[i][0]*X+lay.G[i][1]*y)) for i in range(lay.D)])
             for i in range(int(d/dz)):
                 EPS.append(EPSt)
         EPS=np.array(EPS)

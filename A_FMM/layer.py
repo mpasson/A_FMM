@@ -72,7 +72,7 @@ class layer:
             a.close()
         plt.close()
 
-    def trasform(self,ex=0,ey=0):
+    def transform(self,ex=0,ey=0):
         if (ex!=0):
             self.TX=True
             self.ex=ex
@@ -91,7 +91,7 @@ class layer:
                     self.FY[i,j]=sub.fou_t(self.G[i][1]-self.G[j][1],ey)*(self.G[i][0]==self.G[j][0])
 
 
-    def trasform_complex(self,ex=0,ey=0):
+    def transform_complex(self,ex=0,ey=0):
         g=1.0/(1-1j)
         if (ex!=0):
             self.TX=True
