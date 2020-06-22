@@ -51,8 +51,8 @@ class S_matrix:
 
     def get_T(self,i1,lay1,i2,lay2,ordered='yes'):
         if ordered=='yes':
-            j1=np.argsort(lay1.W)[-i1]
-            j2=np.argsort(lay2.W)[-i2]
+            j1=np.argsort(lay1.W)[-i1-1]
+            j2=np.argsort(lay2.W)[-i2-1]
         else:
             j1=i1
             j2=i2
@@ -64,8 +64,8 @@ class S_matrix:
 
     def get_R(self,i1,i2,lay,ordered='yes'):
         if ordered=='yes':
-            j1=np.argsort(lay.W)[-i1]
-            j2=np.argsort(lay.W)[-i2]
+            j1=np.argsort(lay.W)[-i1-1]
+            j2=np.argsort(lay.W)[-i2-1]
         else:
             j1=i1
             j2=i2

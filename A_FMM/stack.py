@@ -3,8 +3,13 @@ import A_FMM.sub_sm as sub
 from A_FMM.scattering import S_matrix
 import matplotlib.pyplot as plt
 import copy
+from A_FMM.layer import layer_empty_st
 from matplotlib.backends.backend_pdf import PdfPages
-
+try:
+    from multiprocessing import Pool
+except ModuleNotFoundError:
+    print('WARNING: multiprocessing not available')
+    
 
 class stack:
     def __init__(self,layers=[],d=[]):
@@ -129,6 +134,16 @@ class stack:
             if not T_inter in self.int_list:
                 self.int_list.append(T_inter)
             self.interfaces.append(T_inter)
+
+    def fourier(self,threads=1):
+        p=Pool(threads)
+        mat_list=p.map(layer_empty_st.fourier,self.lay_list)
+        for lay,FOUP,INV,EPS1,EPS2 in zip(self.lay_list,mat_list):
+            lay.FOUP=FOUP
+            lay.INV=INV
+            lay.EPS1=EPS1
+            lay.EPS2=EPS2
+        del mat_list
 
             
 
@@ -297,7 +312,7 @@ class stack:
             self.S.S12=S.S21
             self.S.S21=S.S12
         except AttributeError:
-            raise RuntimeError('structure 2 not solved yet')
+            raise RuntimeError('structure not solved yet')
         self.layers=[i for i in reversed(self.layers)]
 
 
@@ -438,7 +453,7 @@ class stack:
     def plot_E(self,i=1,dz=0.01,pdf=None,pdfname=None,N=100,y=0.0,func=np.real,s=1,ordered='yes',title=None):
         u1,d2=np.zeros((2*self.NPW),complex),np.zeros((2*self.NPW),complex)
         if ordered=='yes':
-            u1[np.argsort(self.layers[0].W)[-i]]=1.0+0.0j
+            u1[np.argsort(self.layers[0].W)[-i-1]]=1.0+0.0j
         else:
             u1[i]=1.0+0.0j
         (u2,d1)=self.S.output(u1,d2)

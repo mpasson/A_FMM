@@ -2,6 +2,7 @@ import numpy as np
 from scipy import linalg
 import matplotlib.pyplot as plt
 import A_FMM.sub_sm as sub
+from A_FMM.creator import creator
 from matplotlib.backends.backend_pdf import PdfPages
 from A_FMM.scattering import S_matrix
 import copy
@@ -167,6 +168,14 @@ class layer:
         self.GH=None
         self.INV=None
         self.M=None
+
+    def get_index(self,modes=0,ordered=True):
+        if ordered:
+            Neff=np.sort(self.gamma)[::-1]
+        else:
+            Neff=self.gamma
+        return Neff[modes]
+
 
                 
     def mat_plot(self,name,N=100,s=1):
@@ -1027,11 +1036,70 @@ class layer_empty_st(layer):
         self.INV=linalg.inv(self.FOUP)
         self.EPS1=sub.fou_xy(self.Nx,self.Ny,self.G,self.creator.x_list,self.creator.y_list,self.creator.eps_lists)*(1.0+0.0j)
         self.EPS2=sub.fou_yx(self.Nx,self.Ny,self.G,self.creator.x_list,self.creator.y_list,self.creator.eps_lists)*(1.0+0.0j)
+        return (self.FOUP,self.INV,self.EPS1,self.EPS2)
+
+
+class layer_from_xsection(layer):    
+    def __init__(self,Nx,Ny,xs):
+        self.Nx=Nx
+        self.Ny=Ny
+        self.NPW=(2*Nx+1)*(2*Ny+1)
+        self.G=sub.createG(self.Nx,self.Ny)
+        self.D=len(self.G)
+        self.creator=creator()
+
+        y_stacks=[]
+        w_tot=0.0
+        x_list=[]
+        for i, (width,stack) in enumerate(zip(xs.hstack['widths'],xs.hstack['vstacks'])):
+            y_temp=[]
+            x_list.append(width)
+            w_tot+=width
+            for j, (m, w) in enumerate(stack.layers):
+                y_temp.append(w)
+            y_temp=np.cumsum(y_temp)
+            for y in y_temp:
+                if not np.isclose(y_stacks,y).any():
+                    y_stacks.append(y) 
         
+        x_list=(np.cumsum(np.array(x_list)))/w_tot-0.5
+        y_list=np.sort(y_stacks)
+        h_tot=y_list[-1]     
+        y_norm=[y/h_tot-0.5 for y in y_list]
+
+        #print(y_list,'\n')
+        eps_lists=[]
+        for i, (width,stack) in enumerate(zip(xs.hstack['widths'],xs.hstack['vstacks'])):
+            eps_list=[]
+            ys=list(np.cumsum([w for (m, w) in stack.layers]))
+            ys.append(h_tot) 
+            inds=[m.Nmat() for (m, w) in stack.layers]
+            inds.append(xs.background.Nmat())
+            for y in y_list:
+                for j,yp in enumerate(ys):
+                    if y<=yp:
+                        break
+                eps_list.append(inds[j]**2.0)
+            #print(ys,inds,eps_list,'\n')
+            eps_lists.append(eps_list)
+
+        self.FOUP=sub.create_epsilon(self.G,x_list,y_norm,eps_lists)
+        self.INV=linalg.inv(self.FOUP)
+        self.EPS1=sub.fou_xy(self.Nx,self.Ny,self.G,x_list,y_norm,eps_lists)
+        self.EPS2=sub.fou_yx(self.Nx,self.Ny,self.G,x_list,y_norm,eps_lists)
+
+        self.creator.x_list=x_list
+        self.creator.y_list=y_norm
+        self.creator.eps_lists=eps_lists
+
+        #print(x_list)
+        #print(y_norm)
+        #print(eps_lists)
 
 
-
-
+        self.TX=False
+        self.TY=False
+        self.Nyx=h_tot/w_tot
 
 
 
