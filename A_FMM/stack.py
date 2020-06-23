@@ -324,6 +324,7 @@ class stack:
         self.BW=self.BW[ind]
         self.Bk=self.Bk[ind]
         self.BV[:,:]=self.BV[:,ind]        
+        return self.Bk
         
 
     def plot_Ey(self,i,dz=0.01,pdf=None,N=100,y=0.0,func=np.real,s=1):

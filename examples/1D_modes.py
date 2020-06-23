@@ -38,13 +38,12 @@ f=open('bands.out','w')
 kb=[]
 for k0 in k0_l:                                        #loop over wavevectors
     st.solve(k0)                                       #Create the scattering matirx of structure
-    st.bloch_modes()                                   #Solve for bloch modes
-    BK=st.Bk                                           #saving Block vectors
+    BK=st.bloch_modes()                                #Solve for bloch modes (function return array of block vectors)
     f.write('%10.5f' % (k0))                           #writing data to output file
     for k in BK:
         f.write('%10.5f' % (k.real))
     f.write('\n')
-    print 2*'%15.8f' % (k0,max(BK))                    #writing mode with maximum bloch vector
+    print(2*'%15.8f' % (k0,max(BK)))                   #writing mode with maximum bloch vector
     kb.append(max(BK).real*st.tot_thick/np.pi)         #saving normalized block vector
 f.close()
 
@@ -65,7 +64,7 @@ p0=[om_0,n,U]
 RES=curve_fit(func,kb,k0_l**2,p0=p0)                   #fitting
 [om_0,n,U]=RES[0]                                      #retrieve results
 om_lim=np.sqrt(om_0**2.0-0.25*abs(U)/n**2.0)
-print 7*'%15.8f' % (P,om_0,n,U,om_lim,P/om_lim,om_lim*1.3)
+print(7*'%15.8f' % (P,om_0,n,U,om_lim,P/om_lim,om_lim*1.3))
 
 
 

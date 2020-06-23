@@ -1100,7 +1100,10 @@ class layer_from_xsection(layer):
         self.TX=False
         self.TY=False
         self.Nyx=h_tot/w_tot
+        self.ax=w_tot
+        self.ay=h_tot
 
-
-
+    def mode_from_lam(self,lam,kx=0.0,ky=0.0,v=1):
+        self.mode(self.ax/lam,kx=kx,ky=ky,v=v)
+        
 

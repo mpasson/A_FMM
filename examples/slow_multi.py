@@ -19,14 +19,14 @@ def proc(k0):                                          # function which calculat
 #SOI 310 nm
 NX=11                               # Setting X truncation order
 NY=5                               # Setting Y truncation order
-#k0_ll=np.linspace(0.75,0.78,24)      # Setting array of wavevectors
-k0_ll=np.linspace(0.6,0.64,24)       # Setting array of wavevectors
-SOI=0.20                           # thickness in micron
-t=0.1                              # cladding thickness in micron
-W1=0.3                              #W1 in microns
-W2=0.65                              #W1 in microns
+k0_ll=np.linspace(0.75,0.78,24)      # Setting array of wavevectors
+#k0_ll=np.linspace(0.6,0.64,24)       # Setting array of wavevectors
+SOI=0.301                           # thickness in micron
+t=0.15                              # cladding thickness in micron
+W1=0.1                              #W1 in microns
+W2=0.8                              #W1 in microns
 FF=0.5                              #Filling fraction
-P=0.31                             #Period in microns
+P=0.220                             #Period in microns
 ax=1.5                              #ax  in micron
 ay=0.75                              #ay  in micron
 ratio=ay/ax                         #ay/ax 
@@ -34,7 +34,7 @@ eps_Si=12.299
 eps_SiO2=2.09
 ex=0.8                               #parameter for the x coordinate transform
 ey=0.7                               #parameter for the y coordinate transform
-lam_t=1.55                            #target wavelength for tuning of the band edge
+lam_t=1.31                            #target wavelength for tuning of the band edge
 k0_ll=k0_ll*ax                       # setting right units for wavevectors
 
 
@@ -115,7 +115,7 @@ for i in range(1):                      # no iterations, one single calculation
     #possible part for fit
     def func(x,om,n,U):                                    #defining fitting function
         d=(1-x)**2
-        return om**2 + (d - np.sqrt(4.0*d+(1-d)**2*U**2))/(4.0*n**2)
+         return om**2 + (d - np.sqrt(4.0*d+(1-d)**2*U**2))/(4.0*n**2)
     kb=np.array(bkmax)                                     #converting data to array
     A=kb>0.999999                                          #finding band gap limit
     ind=list(A).index(True)                                #keep only the point under the band edge by truncating the arrays
@@ -132,7 +132,7 @@ for i in range(1):                      # no iterations, one single calculation
     [om_0,n,U]=RES[0]                                      #retrieve results
     om_band=np.sqrt(om_0**2.0-0.25*abs(U)/n**2.0)
     lam_band=P/om_band                                     #wavelength of the band edge
-    print 8*'%15.8f' % (i,P,om_0,n,U,om_band,lam_band,om_band*lam_t)
+    print(8*'%15.8f' % (i,P,om_0,n,U,om_band,lam_band,om_band*lam_t))
     if abs(lam_t-lam_band)<0.001:
         quit()
     P=P*lam_t/lam_band                                     #defining new period for next tuning step
