@@ -521,7 +521,7 @@ class layer:
     def get_field2(self,X,Y,i,func=np.abs):
         if np.shape(X)!=np.shape(Y):
             raise ValueError('X and Y arrays have different shapes')
-        j=np.argsort(self.W)[-i]
+        j=np.argsort(self.W)[-i-1]
         [WEx,WEy]=np.split(self.V[:,j],2)
         [WHx,WHy]=np.split(self.VH[:,j],2)
         Ex=np.zeros_like(X,dtype=complex)
@@ -529,12 +529,13 @@ class layer:
         Hx=np.zeros_like(X,dtype=complex)
         Hy=np.zeros_like(X,dtype=complex)        
         for i in range(self.D):
-            EXP=np.exp((0+2j)*np.pi*((self.G[i][0]+self.kx)*X+(self.G[i][1]+self.ky)*X))
+            EXP=np.exp((0+2j)*np.pi*((self.G[i][0]+self.kx)*X+(self.G[i][1]+self.ky)*Y))
             Ex=np.add(Ex,np.dot(WEx[i],EXP))
             Ey=np.add(Ey,np.dot(WEy[i],EXP))
             Hx=np.add(Hx,np.dot(WHx[i],EXP))
             Hy=np.add(Hy,np.dot(WHy[i],EXP))
-        return func(np.array([Ex,Ey,Hx,Hy]))
+        res=(func(M) for M in [Ex,Ey,Hx,Hy])
+        return res
         #Ex=func(Ex)
         #Ey=func(Ey)
         #Hx=func(Hx)
@@ -578,13 +579,13 @@ class layer:
 
     def get_Poynting_single(self,i,u,ordered='yes'):
         if ordered=='yes':
-            j=np.argsort(self.W)[-i]
+            j=np.argsort(self.W)[-i-1]
         else:
             j=i
-        #self.get_Poyinting_norm()
-        #return self.PP_norm[j,j].real*np.abs(u[j])**2.0
-        self.get_P_norm()
-        return self.P_norm[j].real*np.abs(u[j])**2.0
+        self.get_Poyinting_norm()
+        return self.PP_norm[j,j].real*np.abs(u[j])**2.0
+        #self.get_P_norm()
+        #return self.P_norm[j].real*np.abs(u[j])**2.0
 
    
     def get_Poyinting_norm(self):
@@ -620,7 +621,6 @@ class layer:
         C=np.multiply(Cn,Cnp)
         PP=np.multiply(C,self.PP_norm)
         return np.sum(PP).real
-
 
 
     def T_interface(self,lay):
@@ -1075,6 +1075,76 @@ class layer_from_xsection(layer):
             ys.append(h_tot) 
             inds=[m.Nmat() for (m, w) in stack.layers]
             inds.append(xs.background.Nmat())
+            for y in y_list:
+                for j,yp in enumerate(ys):
+                    if y<=yp:
+                        break
+                eps_list.append(inds[j]**2.0)
+            #print(ys,inds,eps_list,'\n')
+            eps_lists.append(eps_list)
+
+        self.FOUP=sub.create_epsilon(self.G,x_list,y_norm,eps_lists)
+        self.INV=linalg.inv(self.FOUP)
+        self.EPS1=sub.fou_xy(self.Nx,self.Ny,self.G,x_list,y_norm,eps_lists)
+        self.EPS2=sub.fou_yx(self.Nx,self.Ny,self.G,x_list,y_norm,eps_lists)
+
+        self.creator.x_list=x_list
+        self.creator.y_list=y_norm
+        self.creator.eps_lists=eps_lists
+
+        #print(x_list)
+        #print(y_norm)
+        #print(eps_lists)
+
+
+        self.TX=False
+        self.TY=False
+        self.Nyx=h_tot/w_tot
+        self.ax=w_tot
+        self.ay=h_tot
+
+    def mode_from_lam(self,lam,kx=0.0,ky=0.0,v=1):
+        self.mode(self.ax/lam,kx=kx,ky=ky,v=v)
+
+
+class layer_from_hstack(layer):    
+    def __init__(self,Nx,Ny,hstack):
+        self.Nx=Nx
+        self.Ny=Ny
+        self.NPW=(2*Nx+1)*(2*Ny+1)
+        self.G=sub.createG(self.Nx,self.Ny)
+        self.D=len(self.G)
+        self.creator=creator()
+
+        y_stacks=[]
+        w_tot=0.0
+        x_list=[]
+        for i, (stack,width) in enumerate(hstack.layers):
+            y_temp=[]
+            x_list.append(width)
+            w_tot+=width
+            for j, (m, w) in enumerate(stack.layers):
+                y_temp.append(w)
+            if i==0:
+                background=m.Neff()
+            y_temp=np.cumsum(y_temp)
+            for y in y_temp:
+                if not np.isclose(y_stacks,y).any():
+                    y_stacks.append(y) 
+        
+        x_list=(np.cumsum(np.array(x_list)))/w_tot-0.5
+        y_list=np.sort(y_stacks)
+        h_tot=y_list[-1]     
+        y_norm=[y/h_tot-0.5 for y in y_list]
+
+        #print(y_list,'\n')
+        eps_lists=[]
+        for i, (stack,width) in enumerate(hstack.layers):
+            eps_list=[]
+            ys=list(np.cumsum([w for (m, w) in stack.layers]))
+            ys.append(h_tot) 
+            inds=[m.Nmat() for (m, w) in stack.layers]
+            inds.append(background)
             for y in y_list:
                 for j,yp in enumerate(ys):
                     if y<=yp:
