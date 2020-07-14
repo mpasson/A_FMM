@@ -1144,7 +1144,7 @@ class layer_from_hstack(layer):
             ys=list(np.cumsum([w for (m, w) in stack.layers]))
             ys.append(h_tot) 
             inds=[m.Nmat() for (m, w) in stack.layers]
-            inds.append(background)
+            inds.append(inds[-1])
             for y in y_list:
                 for j,yp in enumerate(ys):
                     if y<=yp:
