@@ -19,15 +19,15 @@ def proc(k0):                                          # function which calculat
 #SOI 310 nm
 NX=11                               # Setting X truncation order
 NY=5                               # Setting Y truncation order
-k0_ll=np.linspace(0.75,0.78,24)      # Setting array of wavevectors
+k0_ll=np.linspace(0.5,1.0,24)      # Setting array of wavevectors
 #k0_ll=np.linspace(0.6,0.64,24)       # Setting array of wavevectors
-SOI=0.301                           # thickness in micron
-t=0.15                              # cladding thickness in micron
-W1=0.1                              #W1 in microns
-W2=0.8                              #W1 in microns
+SOI=0.300                           # thickness in micron
+t=0.0                              # cladding thickness in micron
+W1=0.0                              #W1 in microns
+W2=0.4                              #W1 in microns
 FF=0.5                              #Filling fraction
-P=0.220                             #Period in microns
-ax=1.5                              #ax  in micron
+P=0.240                             #Period in microns
+ax=1.0                              #ax  in micron
 ay=0.75                              #ay  in micron
 ratio=ay/ax                         #ay/ax 
 eps_Si=12.299
@@ -109,13 +109,13 @@ for i in range(1):                      # no iterations, one single calculation
         f.write('\n')
         #print 2*'%15.8f' % (k0,max(BK)*st.tot_thick/np.pi)         #writing mode with maximum bloch vector
         bkmax.append(max(BK).real*st.tot_thick/np.pi)
-        f2.write('%10.5f %10.5f \n' % (k0,max(BK).real*st.tot_thick/np.pi))   #writing data to output file
+        f2.write('%10.5f %10.5f \n' % (k0*P,max(BK).real*st.tot_thick/np.pi))   #writing data to output file
     f.close()
     f2.close()
     #possible part for fit
     def func(x,om,n,U):                                    #defining fitting function
         d=(1-x)**2
-         return om**2 + (d - np.sqrt(4.0*d+(1-d)**2*U**2))/(4.0*n**2)
+        return om**2 + (d - np.sqrt(4.0*d+(1-d)**2*U**2))/(4.0*n**2)
     kb=np.array(bkmax)                                     #converting data to array
     A=kb>0.999999                                          #finding band gap limit
     ind=list(A).index(True)                                #keep only the point under the band edge by truncating the arrays
@@ -124,9 +124,9 @@ for i in range(1):                      # no iterations, one single calculation
 #    for t in zip(k0_l,kb):
 #        print 2*'%15.8f' %  t
 
-    om_0=0.17                                              #setting initial guess for fit
-    n=3.1
-    U=0.01
+    om_0=0.35                                              #setting initial guess for fit
+    n=1.0
+    U=0.3
     p0=[om_0,n,U]
     RES=curve_fit(func,kb,k0_l**2,p0=p0)                   #fitting
     [om_0,n,U]=RES[0]                                      #retrieve results

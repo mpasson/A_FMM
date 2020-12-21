@@ -83,8 +83,7 @@ class stack:
             lay.mat_plot('layer_%i' % (n),N=N,s=s)
             n+=1
 
-    def plot_stack(self,nome='cross_section_X',N=100,dz=0.01,y=0.0,func=np.abs):
-        nome=nome+'_y=%3.2f.pdf' % (y)
+    def plot_stack(self,pdf='cross_section_X',N=100,dz=0.01,y=0.0,func=np.abs):
         X=np.linspace(-0.5,0.5,N)
         EPS=[]
         for (lay,d) in zip(self.layers,self.d):
@@ -93,13 +92,17 @@ class stack:
             for i in range(int(d/dz)):
                 EPS.append(EPSt)
         EPS=np.array(EPS)
-        out=PdfPages(nome)
         plt.figure()
         plt.imshow(func(EPS).T,origin='lower',extent=[0.0,sum(self.d),-0.5,0.5])
         plt.colorbar()
-        out.savefig(dpi=900)
+        if isinstance(pdf,PdfPages):
+            pdf.savefig()
+        else:
+            pdf=pdf+'_y=%3.2f.pdf' % (y)
+            a=PdfPages(pdf)
+            a.savefig()
+            a.close()
         plt.close()
-        out.close()
 
 
     def plot_stack_y(self,nome='cross_section_Y',N=100,dz=0.01,x=0.0,func=np.abs):
@@ -725,7 +728,7 @@ class stack:
         return None
 
 
-    def plot_E_periodic(self,ii,r=1,dz=0.01,pdf=None,N=100,y=0.0,func=np.real,s=1):
+    def plot_E_periodic(self,ii,r=1,dz=0.01,pdf=None,N=100,y=0.0,func=np.real,s=1,title=None):
         [u,d]=np.split(self.BV[:,ii],2)
         d=d*self.BW[ii]
         x=np.linspace(-s*0.5,s*0.5,s*N)
@@ -741,18 +744,19 @@ class stack:
                 S2.add(self.int_matrices[self.int_list.index(self.interfaces[l])])
             (ul,dl)=S1.int_complete(S2,u,d)
             Emx,Emy=np.zeros(np.shape(X),complex),np.zeros(np.shape(X),complex)
-        for i in range(2*self.NPW):
-            Emx,Emy=np.zeros(np.shape(X),complex),np.zeros(np.shape(X),complex)
             for j in range(self.NPW):
-                Emx=np.add(Emx,self.layers[jlay].V[j,i]*np.exp((0.0+2.0j)*np.pi*((self.layers[jlay].G[j][0]+self.layers[jlay].kx)*X+(self.layers[jlay].G[j][1]+self.layers[jlay].ky)*Y)))
-                Emy=np.add(Emy,self.layers[jlay].V[j+self.NPW,i]*np.exp((0.0+2.0j)*np.pi*((self.layers[jlay].G[j][0]+self.layers[jlay].kx)*X+(self.layers[jlay].G[j][1]+self.layers[jlay].ky)*Y)))
-            Emx_l.append(Emx)
-            Emy_l.append(Emy)         
-        Em=np.add(ul*np.exp((0.0+2.0j)*np.pi*self.layers[jlay].k0*self.layers[jlay].gamma*z*self.d[jlay]),dl*np.exp(-(0.0+2.0j)*np.pi*self.layers[jlay].k0*self.layers[jlay].gamma*z*self.d[jlay]))
-        Ex,Ey=np.zeros(np.shape(X),complex),np.zeros(np.shape(X),complex)
-        for i in range(2*self.NPW):
-            Ex=np.add(Ex,Em[i]*Emx_l[i])
-            Ey=np.add(Ey,Em[i]*Emy_l[i])        
+                Emx=np.add(Emx,self.layers[i].V[j,I]*np.exp((0.0+2.0j)*np.pi*((self.layers[i].G[j][0]+self.layers[i].kx)*X+(self.layers[i].G[j][1]+self.layers[i].ky)*y)))
+                Emy=np.add(Emy,self.layers[i].V[j+self.NPW,I]*np.exp((0.0+2.0j)*np.pi*((self.layers[i].G[j][0]+self.layers[i].kx)*X+(self.layers[i].G[j][1]+self.layers[i].ky)*y)))
+            for z in np.arange(0.0,self.d[i],dz):
+                Em=np.add(ul*np.exp((0.0+2.0j)*np.pi*self.layers[i].k0*self.layers[i].gamma*z),dl*np.exp(-(0.0+2.0j)*np.pi*self.layers[i].k0*self.layers[i].gamma*z))
+                Ex.append(np.dot(Em,Emx))
+                Ey.append(np.dot(Em,Emy))
+            S1.add_uniform(self.layers[i],self.d[i])
+            S1.add(self.int_matrices[self.int_list.index(self.interfaces[i])])
+        Ex,Ey=np.array(Ex),np.array(Ey)
+        #print ii,np.abs([self.BW[ii]**k for k in range(r)])
+        Ex=np.vstack([self.BW[ii]**k*Ex for k in range(r)])
+        Ey=np.vstack([self.BW[ii]**k*Ey for k in range(r)])
         if pdf==None:
             out=PdfPages('E.pdf')
         else:
@@ -766,6 +770,8 @@ class stack:
         plt.title('Ey')
         plt.imshow(func(Ey).T,origin='lower',extent=[0.0,r*sum(self.d),-0.5,0.5],cmap='jet')
         plt.colorbar()
+        if title!=None:
+            plt.suptitle(title)
         #plt.savefig('field.png',dpi=900)
         out.savefig(dpi=900)
         plt.close()

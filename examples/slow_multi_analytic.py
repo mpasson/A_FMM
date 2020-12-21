@@ -20,14 +20,14 @@ def proc(k0):                                          # function which calculat
 NX=11                               # Setting X truncation order
 NY=5                              # Setting Y truncation order
 #k0_l=np.linspace(0.01,1.0,30)      # Setting array of wavevectors
-k0_ll=np.linspace(0.6,0.64,81)       # Setting array of wavevectors
-SOI=0.220                           # thickness in micron
-t=0.100                              # cladding thickness in micron
-W1=0.300                              #W1 in microns
-W2=0.650                              #W1 in microns
+k0_ll=np.linspace(0.5,1.0,81)       # Setting array of wavevectors
+SOI=0.300                           # thickness in micron
+t=0.000                              # cladding thickness in micron
+W1=0.000                              #W1 in microns
+W2=0.400                              #W1 in microns
 FF=0.5                              #Filling fraction
-P=0.310                             #Period in microns
-ax=1.5                              #ax  in micron
+P=0.240                             #Period in microns
+ax=1.0                              #ax  in micron
 ay=0.5                              #ay  in micron
 ratio=ay/ax                         #ay/ax 
 #eps_Si=12.299                       #lam =1.31
@@ -155,7 +155,7 @@ for i in range(1):                      # no iterations, one single calculation
     [om_0,n,U]=RES[0]                                      #retrieve results
     om_band=np.sqrt(om_0**2.0-0.25*abs(U)/n**2.0)
     lam_band=P/om_band                                     #wavelength of the band edge
-    print 8*'%15.8f' % (i,P,om_0,n,U,om_band,lam_band,om_band*lam_t)
+    print(8*'%15.8f' % (i,P,om_0,n,U,om_band,lam_band,om_band*lam_t))
     if abs(lam_t-lam_band)<0.001:
         quit()
     P=P*lam_t/lam_band                                     #defining new period for next tuning step

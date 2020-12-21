@@ -67,6 +67,8 @@ class layer:
         plt.colorbar()
         if (pdf==None):
             plt.show()
+        elif isinstance(pdf,PdfPages):
+            pdf.savefig()
         else:
             a=PdfPages(pdf+'.pdf')
             a.savefig()
@@ -169,12 +171,15 @@ class layer:
         self.INV=None
         self.M=None
 
-    def get_index(self,modes=0,ordered=True):
+    def get_index(self,modes=None,ordered=True):
         if ordered:
             Neff=np.sort(self.gamma)[::-1]
         else:
             Neff=self.gamma
-        return Neff[modes]
+        if modes is None:
+            return Neff
+        else:
+            return Neff[:modes]
 
 
                 
@@ -310,7 +315,7 @@ class layer:
 
     def plot_field(self,pdf,i,N=100,s=1,func=np.abs,title=None,ordered='yes'):
         if ordered=='yes':
-            j=np.argsort(self.W)[-i]
+            j=np.argsort(self.W)[-i-1]
         else:
             j=i
         [X,Y]=np.meshgrid(np.linspace(-s*0.5,s*0.5,s*N),np.linspace(-s*0.5,s*0.5,s*N))
@@ -350,7 +355,11 @@ class layer:
         plt.close()
 
 
-    def write_field(self,i,filename='field.out',N=100,s=1.0,func=None):
+    def write_field(self,i,filename='field.out',N=100,s=1.0,func=None,ordered=True):
+        if ordered:
+            j=np.argsort(self.W)[-i-1]
+        else:
+            j=i
         if self.TX:
             ex=self.ex
             if s==1.0:
@@ -375,7 +384,6 @@ class layer:
             y=np.linspace(-0.5,0.5,N)
             yl=np.linspace(-0.5,0.5,N)
 
-        j=np.argsort(self.W)[-i]
         [X,Y]=np.meshgrid(x,y,indexing='ij')
         [WEx,WEy]=np.split(self.V[:,j],2)
         [WHx,WHy]=np.split(self.VH[:,j],2)
@@ -397,7 +405,7 @@ class layer:
             for i in range(N):    
                 for j in range(N):
                     #print 6*'%12.6f' % (X[i,j],Y[i,j],func(Ex[i,j]),func(Ey[i,j]),func(Hx[i,j]),func(Hy[i,j]))
-                    f.write(12*'%12.6f' % (x[i],xl[i],y[j]*self.Nyx,yl[j]*self.Nyx,Ex[i,j].real,Ex[i,j].imag,Ey[i,j].real,Ey[i,j].imag,Hx[i,j].real,Hx[i,j].imag,Hy[i,j].real,Hy[i,j].imag) + '\n')
+                    f.write(12*'%18.6e' % (x[i],xl[i],y[j]*self.Nyx,yl[j]*self.Nyx,Ex[i,j].real,Ex[i,j].imag,Ey[i,j].real,Ey[i,j].imag,Hx[i,j].real,Hx[i,j].imag,Hy[i,j].real,Hy[i,j].imag) + '\n')
                 #print ''
                 f.write('\n')
             f.close()
@@ -408,7 +416,7 @@ class layer:
             for i in range(N):    
                 for j in range(N):
                     #print 6*'%12.6f' % (X[i,j],Y[i,j],func(Ex[i,j]),func(Ey[i,j]),func(Hx[i,j]),func(Hy[i,j]))
-                    f.write(8*'%12.6f' % (x[i],xl[i],y[j]*self.Nyx,yl[j]*self.Nyx,func(Ex[i,j]),func(Ey[i,j]),func(Hx[i,j]),func(Hy[i,j])) + '\n')
+                    f.write(8*'%18.6e' % (x[i],xl[i],y[j]*self.Nyx,yl[j]*self.Nyx,func(Ex[i,j]),func(Ey[i,j]),func(Hx[i,j]),func(Hy[i,j])) + '\n')
                 #print ''
                 f.write('\n')
             f.close()
@@ -806,6 +814,8 @@ class layer_num(layer):
         plt.colorbar()
         if (pdf==None):
             plt.show()
+        elif isinstance(pdf,PdfPages):
+            pdf.savefig()
         else:
             a=PdfPages(pdf+'.pdf')
             a.savefig()

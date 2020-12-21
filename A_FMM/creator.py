@@ -121,4 +121,42 @@ class creator:
         self.y_list.append(0.5*h)
         self.eps_lists=[eps2,eps1] 
         
+    def varied_epi(self,eps_back,data_list):
+        t_tot=sum([dd[2] for dd in data_list])
+        w_list=np.sort(list(set([0.5*dd[1] for dd in data_list])))
+        self.x_list=[-0.5]+list(-w_list[::-1])+list(w_list)
+        self.y_list=[-0.5*t_tot] + list(-0.5*t_tot+np.cumsum([dd[2] for dd in data_list]))
+        self.eps_lists=[len(self.y_list)*[eps_back]]
+        for pos in self.x_list:
+            eps_list=[eps_back]
+            for eps,w,t in data_list:
+                if pos<-0.5*w:
+                   eps_list.append(eps_back)
+                elif pos>=0.5*w:
+                   eps_list.append(eps_back)
+                else:
+                   eps_list.append(eps)
+            self.eps_lists.append(eps_list)                       
+
+    def varied_plane(self,eps_back,t,data_list):
+        self.y_list=[-0.5*t,0.5*t]
+        w_tot= sum([dd[1] for dd in data_list])
+        self.x_list=[-0.5*w_tot] + list(-0.5*w_tot+np.cumsum([dd[1] for dd in data_list]))
+        self.eps_lists=[len(self.y_list)*[eps_back]]
+        for i,(eps,w) in enumerate(data_list):
+            eps_list=[eps_back,eps]
+            self.eps_lists.append(eps_list)                 
+
+        #print(self.y_list)
+        #print(self.x_list)
+        #print(self.eps_lists)
+
+
+        
+
+
+        
+
+        
+
 
