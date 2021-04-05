@@ -1,0 +1,4 @@
+#!/bin/bash
+rm docs/*
+rm Docs/generated/*
+sphinx-build -b html Docs docs/

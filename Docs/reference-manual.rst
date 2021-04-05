@@ -1,0 +1,6 @@
+.. currentmodule:: solver
+
+*************
+API Reference
+*************
+

@@ -1,4 +1,3 @@
-from A_FMM.layer import layer
 from A_FMM.layer import *
 from A_FMM.scattering import S_matrix
 from A_FMM.creator import creator

@@ -9,7 +9,15 @@ import copy
 
 
 class layer:    
+    """ Class for the definition of a single layer
+    """
     def __init__(self,Nx,Ny,creator,Nyx=1.0):
+        """
+        Args:
+            Nx (int): truncation order in x direction
+            Ny (int): truncation order in y direction
+            Nyx (float): ratio between the cell's dimension in y and x (ay/ax)
+        """
         self.Nx=Nx
         self.Ny=Ny
         self.NPW=(2*Nx+1)*(2*Ny+1)
@@ -31,6 +39,11 @@ class layer:
         self.TY=False
 
     def inspect(self,st=''):
+        """Function for inspectig the attributes of a layer object
+            
+        Args:
+            st (string): string to print before the inspection for identification
+        """
         att=sub.get_user_attributes(self)
         print(st)
         print(22*'_')
@@ -56,6 +69,15 @@ class layer:
         print('')
 
     def eps_plot(self,pdf=None,N=200,s=1):
+        """Function for plotting the dielectric consstat rebuit from plane wave expansion
+
+        Args:
+            pdf (string or PdfPages): file for printing the the epsilon
+                if a PdfPages object, the page is appended to the pdf
+                if string, a pdf with that name is created
+            N (int): number of points
+            s (float): number of cell replicas to display (default 1)
+        """
         [X,Y]=np.meshgrid(np.linspace(-s*0.5,s*0.5,s*N),np.linspace(-s*0.5,s*0.5,int(s*N*self.Nyx)))
         EPS=np.zeros((N,N),complex)
 #        for i in range(self.D):
@@ -76,6 +98,14 @@ class layer:
         plt.close()
 
     def transform(self,ex=0,ey=0):
+        """Function for adding the real coordinate transfomr to the layer
+
+        Note: for no mapping, set the width to 0
+    
+        Args:
+            ex (float): relative width of the unmapped region in x direction. Default is 0 (no mapping)
+            ey (float): relative width of the unmapped region in y direction. Default is 0 (no mapping)
+        """
         if (ex!=0):
             self.TX=True
             self.ex=ex
@@ -95,6 +125,14 @@ class layer:
 
 
     def transform_complex(self,ex=0,ey=0):
+        """Function for adding the complex coordinate transfomr to the layer
+
+        Note: for no mapping, set the width to 0
+    
+        Args:
+            ex (float): relative width of the unmapped region in x direction. Default is 0 (no mapping)
+            ey (float): relative width of the unmapped region in y direction. Default is 0 (no mapping)
+        """
         g=1.0/(1-1j)
         if (ex!=0):
             self.TX=True
@@ -114,6 +152,14 @@ class layer:
                     self.FY[i,j]=sub.fou_complex_t(self.G[i][1]-self.G[j][1],ey,g)*(self.G[i][0]==self.G[j][0])
 
     def add_transform_matrix(self,ex=0.0,FX=None,ey=0.0,FY=None):
+        """Function for adding matrix of a coordinate transform
+
+        Args:
+            ex (float): relative width of the unmapped region in x direction. Default is 0. This is only for keeping track of the value, as it has no effect on the transformation.
+            FX (ndarray): FX matrix of the coordinate trasnformation
+            ey (float): relative width of the unmapped region in y direction. Default is 0. This is only for keeping track of the value, as it has no effect on the transformation.
+            FY (ndarray): FY matrix of the coordinate trasnformation                       
+        """        
         if (ex!=0):
             self.TX=True
             self.ex=ex
@@ -126,7 +172,14 @@ class layer:
         
 
 
-    def mode(self,k0,kx=0.0,ky=0.0,v=1):
+    def mode(self,k0,kx=0.0,ky=0.0,v=True):
+        """Calculates the eighenmode of the layer
+        
+        Args:
+            k0 (float): Vacuum wavevector
+            kx (float): Wavevector in the x direction
+            ky (float): Wavevector in the y direction
+        """
         self.k0=k0
         self.kx=kx
         self.ky=ky
@@ -137,7 +190,7 @@ class layer:
         if self.TY:
             k2=np.dot(self.FY,k2)
         self.GH,self.M=sub.create_2order_new(self.D,k1,k2,self.INV,self.EPS1,self.EPS2)
-        if (v!=0):
+        if v:
             [self.W,self.V]=linalg.eig(self.M)
             self.gamma=np.sqrt(self.W)*np.sign(np.angle(self.W)+0.5*np.pi)
             if np.any(np.real(self.gamma)+np.imag(self.gamma)<=0.0):
@@ -154,6 +207,8 @@ class layer:
 
 
     def clear(self):
+        """Removes data created in mode method
+        """
         self.VH=None
         self.M=None
         self.GH=None
@@ -162,6 +217,8 @@ class layer:
         self.gamma=None
 
     def slim(self):
+        """Removes a lot of attributes. Not sure why was implemented
+        """
         self.EPS1=None
         self.EPS2=None
         self.FOUP=None
@@ -171,19 +228,28 @@ class layer:
         self.INV=None
         self.M=None
 
-    def get_index(self,modes=None,ordered=True):
+    def get_index(self,ordered=True):
+        """Returns the effective idexes of the modes
+
+        Args:
+            ordered (bool): if True (default) the modes are ordered by decreasing effective index
+        """
         if ordered:
             Neff=np.sort(self.gamma)[::-1]
         else:
             Neff=self.gamma
-        if modes is None:
-            return Neff
-        else:
-            return Neff[:modes]
+        return Neff
 
 
                 
     def mat_plot(self,name,N=100,s=1):
+        """Plot the absolute values of the fourier trasnsform matrices
+
+        Args:
+            name (str): name of the pdf file for plotting
+            N (int): number of points for plotting the epsilon
+            s (float): number pf relicas of the cell to plot. Default is 1.
+        """
         save=PdfPages(name+'.pdf')
 
         [X,Y]=np.meshgrid(np.linspace(-s*0.5,s*0.5,s*N),np.linspace(-s*0.5,s*0.5,s*N))
@@ -269,6 +335,13 @@ class layer:
         plt.close()
 
     def plot_E(self,pdf,i,N=100,s=1,func=np.abs):
+        """Plots the electric filed of a mode
+
+        Args:
+            pdf (PdfPages): pdf for saving the plots
+            i (int): Numner of mode to be plotted (start from 1), only ordered
+            func (callable): function to apply to the filed before plotting (default, np.abs). Usefulc could be np.real or np.imag
+        """
         j=np.argsort(self.W)[-i]
         [X,Y]=np.meshgrid(np.linspace(-s*0.5,s*0.5,s*N),np.linspace(-s*0.5,s*0.5,s*N))
         [WEy,WEx]=np.split(self.V[:,j],2)
@@ -291,6 +364,13 @@ class layer:
         plt.close()
 
     def plot_H(self,pdf,i,N=100,s=1,func=np.abs):
+        """Plots the magnetic filed of a mode
+
+        Args:
+            pdf (PdfPages): pdf for saving the plots
+            i (int): Numner of mode to be plotted (start from 1), only ordered
+            func (callable): function to apply to the filed before plotting (default, np.abs). Usefulc could be np.real or np.imag
+        """
         j=np.argsort(self.W)[-i]
         [X,Y]=np.meshgrid(np.linspace(-s*0.5,s*0.5,s*N),np.linspace(-s*0.5,s*0.5,s*N))
         [WEy,WEx]=np.split(self.VH[:,j],2)
@@ -313,11 +393,19 @@ class layer:
         plt.close()
 
 
-    def plot_field(self,pdf,i,N=100,s=1,func=np.abs,title=None,ordered='yes'):
-        if ordered=='yes':
-            j=np.argsort(self.W)[-i-1]
-        else:
-            j=i
+    def plot_field(self,pdf,i,N=100,s=1,func=np.abs,title=None,ordered=True):
+        """Plots both electrinc and magnetic field
+
+        Args:
+            pdf (PdfPages): pdf for appending the plots
+            i (int): mode to be plotted.
+            N (int): number of points in the graph. Default is 100
+            s (float): number of replicas of the cell to be plotted. Default is 1
+            func (callable): function to apply to the filed before plotting (default, np.abs). Usefulc could be np.real or np.imag
+            title (str): title of the plot
+            ordered (bool): if True, the modes are ordered by decreasing effective index
+        """
+        j=np.argsort(self.W)[-i-1] if ordered else i
         [X,Y]=np.meshgrid(np.linspace(-s*0.5,s*0.5,s*N),np.linspace(-s*0.5,s*0.5,s*N))
         [WEx,WEy]=np.split(self.V[:,j],2)
         [WHx,WHy]=np.split(self.VH[:,j],2)
@@ -812,8 +900,8 @@ class layer_num(layer):
         plt.figure()
         plt.imshow(np.real(EPS),origin='lower',extent=[-s*0.5,s*0.5,-self.Nyx*s*0.5,self.Nyx*s*0.5])
         plt.colorbar()
-        if (pdf==None):
-            plt.show()
+        if pdf is None:
+            pass
         elif isinstance(pdf,PdfPages):
             pdf.savefig()
         else:

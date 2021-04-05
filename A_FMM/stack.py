@@ -83,7 +83,7 @@ class stack:
             lay.mat_plot('layer_%i' % (n),N=N,s=s)
             n+=1
 
-    def plot_stack(self,pdf='cross_section_X',N=100,dz=0.01,y=0.0,func=np.abs):
+    def plot_stack(self,pdf=None,N=100,dz=0.01,y=0.0,func=np.abs, cmap='viridis'):
         X=np.linspace(-0.5,0.5,N)
         EPS=[]
         for (lay,d) in zip(self.layers,self.d):
@@ -93,16 +93,16 @@ class stack:
                 EPS.append(EPSt)
         EPS=np.array(EPS)
         plt.figure()
-        plt.imshow(func(EPS).T,origin='lower',extent=[0.0,sum(self.d),-0.5,0.5])
+        plt.imshow(func(EPS).T,origin='lower',extent=[0.0,sum(self.d),-0.5,0.5], cmap=plt.get_cmap(cmap))
         plt.colorbar()
         if isinstance(pdf,PdfPages):
             pdf.savefig()
-        else:
+        elif isinstance(pdf, str):
             pdf=pdf+'_y=%3.2f.pdf' % (y)
             a=PdfPages(pdf)
             a.savefig()
             a.close()
-        plt.close()
+        if pdf is not None: plt.close()
 
 
     def plot_stack_y(self,nome='cross_section_Y',N=100,dz=0.01,x=0.0,func=np.abs):
@@ -454,7 +454,7 @@ class stack:
 
 
 
-    def plot_E(self,i=1,dz=0.01,pdf=None,pdfname=None,N=100,y=0.0,func=np.real,s=1,ordered='yes',title=None):
+    def plot_E(self,i=0,dz=0.01,pdf=None,N=100,y=0.0,func=np.real,s=1,ordered='yes',title=None, cmap='jet'):
         u1,d2=np.zeros((2*self.NPW),complex),np.zeros((2*self.NPW),complex)
         if ordered=='yes':
             u1[np.argsort(self.layers[0].W)[-i-1]]=1.0+0.0j
@@ -505,29 +505,27 @@ class stack:
             Em=np.add(u2*np.exp((0.0+2.0j)*np.pi*lay.k0*lay.gamma*z),d2*np.exp(-(0.0+2.0j)*np.pi*lay.k0*lay.gamma*z))
             Ex.append(np.dot(Em,Emx))
             Ey.append(np.dot(Em,Emy))
-        if pdf==None:
-            if pdfname!=None:
-                out=PdfPages(pdfname+'.pdf')
+        if pdf is not None:
+            if isinstance(pdf, PdfPages):
+                out = pdf
             else:
-                out=PdfPages('E.pdf')
-        else:
-            out=pdf
+                out=PdfPages(pdf)
         plt.figure()
         if title!=None:
             plt.suptitle(title)
         plt.subplot(211)
         plt.title('Ex')
-        plt.imshow(func(Ex).T,origin='lower',extent=[0.0,sum(self.d),-0.5,0.5],cmap='jet')
+        plt.imshow(func(Ex).T,origin='lower',extent=[0.0,sum(self.d),-0.5,0.5],cmap=plt.get_cmap(cmap))
         plt.colorbar()
         plt.subplot(212)
         plt.title('Ey')
-        plt.imshow(func(Ey).T,origin='lower',extent=[0.0,sum(self.d),-0.5,0.5],cmap='jet')
+        plt.imshow(func(Ey).T,origin='lower',extent=[0.0,sum(self.d),-0.5,0.5],cmap=plt.get_cmap(cmap))
         plt.colorbar()
         #plt.savefig('field.png',dpi=900)
-        out.savefig(dpi=900)
-        plt.close()
-        if pdf==None:
-            out.close()
+        if pdf is not None:
+            out.savefig()
+            plt.close()
+            if isinstance(pdf, str): out.close()        
         return None
 
 
