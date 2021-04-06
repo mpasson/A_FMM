@@ -1,0 +1,20 @@
+image: sphinxdoc/sphinx
+
+pages:
+  stage: deploy
+  script:
+  - mkdir public
+  - pip install sphinx-rtd-theme
+  - pip install nbsphinx
+  - pip install notebook
+  - pip install numpy
+  - pip install scipy
+  - pip install pandas
+  - apt-get update && apt-get install -y pandoc
+  - sphinx-build -b html Docs public/
+  artifacts:
+    paths:
+    - public
+
+
+
