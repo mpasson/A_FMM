@@ -53,7 +53,7 @@ class stack:
             FY=np.zeros((self.NPW,self.NPW),complex)
             for i in range(self.NPW):
                 for j in range(self.NPW):
-                    FY[i,j]=sub.fou_t(self.G[i][1]-self.G[j][1],ex)*(self.G[i][0]==self.G[j][0])
+                    FY[i,j]=sub.fou_t(self.G[i][1]-self.G[j][1],ey)*(self.G[i][0]==self.G[j][0])
             for lay in self.lay_list:
                 lay.add_transform_matrix(ey=ey,FY=FY)
 
@@ -72,7 +72,7 @@ class stack:
             FY=np.zeros((self.NPW,self.NPW),complex)
             for i in range(self.NPW):
                 for j in range(self.NPW):
-                    FY[i,j]=sub.fou_complex_t(self.G[i][1]-self.G[j][1],ex,g)*(self.G[i][0]==self.G[j][0])
+                    FY[i,j]=sub.fou_complex_t(self.G[i][1]-self.G[j][1],ey,g)*(self.G[i][0]==self.G[j][0])
             for lay in self.lay_list:
                 lay.add_transform_matrix(ey=ey,FY=FY)
 
