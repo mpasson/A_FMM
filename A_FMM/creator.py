@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import A_FMM.sub_sm as sub
 from matplotlib.backends.backend_pdf import PdfPages
 
-class creator:
+class Creator:
     """Class for the definition of the eps profile in the layer
     """
     def __init__(self,x_list=None,y_list=None,eps_lists=None):

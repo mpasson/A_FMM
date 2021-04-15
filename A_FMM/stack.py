@@ -3,7 +3,7 @@ import A_FMM.sub_sm as sub
 from A_FMM.scattering import S_matrix
 import matplotlib.pyplot as plt
 import copy
-from A_FMM.layer import layer_empty_st
+from A_FMM.layer import Layer_empty_st
 from matplotlib.backends.backend_pdf import PdfPages
 try:
     from multiprocessing import Pool
@@ -22,7 +22,7 @@ class stack:
         self.G=self.layers[0].G
         self.Nyx=self.layers[0].Nyx
 
-    def add_layer(lay,d):
+    def add_layer(self,lay,d):
         self.layers.append(lay)
         self.d.append(d)
         self.N+=1
@@ -140,7 +140,7 @@ class stack:
 
     def fourier(self,threads=1):
         p=Pool(threads)
-        mat_list=p.map(layer_empty_st.fourier,self.lay_list)
+        mat_list=p.map(Layer_empty_st.fourier,self.lay_list)
         for lay,FOUP,INV,EPS1,EPS2 in zip(self.lay_list,mat_list):
             lay.FOUP=FOUP
             lay.INV=INV

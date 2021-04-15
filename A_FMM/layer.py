@@ -2,13 +2,13 @@ import numpy as np
 from scipy import linalg
 import matplotlib.pyplot as plt
 import A_FMM.sub_sm as sub
-from A_FMM.creator import creator
+from A_FMM.creator import Creator
 from matplotlib.backends.backend_pdf import PdfPages
 from A_FMM.scattering import S_matrix
 import copy
 
 
-class layer:    
+class Layer:    
     """ Class for the definition of a single layer
     """
     def __init__(self,Nx,Ny,creator,Nyx=1.0):
@@ -842,7 +842,9 @@ class layer:
         return [txc/np.sqrt(tx1*tx2),tyc/np.sqrt(ty1*ty2)]
 
 
-class layer_ani_diag(layer):
+class Layer_ani_diag(Layer):
+    """ Class for the definition of a single layer anysitropic (diagonal) layer
+    """
     def __init__(self,Nx,Ny,creator_x,creator_y,creator_z,Nyx=1.0):
         self.Nx=Nx
         self.Ny=Ny
@@ -862,7 +864,9 @@ class layer_ani_diag(layer):
         self.TY=False
 
 
-class layer_num(layer):
+class Layer_num(Layer):
+    """ Class for the definition of a single layer from a function defining the dielectric profile
+    """
     def __init__(self,Nx,Ny,func,args=(),Nyx=1.0,NX=2048,NY=2048):
         self.Nx=Nx
         self.Ny=Ny
@@ -976,7 +980,9 @@ class layer_num(layer):
         save.close()
 
 
-class layer_uniform(layer):
+class Layer_uniform(Layer):
+    """ Class for the definition of a single uniform layer
+    """
     def __init__(self,Nx,Ny,eps,Nyx=1.0):
         self.Nx=Nx
         self.Ny=Ny
@@ -1110,7 +1116,9 @@ class layer_uniform(layer):
 
 
 
-class layer_empty_st(layer):
+class Layer_empty_st(Layer):
+    """Class for the definition of an empy layer
+    """
     def __init__(self,Nx,Ny,creator,Nyx=1.0):
         self.Nx=Nx
         self.Ny=Ny
@@ -1137,14 +1145,16 @@ class layer_empty_st(layer):
         return (self.FOUP,self.INV,self.EPS1,self.EPS2)
 
 
-class layer_from_xsection(layer):    
+class Layer_from_xsection(Layer):  
+    """ Development class
+    """
     def __init__(self,Nx,Ny,xs):
         self.Nx=Nx
         self.Ny=Ny
         self.NPW=(2*Nx+1)*(2*Ny+1)
         self.G=sub.createG(self.Nx,self.Ny)
         self.D=len(self.G)
-        self.creator=creator()
+        self.creator=Creator()
 
         y_stacks=[]
         w_tot=0.0
@@ -1205,14 +1215,16 @@ class layer_from_xsection(layer):
         self.mode(self.ax/lam,kx=kx,ky=ky,v=v)
 
 
-class layer_from_hstack(layer):    
+class Layer_from_hstack(Layer):    
+    """ Development class
+    """
     def __init__(self,Nx,Ny,hstack):
         self.Nx=Nx
         self.Ny=Ny
         self.NPW=(2*Nx+1)*(2*Ny+1)
         self.G=sub.createG(self.Nx,self.Ny)
         self.D=len(self.G)
-        self.creator=creator()
+        self.creator=Creator()
 
         y_stacks=[]
         w_tot=0.0

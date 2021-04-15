@@ -8,3 +8,4 @@ examples/*.pdf
 test*
 examples/slow_mod
 docs
+Docs/generated

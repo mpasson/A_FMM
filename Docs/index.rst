@@ -14,6 +14,7 @@ A_FMM's documentation
    intro
    api_summary
    jupyter/examples
+   reference-manual
    
 
 
