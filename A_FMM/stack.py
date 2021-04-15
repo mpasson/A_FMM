@@ -174,7 +174,7 @@ class stack:
             lay2.mode(k0,kx=kx,ky=ky)
             self.S.add(lay1.interface(lay2))
             self.S.add_uniform(lay2,self.d[i])
-            if i!=1 and i!=self.N:
+            if lay1 is not lay2 and i!=1 and i!=self.N:
                 lay1.clear()
             lay1=lay2
         lay2.mode(k0,kx=kx,ky=ky)

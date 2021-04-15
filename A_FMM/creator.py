@@ -5,7 +5,16 @@ import A_FMM.sub_sm as sub
 from matplotlib.backends.backend_pdf import PdfPages
 
 class creator:
-    def __init__(self,x_list=[],y_list=[],eps_lists=[]):
+    """Class for the definition of the eps profile in the layer
+    """
+    def __init__(self,x_list=None,y_list=None,eps_lists=None):
+        """Creator
+
+        Args:
+            x_list (list):      list of floats containig the coordinates of the x boundaries
+            y_list (list):      list of floats containig the coordinates of the y boundaries
+            eps_lists (list):   list of list of floats containig the eps value of the squares defined by x_list and y_list
+        """
         self.x_list=x_list
         self.y_list=y_list
         self.eps_lists=eps_lists
@@ -28,7 +37,19 @@ class creator:
             self.eps_lists.append([eps[i]])
 
 
-    def ridge(self,eps_core,eps_lc,eps_uc,w,h,t,y_offset=0.0,x_offset=0.0):
+    def ridge(self,eps_core,eps_lc,eps_uc,w,h,t=0.0,y_offset=0.0,x_offset=0.0):
+        """Rib waveguide with single layer
+
+        Args:
+            eps_core (float):   epsilon of the core
+            eps_lc (floar):     epsilon of the lower cladding
+            eps_up (float):     epsilon of the upper cladding
+            w (float):          width of the rib (in unit of ax)
+            h (float):          height of the un-etched part (in unit of ay)
+            t (float):          height of the etched part (in unit of ay). Default is 0 (strip waveguide)
+            x_offset (float):   offset of the center of the waveguide with respec to the center of the cell (in unit of ax). Default is 0
+            y_offset (float):   offset of the etched part with resoect to the unetched one (in unit of ay). Default is 0 (etched and unetched part are aligned at the bottom)
+        """
         self.x_list=[-0.5*w+x_offset,0.5*w+x_offset]
         self.y_list=[-0.5,-0.5*h,-0.5*h+y_offset,-0.5*h+t+y_offset,0.5*h]
         self.eps_lists=[[eps_uc,eps_lc,eps_lc,eps_core,eps_uc],[eps_uc,eps_lc,eps_core,eps_core,eps_core]]
@@ -52,21 +73,73 @@ class creator:
         self.eps_lists=eps_left+eps_right
 
     def ridge_double(self,eps_core,eps_lc,eps_uc,w1,w2,h,t1,t2,y_offset=0.0,x_offset=0.0):
+        """Rib waveguide with double etch
+
+        Args:
+            eps_core (float):   epsilon of the core
+            eps_lc (floar):     epsilon of the lower cladding
+            eps_up (float):     epsilon of the upper cladding
+            w1 (float):         width of the unetched part (in unit of ax)
+            w2 (float):         width of the intermediate etched part (in unit of ax)
+            h (float):          height of the un-etched part (in unit of ay)
+            t1 (float):         height of the intermidiate etched part (in unit of ay). 
+            t2 (float):         height of the maximum etched part (in unit of ay). 
+            x_offset (float):   offset of the center of the waveguide with respec to the center of the cell (in unit of ax). Default is 0
+            y_offset (float):   offset of the etched part with resoect to the unetched one (in unit of ay). Default is 0 (etched and unetched part are aligned at the bottom)
+
+        """
+
         self.x_list=[-0.5*w2+x_offset,-0.5*w1+x_offset,0.5*w1+x_offset,0.5*w2+x_offset]
         self.y_list=[-0.5,-0.5*h,-0.5*h+y_offset,-0.5*h+t2+y_offset,-0.5*h+t1+y_offset,0.5*h]
         self.eps_lists=[[eps_uc,eps_lc,eps_lc,eps_core,eps_uc,eps_uc],[eps_uc,eps_lc,eps_lc,eps_core,eps_core,eps_uc],[eps_uc,eps_lc,eps_core,eps_core,eps_core,eps_core],[eps_uc,eps_lc,eps_lc,eps_core,eps_core,eps_uc]]
 
     def rect(self,eps_core,eps_clad,w,h,off_x=0.0,off_y=0.0):
+        """Rectangular waveguide
+        
+        Args:
+            eps_core (float):   epsilon of the core
+            eps_clad (floar):   epsilon of the cladding
+            w (float):          width of the waveguide (in unit of ax)
+            h (float):          height of the waveguide (in unit of ay)
+            off_y (float):      offset of the center of the waveguide with respect to the cell (in unit of ay). Default is 0.
+            off_x (float):      offset of the center of the waveguide with respect to the cell (in unit of ax). Default is 0.
+        """
         self.x_list=[-0.5*w+off_x,0.5*w+off_x]
         self.y_list=[-0.5*h+off_y,0.5*h+off_y]
         self.eps_lists=[[eps_clad,eps_clad],[eps_clad,eps_core]]
 
     def slab(self,eps_core,eps_lc,eps_uc,w,offset=0.0):
+        """1D slab in x direction
+
+        Args:
+            eps_core (float): epsilon of the core.
+            eps_lc (float): epsilon of the lower cladding.
+            eps_uc (float): epsilon of the upper cladding.
+            w (float): thickness of the slab (in unit of ax).
+            offset (float, optional): Offset if the slab with respect to the center of the cell. Defaults to 0.0.
+
+        Returns:
+            None.
+
+        """
         self.x_list=[-0.5,-0.5*w+offset,0.5*w+offset]
         self.y_list=[0.5]
         self.eps_lists=[[eps_uc],[eps_lc],[eps_core]]
 
     def slab_y(self,eps_core,eps_lc,eps_uc,w):
+        """1D slab in y direction
+
+        Args:
+            eps_core (float): epsilon of the core.
+            eps_lc (float): epsilon of the lower cladding.
+            eps_uc (float): epsilon of the upper cladding.
+            w (float): thickness of the slab (in unit of ay).
+            offset (float, optional): Offset if the slab with respect to the center of the cell. Defaults to 0.0.
+
+        Returns:
+            None.
+
+        """
         self.x_list=[0.5]
         self.y_list=[-0.5,-0.5*w,0.5*w]
         self.eps_lists=[[eps_uc,eps_lc,eps_core]]
@@ -79,6 +152,22 @@ class creator:
             self.eps_lists.append([eps])
 
     def hole(self,h,w,r,e_core,e_lc,e_up,e_fill):
+        """Rib waveguide with a hole in the middle
+        
+
+        Args:
+            h (TYPE): height of the waveguide (in unit of ay).
+            w (TYPE): width of the waveguide (in unit of ax).
+            r (TYPE): radius of the internal hole (in unit of ax).
+            e_core (TYPE): epsilon of the core.
+            e_lc (TYPE): epsilon of the lower cladding.
+            e_up (TYPE): epsilon of the upper cladding.
+            e_fill (TYPE): epsilon inside the hole.
+
+        Returns:
+            None.
+
+        """
         self.x_list=[-0.5*w,-r,r,0.5*w]
         self.y_list=[-0.5*h,0.5*h,0.5]
         self.eps_lists=[[e_lc,e_up,e_up],[e_lc,e_core,e_up],[e_lc,e_fill,e_up],[e_lc,e_core,e_up]]
@@ -152,7 +241,21 @@ class creator:
         #print(self.eps_lists)
 
 
-        
+    def plot_eps(self, N=101):
+        EPS = np.zeros((N,N)) + self.eps_lists[0][0]
+        x = np.linspace(-0.5, 0.5, N)
+        y = np.linspace(-0.5, 0.5, N)
+        x,y = np.meshgrid(x,y, indexing='ij')
+        x_old = -0.5
+        for xv, el in zip(self.x_list, self.eps_lists):
+            EPS[np.logical_and(x>=xv, x<=x_old)] = el[0]
+            for yv, e in zip(self.y_list, el):
+                EPS[np.logical_and(x>=xv, y>=yv)] = e
+                plt.imshow(np.logical_and(x<=xv,x>=x_old, y>=yv))
+                plt.show()
+                x_old = xv
+        return EPS
+                
 
 
         
