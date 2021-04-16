@@ -1,3 +1,10 @@
+.. autosummary::
+    :toctree: generated/
+
+    A_FMM
+
+
+
 .. currentmodule:: A_FMM
 
 *************
