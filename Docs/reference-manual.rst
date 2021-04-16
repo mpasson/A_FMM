@@ -1,4 +1,4 @@
-.. currentmodule:: A_FMM.creator
+.. currentmodule:: A_FMM
 
 *************
 API Reference
@@ -37,7 +37,7 @@ Methods
     Creator.x_stack
 
 
-.. currentmodule:: A_FMM.layer
+.. currentmodule:: A_FMM
 
 Layer
 +++++++++++++++

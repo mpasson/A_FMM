@@ -1,20 +1,21 @@
-.. currentmodule:: solver
+.. currentmodule:: A_FMM
 
 *************
 Basic Syntax
 *************
 
-This page provides an overview of the most used Methods and Classes in the GenSol package. This is by no meand a full API guide (which can be found :doc:`here <reference-manual>` ), but just shows the most common Methods, grouped by functionality.
+This page provides an overview of the most used Methods and Classes in the A_FMM package. This is by no meand a full API guide (which can be found :doc:`here <reference-manual>` ), but just shows the most common Methods, grouped by functionality.
 
 
-Circtui Definition
-===================
+Layer definition and creation
+================================
 
 Classes and Methods for building a circuit:
 
-.. rubric:: Definition of Solver
+.. rubric:: Definition of Layers
 .. autosummary::
 
-    layer
+    Creator
+    Layer
 
 
