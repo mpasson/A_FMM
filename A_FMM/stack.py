@@ -11,7 +11,7 @@ except ModuleNotFoundError:
     print('WARNING: multiprocessing not available')
     
 
-class stack:
+class Stack:
     def __init__(self,layers=[],d=[]):
         if len(layers)!=len(d):
             raise ValueError('Different number of layers and thicknesses')
@@ -254,17 +254,41 @@ class stack:
         dic['bottom']=(u2,d2,P)
         return dic
 
-    def get_R(self,i,j,ordered='yes'):
-        return self.S.get_R(i,j,self.layers[0],ordered=ordered)
+    def get_R(self,i,j,ordered=True):
+        if ordered:
+            j1=np.argsort(self.layers[0].W)[-i-1]
+            j2=np.argsort(self.layers[0].W)[-j-1]
+        else:
+            j1=i
+            j2=j
+        return np.abs(self.S.S21[j1,j2])**2*self.layers[0].P_norm[j2]/self.layers[0].P_norm[j1]
 
-    def get_T(self,i,j,ordered='yes'):
-        return self.S.get_T(i,self.layers[0],j,self.layers[-1],ordered=ordered)
+    def get_T(self,i,j,ordered=True):
+        if ordered:
+            j1=np.argsort(self.layers[0].W)[-i-1]
+            j2=np.argsort(self.layers[-1].W)[-j-1]
+        else:
+            j1=i
+            j2=j
+        return np.abs(self.S.S11[j2,j1])**2*self.layers[-1].P_norm[j2]/self.layers[0].P_norm[j1]
 
-    def get_PR(self,i,j,ordered='yes'):
-        return self.S.get_PR(i,j,self.layers[0],ordered=ordered)
+    def get_PR(self,i,j,ordered=True):
+        if ordered:
+            j1=np.argsort(self.layers[0].W)[-i-1]
+            j2=np.argsort(self.layers[0].W)[-j-1]
+        else:
+            j1=i
+            j2=j
+        return np.angle(self.S.S21[j2,j1])
 
-    def get_PT(self,i,j,ordered='yes'):
-        return self.S.get_PT(i,self.layers[0],j,self.layers[-1],ordered=ordered)
+    def get_PT(self,i,j,ordered=True):
+        if ordered:
+            j1=np.argsort(self.layers[0].W)[-i-1]
+            j2=np.argsort(self.layers[-1].W)[-j-1]
+        else:
+            j1=i
+            j2=j
+        return np.angle(self.S.S11[j2,j1])
 
     def get_el(self,sel,i,j):
         io=np.argsort(self.layers[0].W)[-i]

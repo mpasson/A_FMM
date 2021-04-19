@@ -13,6 +13,7 @@ class Layer:
     """
     def __init__(self,Nx,Ny,creator,Nyx=1.0):
         """
+        
         Args:
             Nx (int): truncation order in x direction
             Ny (int): truncation order in y direction

@@ -1,10 +1,3 @@
-.. autosummary::
-    :toctree: generated/
-
-    A_FMM
-
-
-
 .. currentmodule:: A_FMM
 
 *************
@@ -43,8 +36,6 @@ Methods
     Creator.varied_plane
     Creator.x_stack
 
-
-.. currentmodule:: A_FMM
 
 Layer
 +++++++++++++++
@@ -98,6 +89,95 @@ Methods
     Layer.writeH
     Layer.write_field
     Layer.write_fieldgeneral
+
+Stack
++++++++++++++++
+
+
+.. autosummary::
+    :toctree: generated/
+
+    Stack
+
+
+Methods
+-------------
+
+.. autosummary::
+    :toctree: generated/
+
+
+    Stack.add_layer
+    Stack.add_transform
+    Stack.add_transform_complex
+    Stack.bloch_modes
+    Stack.count_interface
+    Stack.create_input
+    Stack.double
+    Stack.flip
+    Stack.fourier
+    Stack.get_PR
+    Stack.get_PT
+    Stack.get_R
+    Stack.get_T
+    Stack.get_el
+    Stack.get_energybalance
+    Stack.get_inout
+    Stack.get_prop
+    Stack.inspect
+    Stack.join
+    Stack.line_E
+    Stack.mat_plot
+    Stack.mode_T
+    Stack.plot_E
+    Stack.plot_EY
+    Stack.plot_E_general
+    Stack.plot_E_periodic
+    Stack.plot_E_plane
+    Stack.plot_Ex
+    Stack.plot_Ey
+    Stack.plot_stack
+    Stack.plot_stack_y
+    Stack.solve
+    Stack.solve_S
+    Stack.solve_lay
+    Stack.solve_serial
+    Stack.transform
+    Stack.transform_complex
+    Stack.writeE
+    Stack.writeE_periodic_XY
+    Stack.writeE_periodic_XZ
+    Stack.writeE_periodic_YZ
+
+
+Stack
++++++++++++++++
+
+
+.. autosummary::
+    :toctree: generated/
+
+    S_matrix
+
+
+Methods
+-------------
+
+.. autosummary::
+    :toctree: generated/
+
+    S_matrix.add
+    S_matrix.add_left
+    S_matrix.add_uniform
+    S_matrix.add_uniform_left
+    S_matrix.der
+    S_matrix.det
+    S_matrix.det_modes
+    S_matrix.int_f
+    S_matrix.int_f_tot
+    S_matrix.left
+    S_matrix.matrix
+    S_matrix.output
 
 
 
