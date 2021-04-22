@@ -92,17 +92,10 @@ class Stack:
             for i in range(int(d/dz)):
                 EPS.append(EPSt)
         EPS=np.array(EPS)
-        plt.figure()
+        fig = plt.figure()
         plt.imshow(func(EPS).T,origin='lower',extent=[0.0,sum(self.d),-0.5,0.5], cmap=plt.get_cmap(cmap))
         plt.colorbar()
-        if isinstance(pdf,PdfPages):
-            pdf.savefig()
-        elif isinstance(pdf, str):
-            pdf=pdf+'_y=%3.2f.pdf' % (y)
-            a=PdfPages(pdf)
-            a.savefig()
-            a.close()
-        if pdf is not None: plt.close()
+        sub.savefig(pdf, fig)
 
 
     def plot_stack_y(self,nome='cross_section_Y',N=100,dz=0.01,x=0.0,func=np.abs):
@@ -750,7 +743,7 @@ class Stack:
         return None
 
 
-    def plot_E_periodic(self,ii,r=1,dz=0.01,pdf=None,N=100,y=0.0,func=np.real,s=1,title=None):
+    def plot_E_periodic(self,ii,r=1,dz=0.01,pdf=None,N=100,y=0.0,func=np.real,s=1,title=None, figsize=(12,6)):
         [u,d]=np.split(self.BV[:,ii],2)
         d=d*self.BW[ii]
         x=np.linspace(-s*0.5,s*0.5,s*N)
@@ -779,11 +772,7 @@ class Stack:
         #print ii,np.abs([self.BW[ii]**k for k in range(r)])
         Ex=np.vstack([self.BW[ii]**k*Ex for k in range(r)])
         Ey=np.vstack([self.BW[ii]**k*Ey for k in range(r)])
-        if pdf==None:
-            out=PdfPages('E.pdf')
-        else:
-            out=pdf
-        plt.figure()
+        fig = plt.figure(figsize=figsize)
         plt.subplot(211)
         plt.title('Ex')
         plt.imshow(func(Ex).T,origin='lower',extent=[0.0,r*sum(self.d),-0.5,0.5],cmap='jet')
@@ -794,11 +783,7 @@ class Stack:
         plt.colorbar()
         if title!=None:
             plt.suptitle(title)
-        #plt.savefig('field.png',dpi=900)
-        out.savefig(dpi=900)
-        plt.close()
-        if pdf==None:
-            out.close()
+        sub.savefig(pdf, fig)
         return None
 
     def writeE_periodic_XZ(self,ii,r=1,filename='fieldE_XZ.out',dz=0.01,N=100,y=0.0,s=1.0):

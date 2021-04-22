@@ -4,6 +4,16 @@ from scipy import linalg
 import matplotlib.pyplot as plt
 import numpy.linalg
 import inspect
+from matplotlib.backends.backend_pdf import PdfPages
+
+
+def savefig(pdf, fig):
+    if isinstance(pdf,PdfPages):
+        pdf.savefig(fig)
+    elif isinstance(pdf, str):
+        with PdfPages(pdf) as a:
+            a.savefig(fig)
+    if pdf is not None: plt.close()
 
 def get_user_attributes(cls):
     boring = dir(type('dummy', (object,), {}))
