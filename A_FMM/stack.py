@@ -12,7 +12,29 @@ except ModuleNotFoundError:
     
 
 class Stack:
-    def __init__(self,layers=[],d=[]):
+    """Class representing the multylayer object
+    
+    This class is used for the definition of the multilayer object to be simulated using fourier expansion (x and y axis) and scattering matrix algorithm (z axis).
+    It is built from a list of layers and thicknesses. The value of the thickness of the first and last layer is irrelevant for the simulation, and it is used only to set the plotting window.
+    """
+
+    def __init__(self, layers=None, d=None):
+        """Creator
+    
+        Args:
+            layers (list, optional): List of Layers: layers of the multylayer. Defaults to None (empty list).
+            d (list, optional): List of float: thicknesses of the multylayer. Defaults to None (empty list).
+
+        Raises:
+            ValueError: Raised if d and mat have different lengths
+
+        Returns:
+            None.
+            
+        """
+        layers = [] if layers is None else layers
+        d = [] if layers is None else d
+        
         if len(layers)!=len(d):
             raise ValueError('Different number of layers and thicknesses')
         self.N=len(layers)
@@ -21,25 +43,75 @@ class Stack:
         self.NPW=self.layers[0].D
         self.G=self.layers[0].G
         self.Nyx=self.layers[0].Nyx
+        
+        self.count_interface()
 
     def add_layer(self,lay,d):
+        """Add a layer at the end of the multilayer
+        
+
+        Args:
+            lay (Layer): Layer to be added.
+            d (float): thickness of the layer.
+
+        Returns:
+            None.
+
+        """
         self.layers.append(lay)
         self.d.append(d)
         self.N+=1
+        self.count_interface()
 
     def add_transform(self,ex=0.0,ey=0.0):
+        """Add real coordinate transform to the layers in the stack
+        
+        Note: old inefficient routine (calculate the same transformation matrix for every layer)
+        
+
+        Args:
+            ex (float, optional): Width of the unmapped region in x (unit of ax). Defaults to 0.0 (no transformation applied).
+            ey (float, optional): Width of the unmapped region in y (unit of ay). Defaults to 0.0 (no transformation applied).
+
+        Returns:
+            None.
+
+        """
         self.ex=ex
         self.ey=ey
         for lay in self.layers:
             lay.trasform(ex,ey)
 
     def add_transform_complex(self,ex=0.0,ey=0.0):
+        """Add complex coordinate transform to the layers in the stack
+        
+        Note: old inefficient routine (calculate the same transformation matrix for every layer)
+        
+
+        Args:
+            ex (float, optional): Width of the unmapped region in x (unit of ax). Defaults to 0.0 (no transformation applied).
+            ey (float, optional): Width of the unmapped region in y (unit of ay). Defaults to 0.0 (no transformation applied).
+
+        Returns:
+            None.
+
+        """
         self.ex=ex
         self.ey=ey
         for lay in self.layers:
             lay.trasform_complex(ex,ey)
 
     def transform(self,ex=0.0,ey=0.0):
+        """Add real coordinate transform to the layers in the stack
+        
+        Args:
+            ex (float, optional): Width of the unmapped region in x (unit of ax). Defaults to 0.0 (no transformation applied).
+            ey (float, optional): Width of the unmapped region in y (unit of ay). Defaults to 0.0 (no transformation applied).
+
+        Returns:
+            None.
+
+        """
         if (ex!=0.0):
             self.ex=ex
             FX=np.zeros((self.NPW,self.NPW),complex)
@@ -58,6 +130,16 @@ class Stack:
                 lay.add_transform_matrix(ey=ey,FY=FY)
 
     def transform_complex(self,ex=0.0,ey=0.0):
+        """Add complex coordinate transform to the layers in the stack
+        
+        Args:
+            ex (float, optional): Width of the unmapped region in x (unit of ax). Defaults to 0.0 (no transformation applied).
+            ey (float, optional): Width of the unmapped region in y (unit of ay). Defaults to 0.0 (no transformation applied).
+
+        Returns:
+            None.
+
+        """
         g=1.0/(1-1j)
         if (ex!=0.0):
             self.ex=ex
@@ -78,12 +160,40 @@ class Stack:
 
 
     def mat_plot(self,N=100,s=1):
+        """Call matplot on every layer in the stack. Save the results in multiple pdf files
+        
+        Args:
+            N (int, optional): Number of points to be used to plot the epsilon. Defaults to 100.
+            s (float, optional): Number of replicas of the unit cell to be plotted. Defaults to 1.
+
+        Returns:
+            None.
+
+        """
         n=1
         for lay in self.layers:
             lay.mat_plot('layer_%i' % (n),N=N,s=s)
             n+=1
 
     def plot_stack(self,pdf=None,N=100,dz=0.01,y=0.0,func=np.abs, cmap='viridis'):
+        """Plots the stack xz cross section
+        
+
+        Args:
+            pdf (multiple, optional): Multiple choice. Each one has a diffrent meaning:
+                - (PdfPages): append figure to the PdfPages object
+                - (str): save the figure to a pdf with this name
+                - None (Default): Do not plot anything. Keep the figure as the active one.
+            N (int, optional): Number of points in the x direction. Defaults to 100.
+            dz (float, optional): Resolution in z direction (unit of ax). Defaults to 0.01.
+            y (float, optional): y coordinate at which the cross section is taken (unit of ay). Defaults to 0.0.
+            func (callable, optional): Function to be applied to eps befor plotting. Defaults to np.abs.
+            cmap (str, optional): matplotlib colormap for plotting. Defaults to 'viridis'.
+
+        Returns:
+            None.
+
+        """
         X=np.linspace(-0.5,0.5,N)
         EPS=[]
         for (lay,d) in zip(self.layers,self.d):
@@ -98,8 +208,25 @@ class Stack:
         sub.savefig(pdf, fig)
 
 
-    def plot_stack_y(self,nome='cross_section_Y',N=100,dz=0.01,x=0.0,func=np.abs):
-        nome=nome+'_y=%3.2f.pdf' % (x)
+    def plot_stack_y(self,pdf=None,N=100,dz=0.01,x=0.0,func=np.abs, cmap='viridis'):
+        """Plots the stack yz cross section
+        
+
+        Args:
+            pdf (multiple, optional): Multiple choice. Each one has a diffrent meaning:
+                - (PdfPages): append figure to the PdfPages object
+                - (str): save the figure to a pdf with this name
+                - None (Default): Do not plot anything. Keep the figure as the active one.
+            N (int, optional): Number of points in the x direction. Defaults to 100.
+            dz (float, optional): Resolution in z direction (unit of ax). Defaults to 0.01.
+            x (float, optional): x coordinate at which the cross section is taken (unit of ax). Defaults to 0.0.
+            func (callable, optional): Function to be applied to eps befor plotting. Defaults to np.abs.
+            cmap (str, optional): matplotlib colormap for plotting. Defaults to 'viridis'.
+
+        Returns:
+            None.
+
+        """
         Y=np.linspace(-0.5,0.5,N)
         EPS=[]
         for (lay,d) in zip(self.layers,self.d):
@@ -107,17 +234,20 @@ class Stack:
             for i in range(int(d/dz)):
                 EPS.append(EPSt)
         EPS=np.array(EPS)
-        out=PdfPages(nome)
-        plt.figure()
-        plt.imshow(func(EPS).T,origin='lower',extent=[0.0,sum(self.d),-0.5,0.5])
+        fig = plt.figure()
+        plt.imshow(func(EPS).T,origin='lower',extent=[0.0,sum(self.d),-0.5,0.5], cmap=plt.get_cmap(cmap))
         plt.colorbar()
-        out.savefig()
-        plt.close()
-        out.close()
+        sub.savefig(pdf, fig)
 
 
 
     def count_interface(self):
+        """Helper function to identify the different layers and the needed interfaces
+        
+        Returns:
+            None.
+
+        """
         self.tot_thick=sum(self.d)
         self.lay_list=[]
         for lay in self.layers:
@@ -144,6 +274,20 @@ class Stack:
             
 
     def solve(self,k0,kx=0.0,ky=0.0):
+        """Calculates the scattering matrix of the multilayer (cpu friendly version)
+        
+        This version of solve solve the system in the "smart" way, solving fisrt the eigenvalue problem in each unique layer and the interface matrices of all the interface involved. The computaitonal time scales with the number of different layers, not with the total one.
+        It prioritize minimize the calculation done while using more memory.
+
+        Args:
+            k0 (float): Vacuum wavevector for the simulation (freqency).
+            kx (float, optional): Wavevector in the x direction for the pseudo-fourier expansion. Defaults to 0.0.
+            ky (float, optional): Wavevector in the x direction for the pseudo-fourier expansion. Defaults to 0.0.
+
+        Returns:
+            None.
+
+        """
         for lay in self.lay_list:
             lay.mode(k0,kx=kx,ky=ky)
             #lay.get_P_norm()
@@ -158,6 +302,20 @@ class Stack:
             self.S.add(self.int_matrices[self.int_list.index(self.interfaces[i])])
 
     def solve_serial(self,k0,kx=0.0,ky=0.0):
+        """Calculates the scattering matrix of the multilayer (memory friendly version)
+        
+        This version solves sequentially the layers and the interface as they are in the stack. It is more momery efficient since onlt the data of 2 layer are kept in memory at any given time. Computational time scales with the total number of layer, regardless if they are equal or not. 
+        It prioritize memory efficiency while possibly requiring more calculations. 
+
+        Args:
+            k0 (float): Vacuum wavevector for the simulation (freqency).
+            kx (float, optional): Wavevector in the x direction for the pseudo-fourier expansion. Defaults to 0.0.
+            ky (float, optional): Wavevector in the x direction for the pseudo-fourier expansion. Defaults to 0.0.
+
+        Returns:
+            None.
+
+        """
         lay1=self.layers[0]
         lay1.mode(k0,kx=kx,ky=ky)
         lay1.get_P_norm()
@@ -175,13 +333,31 @@ class Stack:
 
 
     def solve_lay(self,k0,kx=0.0,ky=0.0):
+        """Solve the eigenvalue problem of all the layer in the stack
+        
+
+        Args:
+            k0 (float): Vacuum wavevector for the simulation (freqency).
+            kx (float, optional): Wavevector in the x direction for the pseudo-fourier expansion. Defaults to 0.0.
+            ky (float, optional): Wavevector in the x direction for the pseudo-fourier expansion. Defaults to 0.0.
+
+        Returns:
+            None.
+
+        """
         for lay in self.lay_list:
             lay.mode(k0,kx=kx,ky=ky)
             #lay.get_P_norm()
         self.layers[0].get_P_norm()
         self.layers[-1].get_P_norm()
 
-    def solve_S(self,k0,kx=0.0,ky=0.0):
+    def solve_S(self):
+        """Builds the scattering matrix of the stacks. It assumes that all the layers are alredy solved.
+        
+        Returns:
+            None.
+
+        """
         self.int_matrices=[]
         for i in self.int_list:
             self.int_matrices.append(i[0].interface(i[1]))
@@ -191,6 +367,18 @@ class Stack:
             self.S.add(self.int_matrices[self.int_list.index(self.interfaces[i])])
 
     def get_prop(self,u,list_lay,d=None):
+        """Calculates the total poyinting vector in the requiested layers
+        
+
+        Args:
+            u (ndarray): array containing the modal coefficient incoming in the first layer.
+            list_lay (list of int): indexes of the layer of which to calculate the Poynting vector.
+            d (ndarray, optional): array containing the modal coefficient incoming in the last layer. Defaults to None.
+
+        Returns:
+            dic (dict): Dictionary of the Poyting vectors in the the layers {layer_index : Poyting vector}
+
+        """
         dic={}
         u1,d2=np.zeros((2*self.NPW),complex),np.zeros((2*self.NPW),complex)
         u1=u
