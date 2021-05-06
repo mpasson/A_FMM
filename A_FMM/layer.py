@@ -12,7 +12,7 @@ class Layer:
     """ Class for the definition of a single layer
     """
     def __init__(self,Nx,Ny,creator,Nyx=1.0):
-        """
+        """Creator
         
         Args:
             Nx (int): truncation order in x direction
@@ -327,7 +327,15 @@ class Layer:
         save.close()
 
     def plot_Ham(self,pdf):
-        N=np.shape(self.M)[0]
+        """Plot the matrix of the eigenvalue problem
+
+        Args:
+            pdf (PdfPages): pdf object to be used to plot.
+
+        Returns:
+            None.
+
+        """
         plt.figure()
         plt.title('k0:%5.3f kx:%5.3f ky:%5.3f' % (self.k0,self.kx,self.ky))
         plt.imshow(np.abs(np.abs(self.M)),aspect='auto',interpolation='nearest')
@@ -398,7 +406,9 @@ class Layer:
         """Plots both electrinc and magnetic field
 
         Args:
-            pdf (PdfPages): pdf for appending the plots
+            pdf (multiple, optional): Multiple choice. Each one has a diffrent meaning:
+                - (PdfPages): append figure to the PdfPages object
+                - (str): save the figure to a pdf with this name
             i (int): mode to be plotted.
             N (int): number of points in the graph. Default is 100
             s (float): number of replicas of the cell to be plotted. Default is 1
@@ -422,6 +432,7 @@ class Layer:
             Ey=np.add(Ey,np.dot(WEy[i],EXP))
             Hx=np.add(Hx,np.dot(WHx[i],EXP))
             Hy=np.add(Hy,np.dot(WHy[i],EXP))
+        fig = plt.figure()
         plt.subplot(221)
         plt.imshow(func(Ex),aspect=1,extent=[-s*0.5,s*0.5,-s*0.5,s*0.5],origin='lower')
         plt.title('Ex')
@@ -440,11 +451,25 @@ class Layer:
         plt.colorbar()
         if title!=None:
             plt.suptitle(title)
-        pdf.savefig()
-        plt.close()
+        sub.savefig(pdf, fig)
+
 
 
     def write_field(self,i,filename='field.out',N=100,s=1.0,func=None,ordered=True):
+        """Writes the modal fields to a file
+        
+        Args:
+            i (int): Index of the mode to plot. Menaning depends on the value of the ordered parameter.
+            filename (str, optional): Name of the output file. Defaults to 'field.out'.
+            N (int, optional): Number of points in (both in x and y) on which the fields are calculated. Defaults to 100.
+            s (float, optional): Number of unit cells which are written. Defaults to 1.0.
+            func (function, optional): Function to be applied to the field before writing. Defaults to None (full complex fields are plotted).
+            ordered (bool, optional): if True, modes are ordered on decreasing effective index. If False, the order is whatever is provided by the diagonalization routine. Defaults to True.
+
+        Returns:
+            None.
+
+        """
         if ordered:
             j=np.argsort(self.W)[-i-1]
         else:
@@ -480,10 +505,6 @@ class Layer:
         Hx,Hy=np.zeros((N,N),dtype='complex'),np.zeros((N,N),dtype='complex')
         for i in range(self.D):
             EXP=np.exp((0+2j)*np.pi*((self.G[i][0]+self.kx)*X+(self.G[i][1]+self.ky)*Y))
-#            Ex+=WEx[i]*EXP
-#            Ey+=WEy[i]*EXP
-#            Hx+=WHx[i]*EXP
-#            Hy+=WHy[i]*EXP
             Ex=np.add(Ex,np.dot(WEx[i],EXP))
             Ey=np.add(Ey,np.dot(WEy[i],EXP))
             Hx=np.add(Hx,np.dot(WHx[i],EXP))
@@ -511,6 +532,17 @@ class Layer:
             f.close()
 
     def writeE(self,i,filename='fieldE.out',N=100):
+        """Writes the modal electric field to a file
+        
+        Args:
+            i (int): Index of the mode. Modes are ordered by default.
+            filename (str, optional): Name of the output file. Defaults to 'fieldE.out'.
+            N (int, optional): Number of points in (both in x and y) on which the fields are calculated. Defaults to 100.
+
+        Returns:
+            None.
+
+        """
         j=np.argsort(self.W)[-i]
         [X,Y]=np.meshgrid(np.linspace(-0.5,0.5,N),np.linspace(-0.5,0.5,N))
         [WEx,WEy]=np.split(self.V[:,j],2)
@@ -518,8 +550,6 @@ class Layer:
         Ex,Ey=np.zeros((N,N),dtype='complex'),np.zeros((N,N),dtype='complex')
         for i in range(self.D):
             EXP=np.exp((0+2j)*np.pi*((self.G[i][0]+self.kx)*X+(self.G[i][1]+self.ky)*Y))
-#            Ex+=WEx[i]*EXP
-#            Ey+=WEy[i]*EXP
             Ex=np.add(Ex,np.dot(WEx[i],EXP))
             Ey=np.add(Ey,np.dot(WEy[i],EXP))
         f=open(filename,'w')
@@ -531,6 +561,17 @@ class Layer:
         f.close()
 
     def writeH(self,i,filename='fieldH.out',N=100):
+        """Writes the modal magnetic field to a file
+        
+        Args:
+            i (int): Index of the mode. Modes are ordered by default.
+            filename (str, optional): Name of the output file. Defaults to 'fieldH.out'.
+            N (int, optional): Number of points in (both in x and y) on which the fields are calculated. Defaults to 100.
+
+        Returns:
+            None.
+
+        """
         j=np.argsort(self.W)[-i]
         [X,Y]=np.meshgrid(np.linspace(-0.5,0.5,N),np.linspace(-0.5,0.5,N))
         [WEx,WEy]=np.split(self.V[:,j],2)
@@ -538,10 +579,6 @@ class Layer:
         Hx,Hy=np.zeros((N,N),dtype='complex'),np.zeros((N,N),dtype='complex')
         for i in range(self.D):
             EXP=np.exp((0+2j)*np.pi*((self.G[i][0]+self.kx)*X+(self.G[i][1]+self.ky)*Y))
-#            Ex+=WEx[i]*EXP
-#            Ey+=WEy[i]*EXP
-#            Hx+=WHx[i]*EXP
-#            Hy+=WHy[i]*EXP
             Hx=np.add(Hx,np.dot(WHx[i],EXP))
             Hy=np.add(Hy,np.dot(WHy[i],EXP))
         f=open(filename,'w')
@@ -554,6 +591,19 @@ class Layer:
 
 
     def write_fieldgeneral(self,u,d=None,filename='field_general.out',N=100,s=1.0):
+        """Writes the electric filed obtained by a superposition on modes
+        
+        Args:
+            u (1darray): Array of the coefficients of the forward propagating modes. Dimension in 2*number of plane waves.
+            d (1darray, optional): Array of the coefficients of the backward propagating modes. Dimension in 2*number of plane waves. Defaults to None.
+            filename (str, optional): Name of output file. Defaults to 'field_general.out'.
+            N (int, optional):  Number of points in (both in x and y) on which the fields are calculated. Defaults to 100.
+            s (float, optional): Number of unit cells which are written. Defaults to 1.0.
+
+        Returns:
+            None.
+
+        """
         if d is None:
             d=np.zeros(2*self.D,dtype=complex)
 
@@ -601,7 +651,19 @@ class Layer:
         f.close()
 
 
-    def get_field(self,x,y,i,func=np.abs):
+    def get_field(self,x,y,i,func=None):
+        """Returns the modal fields at a specific point
+        
+        Args:
+            x (float): x coordinate of requested field.
+            y (float): y coordinate of requested field.
+            i (int): Index of the mode. Moder are ordered by default
+            func (function, optional): Function to be applied to the field before returning. Defaults to None (full complex value is returned).
+
+        Returns:
+            1darray: Array containing Ex, Ey, Hx, Hy.
+
+        """
         j=np.argsort(self.W)[-i]
         [WEx,WEy]=np.split(self.V[:,j],2)
         [WHx,WHy]=np.split(self.VH[:,j],2)
@@ -613,9 +675,27 @@ class Layer:
             Ey+=WEy[i]*EXP
             Hx+=WHx[i]*EXP
             Hy+=WHy[i]*EXP
-        return func(np.array([Ex,Ey,Hx,Hy]))
+        if func is not None:
+            return func(np.array([Ex,Ey,Hx,Hy]))
+        else:
+            return np.array([Ex,Ey,Hx,Hy])
 
-    def get_field2(self,X,Y,i,func=np.abs):
+    def get_field2(self,X,Y,i,func=None):
+        """Returns the modal fields given the coordinates
+        
+        Args:
+            X (ndarray): Array of x points (unit of ax).
+            Y (ndarray): Array of y points (unit of ay).
+            i (int): Index of the mode. Modes are ordered by default
+            func (function, optional): Function to be applied to the field before returning. Defaults to None (full complex value is returned).
+
+        Raises:
+            ValueError: Raised if X and Y have different shapes
+
+        Returns:
+            res (tuple): tuple of ndarrays, containing Ex, Ey, Hx, Hy
+
+        """
         if np.shape(X)!=np.shape(Y):
             raise ValueError('X and Y arrays have different shapes')
         j=np.argsort(self.W)[-i-1]
@@ -631,16 +711,30 @@ class Layer:
             Ey=np.add(Ey,np.dot(WEy[i],EXP))
             Hx=np.add(Hx,np.dot(WHx[i],EXP))
             Hy=np.add(Hy,np.dot(WHy[i],EXP))
-        res=(func(M) for M in [Ex,Ey,Hx,Hy])
+        if func is not None:
+            res=(func(M) for M in [Ex,Ey,Hx,Hy])
+        else:
+            res = (Ex,Ey,Hx,Hy)
         return res
-        #Ex=func(Ex)
-        #Ey=func(Ey)
-        #Hx=func(Hx)
-        #Hy=func(Hy)
-        #return (Ex,Ey,Hx,Hy)
 
 
     def plot_Et(self,pdf,i,N=100,sx=1,sy=1,func=np.abs):
+        """Plots both Ex and Ey
+
+        Args:
+            pdf (multiple, optional): Multiple choice. Each one has a diffrent meaning:
+                - (PdfPages): append figure to the PdfPages object
+                - (str): save the figure to a pdf with this name
+            i (int): Modal index. Modes are ordered by default.
+            N (int, optional): DESCRIPTION. Defaults to 100.
+            sx (float, optional): Width of the plotting windows in x (unit of ax). Defaults to 1.
+            sy (float, optional): Width of the plotting windows in y (unit of ay). Defaults to 1.
+            func (TYPE, optional): Function to apply to the field before plotting. Defaults to np.abs.
+
+        Returns:
+            None.
+
+        """
         j=np.argsort(self.W)[-i]
         x,y=np.linspace(-sx*0.5,sx*0.5,sx*N),np.linspace(-sy*0.5,sy*0.5,sy*N)
         if self.TX:
@@ -670,12 +764,32 @@ class Layer:
     
 
     def get_P_norm(self):
+        """Creates array of single mode Poynting vector components.
+        
+        It is stored in the P_norm attribute
+        
+        Returns:
+            None.
+
+        """
         [VEx,VEy]=np.split(self.V,2)
         [VHx,VHy]=np.split(self.VH,2)
         self.P_norm=np.sum(VEx*np.conj(VHy)-VEy*np.conj(VHx),0).real
 
-    def get_Poynting_single(self,i,u,ordered='yes'):
-        if ordered=='yes':
+    def get_Poynting_single(self,i,u,ordered=True):
+        """Return the Poyinting vector of a single mode given the modal expansion in the layer
+        
+
+        Args:
+            i (int): Index of the mode.
+            u (1darray): Array of modal coefficient.
+            ordered (TYPE, optional): Regulates how mode are ordered. If True, they are ordered for decreasing effective index. If Flase, the order is whatever is returned by the diagonalization routine. Defaults to True.
+
+        Returns:
+            TYPE: DESCRIPTION.
+
+        """
+        if ordered:
             j=np.argsort(self.W)[-i-1]
         else:
             j=i
@@ -686,6 +800,13 @@ class Layer:
 
    
     def get_Poyinting_norm(self):
+        """Calculates the normalization matrix for the Poyinting vector calculations
+        
+
+        Returns:
+            None.
+
+        """
         [VEx,VEy]=np.split(self.V,2)
         [VHx,VHy]=np.conj(np.split(self.VH,2))        
         #old version (working) 
@@ -705,6 +826,17 @@ class Layer:
 
     
     def get_Poynting(self,u,d=None):
+        """Calculates total Poynting vector in the layer given arrays of modal expansion
+        
+
+        Args:
+            u (1darray): Modal expansion of forward propagating modes.
+            d (1darray, optional): Modal expansion of backward propagating modes. Defaults to None.
+
+        Returns:
+            TYPE: DESCRIPTION.
+
+        """
         if d is None:
             d=np.zeros(2*self.D,dtype=complex)
         #try:
@@ -721,6 +853,15 @@ class Layer:
 
 
     def T_interface(self,lay):
+        """Builds the Transfer matrix if the interface with another layer
+        
+        Args:
+            lay (Layer): Layer toward which to calculate the scattering matrix.
+
+        Returns:
+            T (2darray): Interface scattering matrix.
+
+        """
         T1=np.dot(linalg.inv(lay.V),self.V)
         T2=np.dot(linalg.inv(lay.VH),self.VH)
         T11= 0.5*(T1 + T2)
@@ -731,6 +872,16 @@ class Layer:
         return T
 
     def T_prop(self,d):
+        """Build the propagation Transfer matrix of the layer
+        
+
+        Args:
+            d (float): Thickness of the layer.
+
+        Returns:
+            T (2darray): Propagation Transfer matrix.
+
+        """
         I1=np.diag(np.exp((0+1j)*self.k0*self.gamma*d))
         I2=np.diag(np.exp(-(0+1j)*self.k0*self.gamma*d))
         I=np.zeros((2*self.D,2*self.D),complex)
@@ -739,6 +890,15 @@ class Layer:
         
 #newer version, should be faster
     def interface(self,lay):
+        """Builds the Scattering matrix if the interface with another layer
+        
+        Args:
+            lay (Layer): Layer toward which to calculate the scattering matrix.
+
+        Returns:
+            S (S_matrix): Interface scattering matrix.
+
+        """
         S=S_matrix(2*self.D)
         T1=np.dot(linalg.inv(lay.V),self.V)
         T2=np.dot(linalg.inv(lay.VH),self.VH)
@@ -755,7 +915,25 @@ class Layer:
         return S
 
 
-    def get_input(self,func,args=(),Nxp=1024,Nyp=None,fileprint=None):
+    def get_input(self,func,args=None,Nxp=1024,Nyp=None,fileprint=None):
+        """Expands an arbitrary fieldd shape on the basis of the layer eigenmodes
+        
+
+        Args:
+            func (function): Function describing the field.
+                This function should be in the form (x,y,*args). It must be able to accept x and y as numpy array.
+                It must return two values, expressing Ex and Ey
+            args (tuple, optional): Eventual tuple of additional arguments for func. Defaults to None.
+            Nxp (int, optional): Number of points to evaluate the function in the x direction. Defaults to 1024.
+            Nyp (int, optional): Number of points to evaluate the function in the y direction. Defaults to None (1 if layer is 1D, Nxp if 2D).
+            fileprint (str, optional): Filename on which to write the used function. Mainly for debug. Defaults to None.
+
+        Returns:
+            u (1darray): Array of the modal coefficient of the expansion.
+
+        """
+        args = () if args is None else args
+        
         if Nyp==None:
             if self.Ny==0:
                 Nyp=1
@@ -809,17 +987,45 @@ class Layer:
         return u
 
     def create_input(self,dic):
+        """Creates the array of modal coefficient using a dictionary as input
+        
+
+        Args:
+            dic (dict): Dictionary of exited modes {modal_index : modal_coeff}. Modes are ordered. 
+
+        Returns:
+            u (1darray): Array of modal coefficient.
+
+        """
         u=np.zeros((2*self.NPW),complex)
         for i in dic:
             u[np.argsort(self.W)[-i]]=dic[i]
         return u
 
     def get_Enorm(self):
+        """Calculate field normalization
+        
+
+        Returns:
+            None.
+
+        """
         [VEx,VEy]=np.split(self.V,2)
         self.ENx=np.dot(np.transpose(VEx),np.conj(VEx))
         self.ENy=np.dot(np.transpose(VEy),np.conj(VEy))
 
     def overlap(self,u,up=None):
+        """EXPERIMENTAL: Calculates overlap between two fields given the modal expansion
+        
+
+        Args:
+            u (1darray): Modal coefficient of first mode.
+            up (1darray, optional): Modal coefficient of first mode. Defaults to None (up=u, namely normalization is returned).
+
+        Returns:
+            list: [tx, tx]: floats. Namely overlap in x and y polarization
+
+        """
         if up is None:
            up=u
         try:
@@ -836,6 +1042,17 @@ class Layer:
 
 
     def coupling(self,u,up):
+        """EXPERIMENTAL: Calculates coupling between two modes given their modal exapnsion
+        
+
+        Args:
+            u (TYPE): Modal coefficient of first mode.
+            up (TYPE): Modal coefficient of second mode.
+
+        Returns:
+            list: [tx, tx]: floats. Coupling in x and y polarization.
+
+        """
         self.get_Enorm()
         [tx1,ty1]=self.overlap(u)
         [tx2,ty2]=self.overlap(up)
@@ -894,6 +1111,15 @@ class Layer_num(Layer):
 
 
     def eps_plot(self,pdf=None,N=200,s=1.0):
+        """Function for plotting the dielectric consstat rebuit from plane wave expansion
+
+        Args:
+            pdf (string or PdfPages): file for printing the the epsilon
+                if a PdfPages object, the page is appended to the pdf
+                if string, a pdf with that name is created
+            N (int): number of points
+            s (float): number of cell replicas to display (default 1)
+        """
         [X,Y]=np.meshgrid(np.linspace(-s*0.5,s*0.5,s*N),np.linspace(-s*0.5,s*0.5,s*N))
         [YY,XX]=np.meshgrid(np.linspace(-0.5,0.5,self.NY),np.linspace(-0.5,0.5,self.NX))
         #F=self.func(XX,YY)
@@ -917,6 +1143,13 @@ class Layer_num(Layer):
 
 
     def mat_plot(self,name,N=100,s=1):
+        """Plot the absolute values of the fourier trasnsform matrices
+
+        Args:
+            name (str): name of the pdf file for plotting
+            N (int): number of points for plotting the epsilon
+            s (float): number pf relicas of the cell to plot. Default is 1.
+        """
         save=PdfPages(name+'.pdf')
 
         [X,Y]=np.meshgrid(np.linspace(-s*0.5,s*0.5,s*N),np.linspace(-s*0.5,s*0.5,s*N))
@@ -1005,6 +1238,15 @@ class Layer_uniform(Layer):
 
 
     def eps_plot(self,pdf=None,N=200,s=1.0):
+        """Function for plotting the dielectric consstat rebuit from plane wave expansion
+
+        Args:
+            pdf (string or PdfPages): file for printing the the epsilon
+                if a PdfPages object, the page is appended to the pdf
+                if string, a pdf with that name is created
+            N (int): number of points
+            s (float): number of cell replicas to display (default 1)
+        """
         [X,Y]=np.meshgrid(np.linspace(-s*0.5,s*0.5,s*N),np.linspace(-s*0.5,s*0.5,s*N))
         EPS=np.zeros(np.shape(X))+self.eps.real
         plt.figure()
@@ -1020,6 +1262,13 @@ class Layer_uniform(Layer):
 
 
     def mat_plot(self,name,N=100,s=1):
+        """Plot the absolute values of the fourier trasnsform matrices
+
+        Args:
+            name (str): name of the pdf file for plotting
+            N (int): number of points for plotting the epsilon
+            s (float): number pf relicas of the cell to plot. Default is 1.
+        """
         save=PdfPages(name+'.pdf')
 
         [X,Y]=np.meshgrid(np.linspace(-s*0.5,s*0.5,s*N),np.linspace(-s*0.5,s*0.5,s*N))
@@ -1080,6 +1329,13 @@ class Layer_uniform(Layer):
 
 
     def mode(self,k0,kx=0.0,ky=0.0):
+        """Calculates the eighenmode of the layer
+        
+        Args:
+            k0 (float): Vacuum wavevector
+            kx (float): Wavevector in the x direction
+            ky (float): Wavevector in the y direction
+        """
         self.k0=k0
         self.kx=kx
         self.ky=ky
@@ -1139,6 +1395,16 @@ class Layer_empty_st(Layer):
         self.EPS2=np.zeros((self.D,self.D),dtype=complex)
 
     def fourier(self):
+        """Calculates the fourier transform matrices need for the eigenvalue problem.
+        
+
+        Returns:
+            2darray: FOUP matrix.
+            2darray: INV matrix.
+            2darray: EPS1 matrix.
+            2darray: EPS2 matrix.
+
+        """
         self.FOUP=sub.create_epsilon(self.G,self.creator.x_list,self.creator.y_list,self.creator.eps_lists)*(1.0+0.0j)
         self.INV=linalg.inv(self.FOUP)
         self.EPS1=sub.fou_xy(self.Nx,self.Ny,self.G,self.creator.x_list,self.creator.y_list,self.creator.eps_lists)*(1.0+0.0j)
