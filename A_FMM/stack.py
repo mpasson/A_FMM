@@ -5,10 +5,12 @@ import matplotlib.pyplot as plt
 import copy
 from A_FMM.layer import Layer_empty_st
 from matplotlib.backends.backend_pdf import PdfPages
-try:
-    from multiprocessing import Pool
-except ModuleNotFoundError:
-    print('WARNING: multiprocessing not available')
+# =============================================================================
+# try:
+#     from multiprocessing import Pool
+# except ModuleNotFoundError:
+#     print('WARNING: multiprocessing not available')
+# =============================================================================
     
 
 class Stack:
@@ -261,16 +263,18 @@ class Stack:
                 self.int_list.append(T_inter)
             self.interfaces.append(T_inter)
 
-    def fourier(self,threads=1):
-        p=Pool(threads)
-        mat_list=p.map(Layer_empty_st.fourier,self.lay_list)
-        for lay,FOUP,INV,EPS1,EPS2 in zip(self.lay_list,mat_list):
-            lay.FOUP=FOUP
-            lay.INV=INV
-            lay.EPS1=EPS1
-            lay.EPS2=EPS2
-        del mat_list
-
+# =============================================================================
+#     def fourier(self,threads=1):
+#         p=Pool(threads)
+#         mat_list=p.map(Layer_empty_st.fourier,self.lay_list)
+#         for lay,FOUP,INV,EPS1,EPS2 in zip(self.lay_list,mat_list):
+#             lay.FOUP=FOUP
+#             lay.INV=INV
+#             lay.EPS1=EPS1
+#             lay.EPS2=EPS2
+#         del mat_list
+# 
+# =============================================================================
             
 
     def solve(self,k0,kx=0.0,ky=0.0):
@@ -411,6 +415,21 @@ class Stack:
         return dic
 
     def get_energybalance(self,u,d=None):
+        """Get total energy balance of the stack given the inputs
+        
+        Return total power reflected, transmitted and absorbed, normalized to the incidenc power.
+
+        Args:
+            u (1darray): Modal coefficient of the left input.
+            d (1darray, optional): Modal coefficent of the right input. Defaults to None.
+
+        Returns:
+            tuple: tuple contining tree floats with meaning:
+                - Total power out from left side (reflection if only u).
+                - Total power out from right side (transmission if only u).
+                - Total power absorbed in the stack.
+
+        """
         u1,d2,e=np.zeros((2*self.NPW),complex),np.zeros((2*self.NPW),complex),np.zeros((2*self.NPW),complex)
         u1=u
         PN=self.layers[0].get_Poynting(u1,e)
@@ -420,9 +439,23 @@ class Stack:
         (u2,d1)=self.S.output(u1,d2)
         P1=self.layers[0].get_Poynting(u1,d1)
         P2=self.layers[-1].get_Poynting(u2,d2)
-        return [P1/PN,P2/PN,(P1-P2)/PN]
+        return P1/PN,P2/PN,(P1-P2)/PN
 
     def get_inout(self,u,d=None):
+        """Return data about the output of the structure given the input
+        
+
+        Args:
+            u (1darray): Vector of the modal coefficents of the right inputs.
+            d (1darray, optional): Vector of the modal coefficents of the right inputs. Defaults to None.
+
+        Returns:
+            dict: Dictionary containing data of the output:
+                - 'left' : (u,d,P): forward modal coefficient, backward modal coefficient and Poyinting vector at the left side.
+                - 'right' : (u,d,P): forward modal coefficient, backward modal coefficient and Poyinting vector at the right side.
+        """
+        
+        
         u1,d2=np.zeros((2*self.NPW),complex),np.zeros((2*self.NPW),complex)
         u1=u
         if d!=None:
@@ -430,12 +463,23 @@ class Stack:
         (u2,d1)=self.S.output(u1,d2)
         dic={}        
         P=self.layers[0].get_Poynting(u1,d1)
-        dic['top']=(u1,d1,P)
+        dic['left']=(u1,d1,P)
         P=self.layers[-1].get_Poynting(u2,d2)
-        dic['bottom']=(u2,d2,P)
+        dic['right']=(u2,d2,P)
         return dic
 
     def get_R(self,i,j,ordered=True):
+        """Get relfection coefficient between modes
+        
+        Args:
+            i (int): Index of the source mode.
+            j (int): Index of the target mode.
+            ordered (bool, optional): If True, modes are ordered for decrasing effective index, otherwise the order is whatever is returned by the diagonalization routine. Defaults to True.
+
+        Returns:
+            float: Reflection between the modes
+
+        """
         if ordered:
             j1=np.argsort(self.layers[0].W)[-i-1]
             j2=np.argsort(self.layers[0].W)[-j-1]
@@ -445,6 +489,17 @@ class Stack:
         return np.abs(self.S.S21[j1,j2])**2*self.layers[0].P_norm[j2]/self.layers[0].P_norm[j1]
 
     def get_T(self,i,j,ordered=True):
+        """Get transmission coefficient between modes.
+        
+        Args:
+            i (int): Index of the source mode.
+            j (int): Index of the target mode.
+            ordered (bool, optional): If True, modes are ordered for decrasing effective index, otherwise the order is whatever is returned by the diagonalization routine. Defaults to True.
+
+        Returns:
+            float: Transmission between the modes.
+
+        """
         if ordered:
             j1=np.argsort(self.layers[0].W)[-i-1]
             j2=np.argsort(self.layers[-1].W)[-j-1]
@@ -454,6 +509,17 @@ class Stack:
         return np.abs(self.S.S11[j2,j1])**2*self.layers[-1].P_norm[j2]/self.layers[0].P_norm[j1]
 
     def get_PR(self,i,j,ordered=True):
+        """Get phase of the relfection coefficient between modes
+        
+        Args:
+            i (int): Index of the source mode.
+            j (int): Index of the target mode.
+            ordered (bool, optional): If True, modes are ordered for decrasing effective index, otherwise the order is whatever is returned by the diagonalization routine. Defaults to True.
+
+        Returns:
+            float: Phase of reflection between the modes
+
+        """
         if ordered:
             j1=np.argsort(self.layers[0].W)[-i-1]
             j2=np.argsort(self.layers[0].W)[-j-1]
@@ -463,6 +529,17 @@ class Stack:
         return np.angle(self.S.S21[j2,j1])
 
     def get_PT(self,i,j,ordered=True):
+        """Get phase of the transmission coefficient between modes
+        
+        Args:
+            i (int): Index of the source mode.
+            j (int): Index of the target mode.
+            ordered (bool, optional): If True, modes are ordered for decrasing effective index, otherwise the order is whatever is returned by the diagonalization routine. Defaults to True.
+
+        Returns:
+            float: Phase of transmission between the modes
+
+        """
         if ordered:
             j1=np.argsort(self.layers[0].W)[-i-1]
             j2=np.argsort(self.layers[-1].W)[-j-1]
@@ -472,6 +549,22 @@ class Stack:
         return np.angle(self.S.S11[j2,j1])
 
     def get_el(self,sel,i,j):
+        """Returns element of the scattering matrix
+        
+        Note: Modes are ordered for decrasing effective index
+
+        Args:
+            sel (str): First index of the matrix.
+            i (int): Second index of the matrix.
+            j (int): Select the relevand submatrix. Choises are '11', '12', '21', '22'.
+
+        Raises:
+            ValueError: If sel in not in the allowed.
+
+        Returns:
+            complex: Element of the scattering matrix.
+
+        """
         io=np.argsort(self.layers[0].W)[-i]
         jo=np.argsort(self.layers[-1].W)[-j]
         if sel=='11':
@@ -482,6 +575,8 @@ class Stack:
             return self.S.S21[io,jo]
         elif sel=='22':
             return self.S.S22[io,jo]
+        else:
+            raise ValueError(f"Sel {sel} not allowed. Only '11', '12', '21', '22'")
 
     def mode_T(self,uin,uout):
         d1=np.zeros((2*self.NPW),complex)
@@ -491,6 +586,18 @@ class Stack:
 
 
     def double(self):
+        """Compose the scattering matrix of the stack with itself, doubling the structure
+        
+        When doing this, the lenght of the first al last layer are ignored (set to 0).
+        To function properly hoever they need to be equal (but do not need to have physical meaning)
+
+        Raises:
+            RuntimeError: Raised if the stack is not solved yet.
+
+        Returns:
+            None.
+
+        """
         try:
             self.S.add(self.S)
         except AttributeError:
@@ -498,6 +605,23 @@ class Stack:
 
 
     def join(self,st2):
+        """Join the scattering matrix of the structure with the one of a second structure
+        
+        When doing this, the lenght of the first al last layeror each stack are ignored (set to 0).
+        To function last layer of self and first of st2 need to be equal (but do not need to have physical meaning).
+        The condiction used to previoselt solve the stack needs to be the same. This is not checked by the code, so be careful.
+
+
+        Args:
+            st2 (Stack): Stack to which to join self.
+
+        Raises:
+            RuntimeError: Raised is one the structure is not solved yet.
+
+        Returns:
+            None.
+
+        """
         try:
             self.S
         except AttributeError:
@@ -513,6 +637,17 @@ class Stack:
         
 
     def flip(self):
+        """Flip a solved stack
+        
+        Flip the stack, swapping the left and right side
+
+        Raises:
+            RuntimeError: Raised if the structure is not solved yet.
+
+        Returns:
+            None.
+
+        """
         try:
             S=copy.deepcopy(self.S)
             self.S.S11=S.S22
@@ -521,10 +656,20 @@ class Stack:
             self.S.S21=S.S12
         except AttributeError:
             raise RuntimeError('structure not solved yet')
-        self.layers=[i for i in reversed(self.layers)]
+        self.layers = self.layers[::-1]
+        self.d = self.d[::-1]
 
 
     def bloch_modes(self):
+        """Calculates Bloch modes of the stack. 
+        
+        This function assumens the stack to represent the unit cell of a periodic structure, and calculates the corresponding Bloch modes.
+        The thickness of the first and last layer are ignored (assumed 0). To work correctly first and last layer needs to be the same.
+
+        Returns:
+            TYPE: DESCRIPTION.
+
+        """
         [self.BW,self.BV]=self.S.S_modes()
         self.Bk=-(0.0+1j)*np.log(self.BW)/self.tot_thick
         #reorder modes
@@ -975,6 +1120,27 @@ class Stack:
         return None
 
     def writeE_periodic_XZ(self,ii,r=1,filename='fieldE_XZ.out',dz=0.01,N=100,y=0.0,s=1.0):
+        """Write to a file the filed component of the Bloch mode (XZ cross section) of a periodic structure. 
+        
+
+        Args:
+            ii (int): Index of the Bloch mode to be plotted.
+            r (int, optional): Number unit cells plotted in z direction. Defaults to 1.
+            filename (str, optional): Name of the file for writing the field. Defaults to 'fieldE_XZ.out'.
+            dz (float, optional): Grid dimension in z. Defaults to 0.01.
+            N (int, optional): Number of points in x direction. Defaults to 100.
+            y (float, optional): y coordinate of the cross section. Defaults to 0.0.
+            s (float, optional): Width of the plot in x (unit of ax). Defaults to 1.0.
+
+        Returns:
+            tuple: tutple containing:
+                - 1darray: x coordinate in the unit cell
+                - 1darray: x coordintate in the real space (only meaniningful if coordinate transformation is applied)
+                - 1darray: z coordinate
+                - 2darray: Ex
+                - 2darray: Ey
+
+        """
         [u,d]=np.split(self.BV[:,ii],2)
         d=d*self.BW[ii]
         try:
@@ -1021,9 +1187,32 @@ class Stack:
                 f.write(9*'%15.6e' % (x[j],xl[j],dz*i,Ex[i,j].real,Ex[i,j].imag,abs(Ex[i,j]),Ey[i,j].real,Ey[i,j].imag,abs(Ey[i,j])) +'\n')
             f.write('\n')
         f.close()
+        DZ = np.array([dz*i for i in range(np.shape(Ex)[0])])
+        return x, xl, DZ, Ex, Ey
 
 
     def writeE_periodic_YZ(self,ii,r=1,filename='fieldE_YZ.out',dz=0.01,N=100,x=0.0,s=1.0):
+        """Write to a file the filed component of the Bloch mode (YZ cross section) of a periodic structure. 
+        
+
+        Args:
+            ii (int): Index of the Bloch mode to be plotted.
+            r (int, optional): Number unit cells plotted in z direction. Defaults to 1.
+            filename (str, optional): Name of the file for writing the field. Defaults to 'fieldE_XZ.out'.
+            dz (float, optional): Grid dimension in z. Defaults to 0.01.
+            N (int, optional): Number of points in y direction. Defaults to 100.
+            x (float, optional): x coordinate of the cross section. Defaults to 0.0.
+            s (float, optional): Width of the plot in y (unit of ay). Defaults to 1.0.
+
+        Returns:
+            tuple: tutple containing:
+                - 1darray: y coordinate in the unit cell
+                - 1darray: y coordintate in the real space (only meaniningful if coordinate transformation is applied)
+                - 1darray: z coordinate
+                - 2darray: Ex
+                - 2darray: Ey
+
+        """
         [u,d]=np.split(self.BV[:,ii],2)
         d=d*self.BW[ii]
         try:
@@ -1070,6 +1259,8 @@ class Stack:
                 f.write(9*'%15.6e' % (y[j]*self.Nyx,yl[j]*self.Nyx,dz*i,Ex[i,j].real,Ex[i,j].imag,abs(Ex[i,j]),Ey[i,j].real,Ey[i,j].imag,abs(Ey[i,j])) +'\n')
             f.write('\n')
         f.close()
+        DZ = np.array([dz*i for i in range(np.shape(Ex)[0])])
+        return y, yl, DZ, Ex, Ey
 
 
     def writeE_periodic_XY(self,ii,jlay,z,filename='fieldE_XY.out',N=100,s=1.0):
