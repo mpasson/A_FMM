@@ -671,7 +671,7 @@ class Stack:
 
         """
         [self.BW,self.BV]=self.S.S_modes()
-        self.Bk=-(0.0+1j)*np.log(self.BW)/self.tot_thick
+        self.Bk=-(0.0+1j)*np.log(self.BW)/(2.0*np.pi*self.tot_thick)
         #reorder modes
         ind=np.argsort((0.0+1.0j)*self.Bk)
         self.BW=self.BW[ind]
@@ -804,7 +804,7 @@ class Stack:
 
 
 
-    def plot_E(self,i=0,dz=0.01,pdf=None,N=100,y=0.0,func=np.real,s=1,ordered='yes',title=None, cmap='jet'):
+    def plot_E(self,i=0,dz=0.01,pdf=None,N=100,y=0.0,func=np.real,s=1,ordered='yes',title=None, cmap='viridis'):
         u1,d2=np.zeros((2*self.NPW),complex),np.zeros((2*self.NPW),complex)
         if ordered=='yes':
             u1[np.argsort(self.layers[0].W)[-i-1]]=1.0+0.0j

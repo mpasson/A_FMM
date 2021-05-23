@@ -351,7 +351,7 @@ class Layer:
             i (int): Numner of mode to be plotted (start from 1), only ordered
             func (callable): function to apply to the filed before plotting (default, np.abs). Usefulc could be np.real or np.imag
         """
-        j=np.argsort(self.W)[-i]
+        j=np.argsort(self.W)[-i-1]
         [X,Y]=np.meshgrid(np.linspace(-s*0.5,s*0.5,s*N),np.linspace(-s*0.5,s*0.5,s*N))
         [WEy,WEx]=np.split(self.V[:,j],2)
         Ey,Ex=np.zeros((N,N),dtype='complex'),np.zeros((N,N),dtype='complex')
