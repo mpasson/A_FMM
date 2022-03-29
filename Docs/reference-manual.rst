@@ -69,7 +69,6 @@ Methods
     Layer.get_Poynting
     Layer.get_Poynting_single
     Layer.get_field
-    Layer.get_field2
     Layer.get_index
     Layer.get_input
     Layer.inspect

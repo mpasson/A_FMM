@@ -1,6 +1,7 @@
 import numpy as np
 from scipy import linalg
 import matplotlib.pyplot as plt
+import pandas as pd
 import A_FMM.sub_sm as sub
 from A_FMM.creator import Creator
 from matplotlib.backends.backend_pdf import PdfPages
@@ -170,10 +171,8 @@ class Layer:
             self.ey=ey
             self.FY=FY
         
-        
 
-
-    def mode(self,k0,kx=0.0,ky=0.0,v=True):
+    def mode(self,k0,kx=0.0,ky=0.0):
         """Calculates the eighenmode of the layer
         
         Args:
@@ -186,25 +185,21 @@ class Layer:
         self.ky=ky
         (k1,k2)=sub.createK(self.G,k0,kx=kx,ky=ky,Nyx=self.Nyx)
         if self.TX:
-            #print np.shape(self.FX),np.shape(self.k1)
             k1=np.dot(self.FX,k1)
         if self.TY:
             k2=np.dot(self.FY,k2)
         self.GH,self.M=sub.create_2order_new(self.D,k1,k2,self.INV,self.EPS1,self.EPS2)
-        if v:
-            [self.W,self.V]=linalg.eig(self.M)
-            self.gamma=np.sqrt(self.W)*np.sign(np.angle(self.W)+0.5*np.pi)
-            if np.any(np.real(self.gamma)+np.imag(self.gamma)<=0.0):
-                print('Warining: wrong complex root')
+        [self.W,self.V]=linalg.eig(self.M)
+        self.gamma=np.sqrt(self.W)*np.sign(np.angle(self.W)+0.5*np.pi)
+        if np.any(np.real(self.gamma)+np.imag(self.gamma)<=0.0):
+            print('Warining: wrong complex root')
 #            self.gamma=np.sqrt(self.W)
 #            self.gamma=self.gamma*np.sign(np.imag(self.gamma))
 #            if np.any(np.imag(self.gamma)<=0.0):
 #                print 'Warining: negative imaginary part'
-            if np.any(np.abs(self.gamma)<=0.0):
-                print('Warining: gamma=0')
-            self.VH=np.dot(self.GH,self.V/self.gamma)
-        else:
-            self.W=linalg.eigvals(self.M)
+        if np.any(np.abs(self.gamma)<=0.0):
+            print('Warining: gamma=0')
+        self.VH=np.dot(self.GH,self.V/self.gamma)
 
 
     def clear(self):
@@ -217,17 +212,6 @@ class Layer:
         self.V=None
         self.gamma=None
 
-    def slim(self):
-        """Removes a lot of attributes. Not sure why was implemented
-        """
-        self.EPS1=None
-        self.EPS2=None
-        self.FOUP=None
-        self.FX=None
-        self.FY=None
-        self.GH=None
-        self.INV=None
-        self.M=None
 
     def get_index(self,ordered=True):
         """Returns the effective idexes of the modes
@@ -242,7 +226,6 @@ class Layer:
         return Neff
 
 
-                
     def mat_plot(self,name,N=100,s=1):
         """Plot the absolute values of the fourier trasnsform matrices
 
@@ -343,425 +326,86 @@ class Layer:
         pdf.savefig()
         plt.close()
 
-    def plot_E(self,pdf,i,N=100,s=1,func=np.abs):
-        """Plots the electric filed of a mode
+
+    def calculate_field(self,x,y,z,u,d=None, components=None):
+        """Return field given modal coefficient and coordinates
 
         Args:
-            pdf (PdfPages): pdf for saving the plots
-            i (int): Numner of mode to be plotted (start from 1), only ordered
-            func (callable): function to apply to the filed before plotting (default, np.abs). Usefulc could be np.real or np.imag
-        """
-        j=np.argsort(self.W)[-i-1]
-        [X,Y]=np.meshgrid(np.linspace(-s*0.5,s*0.5,s*N),np.linspace(-s*0.5,s*0.5,s*N))
-        [WEy,WEx]=np.split(self.V[:,j],2)
-        Ey,Ex=np.zeros((N,N),dtype='complex'),np.zeros((N,N),dtype='complex')
-        for i in range(self.D):
-            EXP=np.exp((0+2j)*np.pi*((self.G[i][0]+self.kx)*X+(self.G[i][1]+self.ky)*Y))
-            Ey+=WEy[i]*EXP
-            Ex+=WEx[i]*EXP
-        plt.figure()
-        plt.title('k0:%5.3f kx:%5.3f ky:%5.3f' % (self.k0,self.kx,self.ky))
-        plt.subplot(211)
-        plt.imshow(func(Ex),aspect=1,extent=[-s*0.5,s*0.5,-s*0.5,s*0.5])
-        plt.title('Ex')
-        plt.colorbar()
-        plt.subplot(212)
-        plt.imshow(func(Ey),aspect=1,extent=[-s*0.5,s*0.5,-s*0.5,s*0.5])
-        plt.title('Ey')
-        plt.colorbar()
-        pdf.savefig()
-        plt.close()
-
-    def plot_H(self,pdf,i,N=100,s=1,func=np.abs):
-        """Plots the magnetic filed of a mode
-
-        Args:
-            pdf (PdfPages): pdf for saving the plots
-            i (int): Numner of mode to be plotted (start from 1), only ordered
-            func (callable): function to apply to the filed before plotting (default, np.abs). Usefulc could be np.real or np.imag
-        """
-        j=np.argsort(self.W)[-i]
-        [X,Y]=np.meshgrid(np.linspace(-s*0.5,s*0.5,s*N),np.linspace(-s*0.5,s*0.5,s*N))
-        [WEy,WEx]=np.split(self.VH[:,j],2)
-        Ey,Ex=np.zeros((N,N),dtype='complex'),np.zeros((N,N),dtype='complex')
-        for i in range(self.D):
-            EXP=np.exp((0+2j)*np.pi*((self.G[i][0]+self.kx)*X+(self.G[i][1]+self.ky)*Y))
-            Ey+=WEy[i]*EXP
-            Ex+=WEx[i]*EXP
-        plt.figure()
-        plt.title('k0:%5.3f kx:%5.3f ky:%5.3f' % (self.k0,self.kx,self.ky))
-        plt.subplot(211)
-        plt.imshow(func(Ex),aspect=1,extent=[-s*0.5,s*0.5,-s*0.5,s*0.5])
-        plt.title('Hx')
-        plt.colorbar()
-        plt.subplot(212)
-        plt.imshow(func(Ey),aspect=1,extent=[-s*0.5,s*0.5,-s*0.5,s*0.5])
-        plt.title('Hy')
-        plt.colorbar()
-        pdf.savefig()
-        plt.close()
-
-
-    def plot_field(self,pdf,i,N=100,s=1,func=np.abs,title=None,ordered=True):
-        """Plots both electrinc and magnetic field
-
-        Args:
-            pdf (multiple, optional): Multiple choice. Each one has a diffrent meaning:
-                - (PdfPages): append figure to the PdfPages object
-                - (str): save the figure to a pdf with this name
-            i (int): mode to be plotted.
-            N (int): number of points in the graph. Default is 100
-            s (float): number of replicas of the cell to be plotted. Default is 1
-            func (callable): function to apply to the filed before plotting (default, np.abs). Usefulc could be np.real or np.imag
-            title (str): title of the plot
-            ordered (bool): if True, the modes are ordered by decreasing effective index
-        """
-        j=np.argsort(self.W)[-i-1] if ordered else i
-        [X,Y]=np.meshgrid(np.linspace(-s*0.5,s*0.5,s*N),np.linspace(-s*0.5,s*0.5,s*N))
-        [WEx,WEy]=np.split(self.V[:,j],2)
-        [WHx,WHy]=np.split(self.VH[:,j],2)
-        Ex,Ey=np.zeros((N,N),dtype='complex'),np.zeros((N,N),dtype='complex')
-        Hx,Hy=np.zeros((N,N),dtype='complex'),np.zeros((N,N),dtype='complex')
-        for i in range(self.D):
-            EXP=np.exp((0+2j)*np.pi*((self.G[i][0]+self.kx)*X+(self.G[i][1]+self.ky)*Y))
-#            Ex+=WEx[i]*EXP
-#            Ey+=WEy[i]*EXP
-#            Hx+=WHx[i]*EXP
-#            Hy+=WHy[i]*EXP
-            Ex=np.add(Ex,np.dot(WEx[i],EXP))
-            Ey=np.add(Ey,np.dot(WEy[i],EXP))
-            Hx=np.add(Hx,np.dot(WHx[i],EXP))
-            Hy=np.add(Hy,np.dot(WHy[i],EXP))
-        fig = plt.figure()
-        plt.subplot(221)
-        plt.imshow(func(Ex),aspect=1,extent=[-s*0.5,s*0.5,-s*0.5,s*0.5],origin='lower')
-        plt.title('Ex')
-        plt.colorbar()
-        plt.subplot(222)
-        plt.imshow(func(Ey),aspect=1,extent=[-s*0.5,s*0.5,-s*0.5,s*0.5],origin='lower')
-        plt.title('Ey')
-        plt.colorbar()
-        plt.subplot(223)
-        plt.imshow(func(Hx),aspect=1,extent=[-s*0.5,s*0.5,-s*0.5,s*0.5],origin='lower')
-        plt.title('Hx')
-        plt.colorbar()
-        plt.subplot(224)
-        plt.imshow(func(Hy),aspect=1,extent=[-s*0.5,s*0.5,-s*0.5,s*0.5],origin='lower')
-        plt.title('Hy')
-        plt.colorbar()
-        if title!=None:
-            plt.suptitle(title)
-        sub.savefig(pdf, fig)
-
-
-
-    def write_field(self,i,filename='field.out',N=100,s=1.0,func=None,ordered=True):
-        """Writes the modal fields to a file
-        
-        Args:
-            i (int): Index of the mode to plot. Menaning depends on the value of the ordered parameter.
-            filename (str, optional): Name of the output file. Defaults to 'field.out'.
-            N (int, optional): Number of points in (both in x and y) on which the fields are calculated. Defaults to 100.
-            s (float, optional): Number of unit cells which are written. Defaults to 1.0.
-            func (function, optional): Function to be applied to the field before writing. Defaults to None (full complex fields are plotted).
-            ordered (bool, optional): if True, modes are ordered on decreasing effective index. If False, the order is whatever is provided by the diagonalization routine. Defaults to True.
+            x (array_like): x coordinates.
+            y (array_like): y coordinates.
+            z (array_like): z coordinates.
+            u (array_like): coefficient of forward propagating modes.
+            d (array_like, optional): coefficient of backward propagating modes.
+                Default to None: no backward propagagtion is assumed.
+            components (list of str, optional): field components to calculate.
+                Default to None: all components ('Ex', 'Ey', 'Hx', 'Hy') are calculated.
 
         Returns:
-            None.
-
-        """
-        if ordered:
-            j=np.argsort(self.W)[-i-1]
-        else:
-            j=i
-        if self.TX:
-            ex=self.ex
-            if s==1.0:
-                x=np.linspace(-0.5,0.5,N)
-                xl=sub.t_dir(x,ex)
-            else:
-                xl=np.linspace(-s*0.5,s*0.5,N)
-                x=sub.t_inv(xl,ex)
-        else:
-            x=np.linspace(-0.5,0.5,N)
-            xl=np.linspace(-0.5,0.5,N)
-
-        if self.TY:
-            ey=self.ey
-            if s==1.0:
-                y=np.linspace(-0.5,0.5,N)
-                yl=sub.t_dir(y,ey)
-            else:
-                yl=np.linspace(-s*0.5,s*0.5,N)
-                y=sub.t_inv(yl,ey)
-        else:
-            y=np.linspace(-0.5,0.5,N)
-            yl=np.linspace(-0.5,0.5,N)
-
-        [X,Y]=np.meshgrid(x,y,indexing='ij')
-        [WEx,WEy]=np.split(self.V[:,j],2)
-        [WHx,WHy]=np.split(self.VH[:,j],2)
-        Ex,Ey=np.zeros((N,N),dtype='complex'),np.zeros((N,N),dtype='complex')
-        Hx,Hy=np.zeros((N,N),dtype='complex'),np.zeros((N,N),dtype='complex')
-        for i in range(self.D):
-            EXP=np.exp((0+2j)*np.pi*((self.G[i][0]+self.kx)*X+(self.G[i][1]+self.ky)*Y))
-            Ex=np.add(Ex,np.dot(WEx[i],EXP))
-            Ey=np.add(Ey,np.dot(WEy[i],EXP))
-            Hx=np.add(Hx,np.dot(WHx[i],EXP))
-            Hy=np.add(Hy,np.dot(WHy[i],EXP))
-        if func==None:
-            f=open(filename,'w')
-            f.write('#    x           xl          y           yl          ReEx        ImEx        ReEy        ImEy        ReHx        ImHx        ReHy        ImHy\n')
-            for i in range(N):    
-                for j in range(N):
-                    #print 6*'%12.6f' % (X[i,j],Y[i,j],func(Ex[i,j]),func(Ey[i,j]),func(Hx[i,j]),func(Hy[i,j]))
-                    f.write(12*'%18.6e' % (x[i],xl[i],y[j]*self.Nyx,yl[j]*self.Nyx,Ex[i,j].real,Ex[i,j].imag,Ey[i,j].real,Ey[i,j].imag,Hx[i,j].real,Hx[i,j].imag,Hy[i,j].real,Hy[i,j].imag) + '\n')
-                #print ''
-                f.write('\n')
-            f.close()
-
-        else:
-            f=open(filename,'w')
-            f.write('#    x           xl          y           yl          Ex          Ey          Hx          Hy \n')
-            for i in range(N):    
-                for j in range(N):
-                    #print 6*'%12.6f' % (X[i,j],Y[i,j],func(Ex[i,j]),func(Ey[i,j]),func(Hx[i,j]),func(Hy[i,j]))
-                    f.write(8*'%18.6e' % (x[i],xl[i],y[j]*self.Nyx,yl[j]*self.Nyx,func(Ex[i,j]),func(Ey[i,j]),func(Hx[i,j]),func(Hy[i,j])) + '\n')
-                #print ''
-                f.write('\n')
-            f.close()
-
-    def writeE(self,i,filename='fieldE.out',N=100):
-        """Writes the modal electric field to a file
-        
-        Args:
-            i (int): Index of the mode. Modes are ordered by default.
-            filename (str, optional): Name of the output file. Defaults to 'fieldE.out'.
-            N (int, optional): Number of points in (both in x and y) on which the fields are calculated. Defaults to 100.
-
-        Returns:
-            None.
-
-        """
-        j=np.argsort(self.W)[-i]
-        [X,Y]=np.meshgrid(np.linspace(-0.5,0.5,N),np.linspace(-0.5,0.5,N))
-        [WEx,WEy]=np.split(self.V[:,j],2)
-        [WHx,WHy]=np.split(self.VH[:,j],2)
-        Ex,Ey=np.zeros((N,N),dtype='complex'),np.zeros((N,N),dtype='complex')
-        for i in range(self.D):
-            EXP=np.exp((0+2j)*np.pi*((self.G[i][0]+self.kx)*X+(self.G[i][1]+self.ky)*Y))
-            Ex=np.add(Ex,np.dot(WEx[i],EXP))
-            Ey=np.add(Ey,np.dot(WEy[i],EXP))
-        f=open(filename,'w')
-        f.write('#    x           y          ReEx        ImEx        AbsEx       ReEy        ImEy        AbsEy \n')
-        for i in range(N):    
-            for j in range(N):
-                f.write(8*'%12.6f' % (X[i,j],Y[i,j],Ex[i,j].real,Ex[i,j].imag,abs(Ex[i,j]),Ey[i,j].real,Ey[i,j].imag,abs(Ey[i,j])) + '\n')
-            f.write('\n')
-        f.close()
-
-    def writeH(self,i,filename='fieldH.out',N=100):
-        """Writes the modal magnetic field to a file
-        
-        Args:
-            i (int): Index of the mode. Modes are ordered by default.
-            filename (str, optional): Name of the output file. Defaults to 'fieldH.out'.
-            N (int, optional): Number of points in (both in x and y) on which the fields are calculated. Defaults to 100.
-
-        Returns:
-            None.
-
-        """
-        j=np.argsort(self.W)[-i]
-        [X,Y]=np.meshgrid(np.linspace(-0.5,0.5,N),np.linspace(-0.5,0.5,N))
-        [WEx,WEy]=np.split(self.V[:,j],2)
-        [WHx,WHy]=np.split(self.VH[:,j],2)
-        Hx,Hy=np.zeros((N,N),dtype='complex'),np.zeros((N,N),dtype='complex')
-        for i in range(self.D):
-            EXP=np.exp((0+2j)*np.pi*((self.G[i][0]+self.kx)*X+(self.G[i][1]+self.ky)*Y))
-            Hx=np.add(Hx,np.dot(WHx[i],EXP))
-            Hy=np.add(Hy,np.dot(WHy[i],EXP))
-        f=open(filename,'w')
-        f.write('#    x           y          ReHx        ImHx        AbsHx       ReHy        ImHy        AbsHy \n')
-        for i in range(N):    
-            for j in range(N):
-                f.write(8*'%12.6f' % (X[i,j],Y[i,j],Hx[i,j].real,Hx[i,j].imag,abs(Hx[i,j]),Hy[i,j].real,Hy[i,j].imag,abs(Hy[i,j])) + '\n')
-            f.write('\n')
-        f.close()
-
-
-    def write_fieldgeneral(self,u,d=None,filename='field_general.out',N=100,s=1.0):
-        """Writes the electric filed obtained by a superposition on modes
-        
-        Args:
-            u (1darray): Array of the coefficients of the forward propagating modes. Dimension in 2*number of plane waves.
-            d (1darray, optional): Array of the coefficients of the backward propagating modes. Dimension in 2*number of plane waves. Defaults to None.
-            filename (str, optional): Name of output file. Defaults to 'field_general.out'.
-            N (int, optional):  Number of points in (both in x and y) on which the fields are calculated. Defaults to 100.
-            s (float, optional): Number of unit cells which are written. Defaults to 1.0.
-
-        Returns:
-            None.
-
-        """
-        if d is None:
-            d=np.zeros(2*self.D,dtype=complex)
-
-        try:
-            ex=self.ex
-            if s==1.0:
-                x=np.linspace(-0.5,0.5,N)
-                xl=sub.t_dir(x,ex)
-            else:
-                xl=np.linspace(-s*0.5,s*0.5,N)
-                x=sub.t_inv(xl,ex)
-        except AttributeError:
-                x=np.linspace(-0.5,0.5,N)
-                xl=np.linspace(-0.5,0.5,N)
-        try:
-            ey=self.ey
-            if s==1.0:
-                y=np.linspace(-0.5,0.5,N)
-                yl=sub.t_dir(y,ey)
-            else:
-                yl=np.linspace(-s*0.5,s*0.5,N)
-                y=sub.t_inv(yl,ey)
-        except AttributeError:
-                y=np.linspace(-0.5,0.5,N)
-                yl=np.linspace(-0.5,0.5,N)
-
-        [X,Y]=np.meshgrid(x,y,indexing='ij')
-        Ef=np.dot(self.V,u+d)
-        [WEx,WEy]=np.split(Ef,2)
-        #[WEx,WEy]=np.split(self.V[:,j],2)
-        #[WHx,WHy]=np.split(self.VH[:,j],2)
-        Ex,Ey=np.zeros((N,N),dtype='complex'),np.zeros((N,N),dtype='complex')
-        for i in range(self.D):
-            EXP=np.exp((0+2j)*np.pi*((self.G[i][0]+self.kx)*X+(self.G[i][1]+self.ky)*Y))
-#            Ex+=WEx[i]*EXP
-#            Ey+=WEy[i]*EXP
-            Ex=np.add(Ex,np.dot(WEx[i],EXP))
-            Ey=np.add(Ey,np.dot(WEy[i],EXP))
-        f=open(filename,'w')
-        f.write('#    x           y          ReEx        ImEx        AbsEx       ReEy        ImEy        AbsEy \n')
-        for i in range(N):    
-            for j in range(N):
-                f.write(10*'%12.6f' % (x[i],xl[i],y[j]*self.Nyx,yl[j]*self.Nyx,Ex[i,j].real,Ex[i,j].imag,abs(Ex[i,j]),Ey[i,j].real,Ey[i,j].imag,abs(Ey[i,j])) + '\n')
-            f.write('\n')
-        f.close()
-
-
-    def get_field(self,x,y,i,func=None):
-        """Returns the modal fields at a specific point
-        
-        Args:
-            x (float): x coordinate of requested field.
-            y (float): y coordinate of requested field.
-            i (int): Index of the mode. Moder are ordered by default
-            func (function, optional): Function to be applied to the field before returning. Defaults to None (full complex value is returned).
-
-        Returns:
-            1darray: Array containing Ex, Ey, Hx, Hy.
-
-        """
-        j=np.argsort(self.W)[-i]
-        [WEx,WEy]=np.split(self.V[:,j],2)
-        [WHx,WHy]=np.split(self.VH[:,j],2)
-        Ex,Ey=0.0,0.0
-        Hx,Hy=0.0,0.0
-        for i in range(self.D):
-            EXP=np.exp((0+2j)*np.pi*((self.G[i][0]+self.kx)*x+(self.G[i][1]+self.ky)*y))
-            Ex+=WEx[i]*EXP
-            Ey+=WEy[i]*EXP
-            Hx+=WHx[i]*EXP
-            Hy+=WHy[i]*EXP
-        if func is not None:
-            return func(np.array([Ex,Ey,Hx,Hy]))
-        else:
-            return np.array([Ex,Ey,Hx,Hy])
-
-    def get_field2(self,X,Y,i,func=None):
-        """Returns the modal fields given the coordinates
-        
-        Args:
-            X (ndarray): Array of x points (unit of ax).
-            Y (ndarray): Array of y points (unit of ay).
-            i (int): Index of the mode. Modes are ordered by default
-            func (function, optional): Function to be applied to the field before returning. Defaults to None (full complex value is returned).
+            dict of ndarray : Desired field components. Shape of ndarray is the same as x,y, and z.
 
         Raises:
-            ValueError: Raised if X and Y have different shapes
-
-        Returns:
-            res (tuple): tuple of ndarrays, containing Ex, Ey, Hx, Hy
+            ValueError:
+                if x,y,z have different shapes
+            ValueError:
+                if other component than 'Ex', 'Ey', 'Hx', or 'Hy' is requested.
 
         """
-        if np.shape(X)!=np.shape(Y):
-            raise ValueError('X and Y arrays have different shapes')
-        j=np.argsort(self.W)[-i-1]
-        [WEx,WEy]=np.split(self.V[:,j],2)
-        [WHx,WHy]=np.split(self.VH[:,j],2)
-        Ex=np.zeros_like(X,dtype=complex)
-        Ey=np.zeros_like(X,dtype=complex)
-        Hx=np.zeros_like(X,dtype=complex)
-        Hy=np.zeros_like(X,dtype=complex)        
-        for i in range(self.D):
-            EXP=np.exp((0+2j)*np.pi*((self.G[i][0]+self.kx)*X+(self.G[i][1]+self.ky)*Y))
-            Ex=np.add(Ex,np.dot(WEx[i],EXP))
-            Ey=np.add(Ey,np.dot(WEy[i],EXP))
-            Hx=np.add(Hx,np.dot(WHx[i],EXP))
-            Hy=np.add(Hy,np.dot(WHy[i],EXP))
-        if func is not None:
-            res=(func(M) for M in [Ex,Ey,Hx,Hy])
-        else:
-            res = (Ex,Ey,Hx,Hy)
-        return res
+        if components is None:
+            components = ['Ex', 'Ey', 'Hx', 'Hy']
+        d = np.zeros_like(u, dtype=complex) if d is None else d
+        if np.shape(u)!=np.shape(d):
+            raise ValueError(f'Shape of u different from shape of d {nd.shape(u)}!={nd.shape(d)}')
+        if np.shape(x) != np.shape(y) or np.shape(x) != np.shape(z):
+            raise ValueError(f'Shapes of x,y, and z do not match (z: {np.shape(x)}, z: {np.shape(x)}, z: {np.shape(z)})')
+        for comp in components:
+            if comp not in ['Ex', 'Ey', 'Hx', 'Hy']:
+                raise ValueError(f'Field component f{comp} not available. Only Ex, Ey, Hx, or Hy are allowed')
+
+        if self.TX:
+            x = sub.t_inv(x,self.ex)
+        if self.TX:
+            y = sub.t_inv(y,self.ey)
+
+        field = {comp : np.zeros_like(x, dtype=complex) for comp in components}
+        for i, (uu, dd, n) in enumerate(zip(u,d, self.gamma)):
+            if uu==0.0 and dd==0.0: continue
+            field_tmp = {comp: np.zeros_like(x, dtype=complex) for comp in components}
+            for j, (gx, gy) in self.G.items():
+                [WEx, WEy] = np.split(self.V[:, i], 2)
+                [WHx, WHy] = np.split(self.VH[:, i], 2)
+                EXP = np.exp((0 + 2j) * np.pi * ((gx + self.kx) * x + (gy + self.ky) * y))
+                for comp in components:
+                    sign = 1.0 if comp[0]=='E' else -1.0
+                    coeff = uu * np.exp(2.0j*self.k0*n*z) + sign * dd * np.exp(-2.0j*self.k0*n*z)
+                    field_tmp[comp] = field_tmp[comp] + coeff* eval(f'W{comp}')[j] * EXP
+            for comp in components:
+                field[comp] = field[comp] + field_tmp[comp]
+        return field
 
 
-    def plot_Et(self,pdf,i,N=100,sx=1,sy=1,func=np.abs):
-        """Plots both Ex and Ey
+    def get_modal_field(self, i, x=0.0, y=0.0, components=None):
+        """Returns modal field profile
 
         Args:
-            pdf (multiple, optional): Multiple choice. Each one has a diffrent meaning:
-                - (PdfPages): append figure to the PdfPages object
-                - (str): save the figure to a pdf with this name
-            i (int): Modal index. Modes are ordered by default.
-            N (int, optional): DESCRIPTION. Defaults to 100.
-            sx (float, optional): Width of the plotting windows in x (unit of ax). Defaults to 1.
-            sy (float, optional): Width of the plotting windows in y (unit of ay). Defaults to 1.
-            func (TYPE, optional): Function to apply to the field before plotting. Defaults to np.abs.
+            i (int): index of the mode.
+            x (float or array_like): x coordinate for the field calculation
+            y (float or array_like): y coordinate for the field calculation
+            components (list of str, optional): field components to calculate.
+                Default to None: all components ('Ex', 'Ey', 'Hx', 'Hy') are calculated.
 
         Returns:
-            None.
-
+            DataFrame: modal field
         """
-        j=np.argsort(self.W)[-i]
-        x,y=np.linspace(-sx*0.5,sx*0.5,sx*N),np.linspace(-sy*0.5,sy*0.5,sy*N)
-        if self.TX:
-            x=sub.t_inv(x,self.ex)
-        if self.TY:
-            y=sub.t_inv(y,self.ey)
-        [X,Y]=np.meshgrid(x,y)
-        [WEy,WEx]=np.split(self.V[:,j],2)
-        Ey,Ex=np.zeros((sy*N,sx*N),dtype='complex'),np.zeros((sy*N,sx*N),dtype='complex')
-        for i in range(self.D):
-            EXP=np.exp((0+2j)*np.pi*((self.G[i][0]+self.kx)*X+(self.G[i][1]+self.ky)*Y))
-            Ey+=WEy[i]*EXP
-            Ex+=WEx[i]*EXP
-        plt.figure()
-        plt.title('k0:%5.3f kx:%5.3f ky:%5.3f' % (self.k0,self.kx,self.ky))
-        plt.subplot(211)
-        plt.imshow(func(Ex),extent=[-sx*0.5,sx*0.5,-sy*0.5,sy*0.5])
-        plt.title('Ex')
-        plt.colorbar()
-        plt.subplot(212)
-        plt.imshow(func(Ey),extent=[-sx*0.5,sx*0.5,-sy*0.5,sy*0.5])
-        plt.title('Ey')
-        plt.colorbar()
-        pdf.savefig()
-        plt.close()
-
-    
+        x, y, z = np.meshgrid(x, y, [0.0], indexing='ij')
+        u = self.create_input({i : 1.0})
+        data = {
+            'x': x.reshape(-1),
+            'y': y.reshape(-1),
+        }
+        field = self.calculate_field(x,y,z,u, components=components)
+        for k,v in field.items():
+            data[k] = v.reshape(-1)
+        return pd.DataFrame(data)
 
     def get_P_norm(self):
         """Creates array of single mode Poynting vector components.
@@ -999,7 +643,7 @@ class Layer:
         """
         u=np.zeros((2*self.NPW),complex)
         for i in dic:
-            u[np.argsort(self.W)[-i]]=dic[i]
+            u[np.argsort(self.W)[-i-1]]=dic[i]
         return u
 
     def get_Enorm(self):
@@ -1327,52 +971,6 @@ class Layer_uniform(Layer):
         plt.close()
         save.close()
 
-
-    def mode(self,k0,kx=0.0,ky=0.0):
-        """Calculates the eighenmode of the layer
-        
-        Args:
-            k0 (float): Vacuum wavevector
-            kx (float): Wavevector in the x direction
-            ky (float): Wavevector in the y direction
-        """
-        self.k0=k0
-        self.kx=kx
-        self.ky=ky
-        if (self.TX or self.TY):
-            (k1,k2)=sub.createK(self.G,k0,kx=kx,ky=ky,Nyx=self.Nyx)
-            if self.TX:
-                #print np.shape(self.FX),np.shape(self.k1)
-                k1=np.dot(self.FX,k1)
-            if self.TY:
-                k2=np.dot(self.FY,k2)
-            self.GH,self.M=sub.create_2order_new(self.D,k1,k2,self.INV,self.EPS1,self.EPS2)
-            [self.W,self.V]=linalg.eig(self.M)
-            self.gamma=np.sqrt(self.W)*np.sign(np.angle(self.W)+0.5*np.pi)
-            if np.any(np.real(self.gamma)+np.imag(self.gamma)<=0.0):
-                print('Warining: wrong complex root')
-            if np.any(np.abs(self.gamma)<=0.0):
-                print('Warining: gamma=0')
-            self.VH=np.dot(self.GH,self.V/self.gamma)
-        else:
-            W=2*[self.eps-((1+0j)*(self.G[i][0]+kx)/k0)**2-((1+0j)*(self.G[i][1]+ky)/k0/self.Nyx)**2 for i in self.G]
-            self.W=np.array(W)
-            self.V=np.identity(2*self.D,dtype=complex)
-            self.gamma=np.sqrt(self.W)*np.sign(np.angle(self.W)+0.5*np.pi)
-            if np.any(np.real(self.gamma)+np.imag(self.gamma)<=0.0):
-                print('Warining: wrong complex root')
-            if np.any(np.abs(self.gamma)<=0.0):
-                print('Warining: gamma=0')       
-            self.M=np.diag(self.V)
-            GH_11=[-(1+0j)*(self.G[i][1]+ky)/k0/self.Nyx*(self.G[i][0]+kx)/k0 for i in self.G]
-            GH_22=[(1+0j)*(self.G[i][1]+ky)/k0/self.Nyx*(self.G[i][0]+kx)/k0 for i in self.G]
-            GH_12=[((1+0j)*(self.G[i][0]+kx)/k0)**2-self.eps for i in self.G]
-            GH_21=[self.eps-((1+0j)*(self.G[i][1]+ky)/k0/self.Nyx)**2 for i in self.G]
-            self.GH=np.vstack([np.hstack([np.diag(GH_11),np.diag(GH_12)]),np.hstack([np.diag(GH_21),np.diag(GH_22)])])
-            self.VH=np.dot(self.GH,self.V/self.gamma)
-
-
-
 class Layer_empty_st(Layer):
     """Class for the definition of an empy layer
     """
@@ -1412,145 +1010,18 @@ class Layer_empty_st(Layer):
         return (self.FOUP,self.INV,self.EPS1,self.EPS2)
 
 
-class Layer_from_xsection(Layer):  
-    """ Development class
-    """
-    def __init__(self,Nx,Ny,xs):
-        self.Nx=Nx
-        self.Ny=Ny
-        self.NPW=(2*Nx+1)*(2*Ny+1)
-        self.G=sub.createG(self.Nx,self.Ny)
-        self.D=len(self.G)
-        self.creator=Creator()
+if __name__ == '__main__':
+    cr = Creator()
+    cr.rect(12.0, 2.0, 0.8, 0.3)
+    lay = Layer(5, 5, cr)
+    lay.mode(2.0)
+    x = np.linspace(-0.5, 0.5, 101)
+    y = np.linspace(-0.5, 0.5, 101)
+    data = lay.get_modal_field(4,x=x, y=y)
+    to_plot = data.pivot(index = 'y', columns='x', values='Ex')
+    to_plot.plot()
+    plt.colorbar()
 
-        y_stacks=[]
-        w_tot=0.0
-        x_list=[]
-        for i, (width,stack) in enumerate(zip(xs.hstack['widths'],xs.hstack['vstacks'])):
-            y_temp=[]
-            x_list.append(width)
-            w_tot+=width
-            for j, (m, w) in enumerate(stack.layers):
-                y_temp.append(w)
-            y_temp=np.cumsum(y_temp)
-            for y in y_temp:
-                if not np.isclose(y_stacks,y).any():
-                    y_stacks.append(y) 
-        
-        x_list=(np.cumsum(np.array(x_list)))/w_tot-0.5
-        y_list=np.sort(y_stacks)
-        h_tot=y_list[-1]     
-        y_norm=[y/h_tot-0.5 for y in y_list]
-
-        #print(y_list,'\n')
-        eps_lists=[]
-        for i, (width,stack) in enumerate(zip(xs.hstack['widths'],xs.hstack['vstacks'])):
-            eps_list=[]
-            ys=list(np.cumsum([w for (m, w) in stack.layers]))
-            ys.append(h_tot) 
-            inds=[m.Nmat() for (m, w) in stack.layers]
-            inds.append(xs.background.Nmat())
-            for y in y_list:
-                for j,yp in enumerate(ys):
-                    if y<=yp:
-                        break
-                eps_list.append(inds[j]**2.0)
-            #print(ys,inds,eps_list,'\n')
-            eps_lists.append(eps_list)
-
-        self.FOUP=sub.create_epsilon(self.G,x_list,y_norm,eps_lists)
-        self.INV=linalg.inv(self.FOUP)
-        self.EPS1=sub.fou_xy(self.Nx,self.Ny,self.G,x_list,y_norm,eps_lists)
-        self.EPS2=sub.fou_yx(self.Nx,self.Ny,self.G,x_list,y_norm,eps_lists)
-
-        self.creator.x_list=x_list
-        self.creator.y_list=y_norm
-        self.creator.eps_lists=eps_lists
-
-        #print(x_list)
-        #print(y_norm)
-        #print(eps_lists)
-
-
-        self.TX=False
-        self.TY=False
-        self.Nyx=h_tot/w_tot
-        self.ax=w_tot
-        self.ay=h_tot
-
-    def mode_from_lam(self,lam,kx=0.0,ky=0.0,v=1):
-        self.mode(self.ax/lam,kx=kx,ky=ky,v=v)
-
-
-class Layer_from_hstack(Layer):    
-    """ Development class
-    """
-    def __init__(self,Nx,Ny,hstack):
-        self.Nx=Nx
-        self.Ny=Ny
-        self.NPW=(2*Nx+1)*(2*Ny+1)
-        self.G=sub.createG(self.Nx,self.Ny)
-        self.D=len(self.G)
-        self.creator=Creator()
-
-        y_stacks=[]
-        w_tot=0.0
-        x_list=[]
-        for i, (stack,width) in enumerate(hstack.layers):
-            y_temp=[]
-            x_list.append(width)
-            w_tot+=width
-            for j, (m, w) in enumerate(stack.layers):
-                y_temp.append(w)
-            if i==0:
-                background=m.Neff()
-            y_temp=np.cumsum(y_temp)
-            for y in y_temp:
-                if not np.isclose(y_stacks,y).any():
-                    y_stacks.append(y) 
-        
-        x_list=(np.cumsum(np.array(x_list)))/w_tot-0.5
-        y_list=np.sort(y_stacks)
-        h_tot=y_list[-1]     
-        y_norm=[y/h_tot-0.5 for y in y_list]
-
-        #print(y_list,'\n')
-        eps_lists=[]
-        for i, (stack,width) in enumerate(hstack.layers):
-            eps_list=[]
-            ys=list(np.cumsum([w for (m, w) in stack.layers]))
-            ys.append(h_tot) 
-            inds=[m.Nmat() for (m, w) in stack.layers]
-            inds.append(inds[-1])
-            for y in y_list:
-                for j,yp in enumerate(ys):
-                    if y<=yp:
-                        break
-                eps_list.append(inds[j]**2.0)
-            #print(ys,inds,eps_list,'\n')
-            eps_lists.append(eps_list)
-
-        self.FOUP=sub.create_epsilon(self.G,x_list,y_norm,eps_lists)
-        self.INV=linalg.inv(self.FOUP)
-        self.EPS1=sub.fou_xy(self.Nx,self.Ny,self.G,x_list,y_norm,eps_lists)
-        self.EPS2=sub.fou_yx(self.Nx,self.Ny,self.G,x_list,y_norm,eps_lists)
-
-        self.creator.x_list=x_list
-        self.creator.y_list=y_norm
-        self.creator.eps_lists=eps_lists
-
-        #print(x_list)
-        #print(y_norm)
-        #print(eps_lists)
-
-
-        self.TX=False
-        self.TY=False
-        self.Nyx=h_tot/w_tot
-        self.ax=w_tot
-        self.ay=h_tot
-
-    def mode_from_lam(self,lam,kx=0.0,ky=0.0,v=1):
-        self.mode(self.ax/lam,kx=kx,ky=ky,v=v)
-        
-
+    #plt.contourf(to_plot['x'].values, to_plot['y'].values, to_plot['Ey'].values)
+    #plt.contourf(X[:,0,:], Z[:,0,:], np.abs(out['Ey'][:,0,:]))
+    plt.show()
