@@ -24,16 +24,13 @@ class Layer:
         self.Ny=Ny
         self.NPW=(2*Nx+1)*(2*Ny+1)
         self.G=sub.createG(self.Nx,self.Ny)
+        self.G_inv = {v : k for k,v in self.G.items()}
         self.D=len(self.G)
         self.creator=copy.deepcopy(creator)
         self.Nyx=Nyx
 
-
-        #self.FOUP=sub.create_epsilon(self.G,self.creator.x_list,self.creator.y_list,self.creator.eps_lists)
         self.FOUP=self.__create_eps()
         self.INV=linalg.inv(self.FOUP)
-#        self.EPS_INV=linalg.inv(linalg.toeplitz([sub.fou_v(self.G[i][0]-self.G[0][0],self.G[i][1]-self.G[0][1],self.creator.x_list,self.creator.y_list,self.creator.eps_lists) for i in range(self.D)]))
-#        self.REC=linalg.toeplitz([sub.fou_v(self.G[i][0]-self.G[0][0],self.G[i][1]-self.G[0][1],self.creator.x_list,self.creator.y_list,self.creator.eps_lists) for i in range(self.D)])
 
         self.EPS1=sub.fou_xy(self.Nx,self.Ny,self.G,self.creator.x_list,self.creator.y_list,self.creator.eps_lists)
         self.EPS2=sub.fou_yx(self.Nx,self.Ny,self.G,self.creator.x_list,self.creator.y_list,self.creator.eps_lists)
@@ -121,7 +118,7 @@ class Layer:
             a.close()
         plt.close()
 
-    def transform(self,ex=0,ey=0):
+    def transform(self,ex=0,ey=0, complex_transform=False):
         """Function for adding the real coordinate transfomr to the layer
 
         Note: for no mapping, set the width to 0
@@ -129,51 +126,35 @@ class Layer:
         Args:
             ex (float): relative width of the unmapped region in x direction. Default is 0 (no mapping)
             ey (float): relative width of the unmapped region in y direction. Default is 0 (no mapping)
+            complex_transform (bool): False for real transform (default), True for complex one.
         """
+        if complex_transform:
+            transform_function = sub.fou_complex_t
+        else:
+            transform_function = sub.fou_t
+
         if (ex!=0):
             self.TX=True
             self.ex=ex
-#            self.FX=linalg.toeplitz([sub.fou_t(self.G[i][0]-self.G[0][0],ex) for i in range(self.D)])
             self.FX=np.zeros((self.D,self.D),complex)
-            for i in range(self.D):
-                for j in range(self.D):
-                    self.FX[i,j]=sub.fou_t(self.G[i][0]-self.G[j][0],ex)*(self.G[i][1]==self.G[j][1])
+            nx = 2 * self.Nx
+            mx = 4 * self.Nx + 1
+            F = [transform_function((i + nx) % mx - nx,ex) for i in range(mx)]
+            for i, (gx1, gy1) in self.G.items():
+                for j, (gx2, gy2) in self.G.items():
+                    if gy1!=gy2: continue
+                    self.FX[i,j]=F[gx1 - gx2]
         if (ey!=0):
             self.TY=True
             self.ey=ey
-#            self.FY=linalg.toeplitz([sub.fou_t(self.G[i][0]-self.G[0][0],ex) for i in range(self.D)])
             self.FY=np.zeros((self.D,self.D),complex)
-            for i in range(self.D):
-                for j in range(self.D):
-                    self.FY[i,j]=sub.fou_t(self.G[i][1]-self.G[j][1],ey)*(self.G[i][0]==self.G[j][0])
-
-
-    def transform_complex(self,ex=0,ey=0):
-        """Function for adding the complex coordinate transfomr to the layer
-
-        Note: for no mapping, set the width to 0
-    
-        Args:
-            ex (float): relative width of the unmapped region in x direction. Default is 0 (no mapping)
-            ey (float): relative width of the unmapped region in y direction. Default is 0 (no mapping)
-        """
-        g=1.0/(1-1j)
-        if (ex!=0):
-            self.TX=True
-            self.ex=ex
-#            self.FX=linalg.toeplitz([sub.fou_t(self.G[i][0]-self.G[0][0],ex) for i in range(self.D)])
-            self.FX=np.zeros((self.D,self.D),complex)
-            for i in range(self.D):
-                for j in range(self.D):
-                    self.FX[i,j]=sub.fou_complex_t(self.G[i][0]-self.G[j][0],ex,g)*(self.G[i][1]==self.G[j][1])
-        if (ey!=0):
-            self.TY=True
-            self.ey=ey
-#            self.FY=linalg.toeplitz([sub.fou_t(self.G[i][0]-self.G[0][0],ex) for i in range(self.D)])
-            self.FY=np.zeros((self.D,self.D),complex)
-            for i in range(self.D):
-                for j in range(self.D):
-                    self.FY[i,j]=sub.fou_complex_t(self.G[i][1]-self.G[j][1],ey,g)*(self.G[i][0]==self.G[j][0])
+            ny = 2 * self.Ny
+            my = 4 * self.Ny + 1
+            F = [transform_function((i + ny) % my - ny,ey) for i in range(my)]
+            for i, (gx1, gy1) in self.G.items():
+                for j, (gx2, gy2) in self.G.items():
+                    if gx1!=gx2: continue
+                    self.FY[i,j]=F[gy1 - gy2]
 
     def add_transform_matrix(self,ex=0.0,FX=None,ey=0.0,FY=None):
         """Function for adding matrix of a coordinate transform
@@ -823,7 +804,7 @@ if __name__ == '__main__':
     fig, ax = plt.subplots(1,3, figsize=(12,4))
     cr = Creator()
     cr.rect(12.0, 2.0, 0.6, 0.3)
-    lay = Layer(15, 15, cr)
+    lay = Layer(5, 5, cr)
     lay.transform(ex=0.8, ey=0.8)
     vector = np.linspace(-1.5, 1.5, 201)
     x,y,z = np.meshgrid(vector, vector, [0.0], indexing='ij')
