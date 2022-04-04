@@ -28,8 +28,9 @@ class Layer:
         self.creator=copy.deepcopy(creator)
         self.Nyx=Nyx
 
-        #self.FOUP=linalg.toeplitz([sub.fou(self.G[i][0]-self.G[0][0],self.G[i][1]-self.G[0][1],self.creator.x_list,self.creator.y_list,self.creator.eps_lists) for i in range(self.D)])
-        self.FOUP=sub.create_epsilon(self.G,self.creator.x_list,self.creator.y_list,self.creator.eps_lists)
+
+        #self.FOUP=sub.create_epsilon(self.G,self.creator.x_list,self.creator.y_list,self.creator.eps_lists)
+        self.FOUP=self.__create_eps()
         self.INV=linalg.inv(self.FOUP)
 #        self.EPS_INV=linalg.inv(linalg.toeplitz([sub.fou_v(self.G[i][0]-self.G[0][0],self.G[i][1]-self.G[0][1],self.creator.x_list,self.creator.y_list,self.creator.eps_lists) for i in range(self.D)]))
 #        self.REC=linalg.toeplitz([sub.fou_v(self.G[i][0]-self.G[0][0],self.G[i][1]-self.G[0][1],self.creator.x_list,self.creator.y_list,self.creator.eps_lists) for i in range(self.D)])
@@ -39,6 +40,27 @@ class Layer:
 
         self.TX=False
         self.TY=False
+
+    def __create_eps(self):
+        nx = 2*self.Nx
+        ny = 2*self.Nx
+        mx = 4*self.Nx + 1
+        my = 4 * self.Ny + 1
+        fourier_transform = np.zeros((mx, my), dtype=complex)
+        print(np.shape(fourier_transform))
+        x_list = self.creator.x_list
+        y_list = self.creator.y_list
+        eps_lists = self.creator.eps_lists
+        G = self.G
+        for i in range(mx):
+            for j in range(my):
+                fourier_transform[i,j] = sub.fou((i + nx) % mx - nx, (j + ny) % my - ny, x_list, y_list, eps_lists)
+        D = len(G)
+        F = np.zeros((D, D), complex)
+        for i, (gx1, gy1) in G.items():
+            for j, (gx2, gy2) in G.items():
+                F[i, j] = fourier_transform[gx1 - gx2, gy1 - gy2]
+        return F
 
     def inspect(self,st=''):
         """Function for inspectig the attributes of a layer object
@@ -193,10 +215,6 @@ class Layer:
         self.gamma=np.sqrt(self.W)*np.sign(np.angle(self.W)+0.5*np.pi)
         if np.any(np.real(self.gamma)+np.imag(self.gamma)<=0.0):
             print('Warining: wrong complex root')
-#            self.gamma=np.sqrt(self.W)
-#            self.gamma=self.gamma*np.sign(np.imag(self.gamma))
-#            if np.any(np.imag(self.gamma)<=0.0):
-#                print 'Warining: negative imaginary part'
         if np.any(np.abs(self.gamma)<=0.0):
             print('Warining: gamma=0')
         self.VH=np.dot(self.GH,self.V/self.gamma)
@@ -234,80 +252,19 @@ class Layer:
             N (int): number of points for plotting the epsilon
             s (float): number pf relicas of the cell to plot. Default is 1.
         """
-        save=PdfPages(name+'.pdf')
+        with PdfPages(name+'.pdf') as save:
+            for attr in ['FOUP', 'EPS1', 'EPS2', 'INV', 'FX', 'FY']:
+                try:
+                    to_plot = getattr(self, attr)
+                    plt.figure()
+                    plt.title(attr)
+                    plt.imshow(np.abs(to_plot),aspect='auto',interpolation='nearest')
+                    plt.colorbar()
+                    save.savefig()
+                    plt.close()
+                except AttributeError:
+                    pass
 
-        [X,Y]=np.meshgrid(np.linspace(-s*0.5,s*0.5,s*N),np.linspace(-s*0.5,s*0.5,s*N))
-        EPS=np.zeros((N,N),complex)
-        EPS=sum([sub.fou(self.G[i][0],self.G[i][1],self.creator.x_list,self.creator.y_list,self.creator.eps_lists)*np.exp((0+2j)*np.pi*(self.G[i][0]*X+self.G[i][1]*Y)) for i in range(self.D)])
-
-        plt.figure()
-        plt.title('epsilon real')
-        plt.imshow(np.real(EPS),aspect=1,origin='lower')
-        plt.colorbar()
-        save.savefig()
-        plt.close()
-
-
-        plt.figure()
-        plt.title('epsilon')
-        plt.imshow(np.abs(self.FOUP),aspect='auto',interpolation='nearest')
-        plt.colorbar()
-        save.savefig()
-        plt.close()
-
-        #plt.figure()
-        #plt.title('epsilon_inv')
-        #plt.imshow(np.abs(self.EPS_INV),aspect='auto',interpolation='nearest')
-        #plt.colorbar()
-        #save.savefig()
-        #plt.close()
-
-        plt.figure()
-        plt.title('Epsilon 1')
-        plt.imshow(np.abs(self.EPS1),aspect='auto',interpolation='nearest')
-        plt.colorbar()
-        save.savefig()
-        plt.close()
-
-        plt.figure()
-        plt.title('Epsilon 2')
-        plt.imshow(np.abs(self.EPS2),aspect='auto',interpolation='nearest')
-        plt.colorbar()
-        save.savefig()
-        plt.close()
-
-
-        plt.figure()
-        plt.title('diff eps-eps1')
-        plt.imshow(np.abs(self.FOUP-self.EPS1),aspect='auto',interpolation='nearest')
-        plt.colorbar()
-        save.savefig()
-        plt.close()
-
-        plt.figure()
-        plt.title('INV')
-        plt.imshow(np.abs(np.abs(self.INV)),aspect='auto',interpolation='nearest')
-        plt.colorbar()
-        save.savefig()
-        plt.close()
-
-        if self.TX:
-            plt.figure()
-            plt.title('FX')
-            plt.imshow(np.abs(np.abs(self.FX)),aspect='auto',interpolation='nearest')
-            plt.colorbar()
-            save.savefig()
-            plt.close()
-
-        if self.TY:
-            plt.figure()
-            plt.title('FY')
-            plt.imshow(np.abs(np.abs(self.FY)),aspect='auto',interpolation='nearest')
-            plt.colorbar()
-            save.savefig()
-            plt.close()
-
-        save.close()
 
     def plot_Ham(self,pdf):
         """Plot the matrix of the eigenvalue problem
@@ -326,6 +283,49 @@ class Layer:
         pdf.savefig()
         plt.close()
 
+    def _process_xy(self,x,y):
+        """Transform the x and y coordinates between the real and computational space
+
+        Args:
+            x (ndarray): array of x coordinates in the real space
+            y (ndarray): array of y coordinates in the real space
+
+        Returns:
+            ndarray: array of x coordinates in the computational space
+            ndarray: array of y coordinates in the computational space
+
+        """
+        if self.TX:
+            x = sub.t_inv(x,self.ex)
+        if self.TY:
+            y = sub.t_inv(y,self.ey)
+        return x,y
+
+    def calculate_epsilon(self,x,y,z):
+        """Return epsilon given the coordinates
+
+        The epsilon returned here is the one reconstructed from the Fourier transform.
+
+        Args:
+            x (array_like): x coordinates.
+            y (array_like): y coordinates.
+            z (array_like): z coordinates.
+
+        Returns:
+            ndarray : Epsilon value at coordinates. Shape of ndarray is the same as x,y, and z.
+
+        Raises:
+            ValueError:
+                if x,y,z have different shapes
+        """
+
+        if np.shape(x) != np.shape(y) or np.shape(x) != np.shape(z):
+            raise ValueError(f'Shapes of x,y, and z do not match (z: {np.shape(x)}, z: {np.shape(x)}, z: {np.shape(z)})')
+        x, y = self._process_xy(x, y)
+        EPS = np.zeros_like(x, dtype='complex')
+        for i, (gx,gy) in self.G.items():
+            EPS = EPS + lay.FOUP[i, self.D // 2] * np.exp((0 + 2j) * np.pi * (gx * x + gy * y))
+        return EPS
 
     def calculate_field(self,x,y,z,u,d=None, components=None):
         """Return field given modal coefficient and coordinates
@@ -361,11 +361,7 @@ class Layer:
             if comp not in ['Ex', 'Ey', 'Hx', 'Hy']:
                 raise ValueError(f'Field component f{comp} not available. Only Ex, Ey, Hx, or Hy are allowed')
 
-        if self.TX:
-            x = sub.t_inv(x,self.ex)
-        if self.TX:
-            y = sub.t_inv(y,self.ey)
-
+        x, y = self._process_xy(x, y)
         field = {comp : np.zeros_like(x, dtype=complex) for comp in components}
         for i, (uu, dd, n) in enumerate(zip(u,d, self.gamma)):
             if uu==0.0 and dd==0.0: continue
@@ -497,7 +493,7 @@ class Layer:
 
 
     def T_interface(self,lay):
-        """Builds the Transfer matrix if the interface with another layer
+        """Builds the Transfer matrix of the interface with another layer
         
         Args:
             lay (Layer): Layer toward which to calculate the scattering matrix.
@@ -534,7 +530,7 @@ class Layer:
         
 #newer version, should be faster
     def interface(self,lay):
-        """Builds the Scattering matrix if the interface with another layer
+        """Builds the Scattering matrix of the interface with another layer
         
         Args:
             lay (Layer): Layer toward which to calculate the scattering matrix.
@@ -753,111 +749,6 @@ class Layer_num(Layer):
         self.TX=False
         self.TY=False
 
-
-    def eps_plot(self,pdf=None,N=200,s=1.0):
-        """Function for plotting the dielectric consstat rebuit from plane wave expansion
-
-        Args:
-            pdf (string or PdfPages): file for printing the the epsilon
-                if a PdfPages object, the page is appended to the pdf
-                if string, a pdf with that name is created
-            N (int): number of points
-            s (float): number of cell replicas to display (default 1)
-        """
-        [X,Y]=np.meshgrid(np.linspace(-s*0.5,s*0.5,s*N),np.linspace(-s*0.5,s*0.5,s*N))
-        [YY,XX]=np.meshgrid(np.linspace(-0.5,0.5,self.NY),np.linspace(-0.5,0.5,self.NX))
-        #F=self.func(XX,YY)
-        F=self.func(XX,YY/self.Nyx,*self.args)
-        F=np.fft.fftshift(F)
-        FOU=np.fft.fft2(F)/self.NX/self.NY
-        EPS=np.zeros((N,N),complex)
-        EPS=sum([FOU[self.G[i][0],self.G[i][1]]*np.exp((0+2j)*np.pi*(self.G[i][0]*X+self.G[i][1]*Y)) for i in range(self.D)])
-        plt.figure()
-        plt.imshow(np.real(EPS),origin='lower',extent=[-s*0.5,s*0.5,-self.Nyx*s*0.5,self.Nyx*s*0.5])
-        plt.colorbar()
-        if pdf is None:
-            pass
-        elif isinstance(pdf,PdfPages):
-            pdf.savefig()
-        else:
-            a=PdfPages(pdf+'.pdf')
-            a.savefig()
-            a.close()
-        plt.close()
-
-
-    def mat_plot(self,name,N=100,s=1):
-        """Plot the absolute values of the fourier trasnsform matrices
-
-        Args:
-            name (str): name of the pdf file for plotting
-            N (int): number of points for plotting the epsilon
-            s (float): number pf relicas of the cell to plot. Default is 1.
-        """
-        save=PdfPages(name+'.pdf')
-
-        [X,Y]=np.meshgrid(np.linspace(-s*0.5,s*0.5,s*N),np.linspace(-s*0.5,s*0.5,s*N))
-        [YY,XX]=np.meshgrid(np.linspace(-0.5,0.5,self.NY),np.linspace(-0.5,0.5,self.NX))
-        #F=self.func(XX,YY)
-        F=self.func(XX,YY/self.Nyx,*self.args)
-        F=np.fft.fftshift(F)
-        FOU=np.fft.fft2(F)/self.NX/self.NY
-        EPS=np.zeros((N,N),complex)
-        EPS=sum([FOU[self.G[i][0],self.G[i][1]]*np.exp((0+2j)*np.pi*(self.G[i][0]*X+self.G[i][1]*Y)) for i in range(self.D)])
-
-        plt.figure()
-        plt.title('epsilon real')
-        plt.imshow(np.real(EPS),aspect=1,origin='lower')
-        plt.colorbar()
-        save.savefig()
-        plt.close()
-
-
-        plt.figure()
-        plt.title('epsilon')
-        plt.imshow(np.abs(self.FOUP),aspect='auto',interpolation='nearest')
-        plt.colorbar()
-        save.savefig()
-        plt.close()
-
-        #plt.figure()
-        #plt.title('epsilon_inv')
-        #plt.imshow(np.abs(self.EPS_INV),aspect='auto',interpolation='nearest')
-        #plt.colorbar()
-        #save.savefig()
-        #plt.close()
-
-        plt.figure()
-        plt.title('Epsilon 1')
-        plt.imshow(np.abs(self.EPS1),aspect='auto',interpolation='nearest')
-        plt.colorbar()
-        save.savefig()
-        plt.close()
-
-        plt.figure()
-        plt.title('Epsilon 2')
-        plt.imshow(np.abs(self.EPS2),aspect='auto',interpolation='nearest')
-        plt.colorbar()
-        save.savefig()
-        plt.close()
-
-
-        plt.figure()
-        plt.title('diff eps-eps1')
-        plt.imshow(np.abs(self.FOUP-self.EPS1),aspect='auto',interpolation='nearest')
-        plt.colorbar()
-        save.savefig()
-        plt.close()
-
-        plt.figure()
-        plt.title('INV')
-        plt.imshow(np.abs(np.abs(self.INV)),aspect='auto',interpolation='nearest')
-        plt.colorbar()
-        save.savefig()
-        plt.close()
-        save.close()
-
-
 class Layer_uniform(Layer):
     """ Class for the definition of a single uniform layer
     """
@@ -879,97 +770,6 @@ class Layer_uniform(Layer):
 
         self.TX=False
         self.TY=False
-
-
-    def eps_plot(self,pdf=None,N=200,s=1.0):
-        """Function for plotting the dielectric consstat rebuit from plane wave expansion
-
-        Args:
-            pdf (string or PdfPages): file for printing the the epsilon
-                if a PdfPages object, the page is appended to the pdf
-                if string, a pdf with that name is created
-            N (int): number of points
-            s (float): number of cell replicas to display (default 1)
-        """
-        [X,Y]=np.meshgrid(np.linspace(-s*0.5,s*0.5,s*N),np.linspace(-s*0.5,s*0.5,s*N))
-        EPS=np.zeros(np.shape(X))+self.eps.real
-        plt.figure()
-        plt.imshow(np.real(EPS),extent=[-s*0.5,s*0.5,-self.Nyx*s*0.5,self.Nyx*s*0.5],origin='lower')
-        plt.colorbar()
-        if (pdf==None):
-            plt.show()
-        else:
-            a=PdfPages(pdf+'.pdf')
-            a.savefig()
-            a.close()
-        plt.close()
-
-
-    def mat_plot(self,name,N=100,s=1):
-        """Plot the absolute values of the fourier trasnsform matrices
-
-        Args:
-            name (str): name of the pdf file for plotting
-            N (int): number of points for plotting the epsilon
-            s (float): number pf relicas of the cell to plot. Default is 1.
-        """
-        save=PdfPages(name+'.pdf')
-
-        [X,Y]=np.meshgrid(np.linspace(-s*0.5,s*0.5,s*N),np.linspace(-s*0.5,s*0.5,s*N))
-        #F=self.func(XX,YY)
-        EPS=np.zeros(np.shape(X))+self.eps.real
-
-        plt.figure()
-        plt.title('epsilon real')
-        plt.imshow(np.real(EPS),aspect=1,origin='lower')
-        plt.colorbar()
-        save.savefig()
-        plt.close()
-
-
-        plt.figure()
-        plt.title('epsilon')
-        plt.imshow(np.abs(self.FOUP),aspect='auto',interpolation='nearest')
-        plt.colorbar()
-        save.savefig()
-        plt.close()
-
-        #plt.figure()
-        #plt.title('epsilon_inv')
-        #plt.imshow(np.abs(self.EPS_INV),aspect='auto',interpolation='nearest')
-        #plt.colorbar()
-        #save.savefig()
-        #plt.close()
-
-        plt.figure()
-        plt.title('Epsilon 1')
-        plt.imshow(np.abs(self.EPS1),aspect='auto',interpolation='nearest')
-        plt.colorbar()
-        save.savefig()
-        plt.close()
-
-        plt.figure()
-        plt.title('Epsilon 2')
-        plt.imshow(np.abs(self.EPS2),aspect='auto',interpolation='nearest')
-        plt.colorbar()
-        save.savefig()
-        plt.close()
-
-
-        plt.figure()
-        plt.title('diff eps-eps1')
-        plt.imshow(np.abs(self.FOUP-self.EPS1),aspect='auto',interpolation='nearest')
-        plt.colorbar()
-        save.savefig()
-        plt.close()
-
-        plt.figure()
-        plt.title('INV')
-        plt.imshow(np.abs(np.abs(self.INV)),aspect='auto',interpolation='nearest')
-        plt.colorbar()
-        save.savefig()
-        plt.close()
-        save.close()
 
 class Layer_empty_st(Layer):
     """Class for the definition of an empy layer
@@ -1011,17 +811,38 @@ class Layer_empty_st(Layer):
 
 
 if __name__ == '__main__':
+    # nx = 5
+    # x = np.array(range(4*nx +1))
+    # i = (x + 2*nx) % (4*nx +1) - 2*nx
+    # plt.plot(x,i, 'o')
+    # plt.grid()
+    # plt.show()
+    # quit()
+
+
+    fig, ax = plt.subplots(1,3, figsize=(12,4))
     cr = Creator()
-    cr.rect(12.0, 2.0, 0.8, 0.3)
-    lay = Layer(5, 5, cr)
+    cr.rect(12.0, 2.0, 0.6, 0.3)
+    lay = Layer(15, 15, cr)
+    lay.transform(ex=0.8, ey=0.8)
+    vector = np.linspace(-1.5, 1.5, 201)
+    x,y,z = np.meshgrid(vector, vector, [0.0], indexing='ij')
+    eps = lay.calculate_epsilon(x,y,z)
+    p0 = ax[0].contourf(np.squeeze(x), np.squeeze(y), np.sqrt(np.squeeze(eps)))
     lay.mode(2.0)
-    x = np.linspace(-0.5, 0.5, 101)
-    y = np.linspace(-0.5, 0.5, 101)
-    data = lay.get_modal_field(4,x=x, y=y)
+    lay.mat_plot('test')
+    data = lay.get_modal_field(3,x=vector, y=vector)
     to_plot = data.pivot(index = 'y', columns='x', values='Ex')
-    to_plot.plot()
-    plt.colorbar()
+    p1 = ax[1].contourf(to_plot.columns, to_plot.index, np.abs(to_plot.values))
+    to_plot = data.pivot(index = 'y', columns='x', values='Ey')
+    p2 = ax[2].contourf(to_plot.columns, to_plot.index, np.abs(to_plot.values))
+    fig.colorbar(p0, ax=ax[0])
+    fig.colorbar(p1, ax=ax[1])
+    fig.colorbar(p2, ax=ax[2])
+
+    #to_plot.plot()
+    #plt.colorbar()
 
     #plt.contourf(to_plot['x'].values, to_plot['y'].values, to_plot['Ey'].values)
     #plt.contourf(X[:,0,:], Z[:,0,:], np.abs(out['Ey'][:,0,:]))
-    plt.show()
+    #plt.show()
