@@ -77,9 +77,11 @@ def fou_yx(Nx,Ny,G,x_list,y_list,eps_lists):
     for i in range(nx):
         f.append(linalg.inv(linalg.toeplitz([inter_v(j+Ny,y_list,eps_lists[i]) for j in range(-Ny,Ny+1)])))
     F=np.zeros((D,D),complex)
+    mx = 4 * Nx + 1
+    f = [inter_((i + 2 * Nx) % mx - 2 * Nx, x_list, f) for i in range(mx)]
     for i in range(D):
         for j in range(D):
-            F[i,j]=inter_(G[i][0]-G[j][0],x_list,f)[+G[i][1]+Ny,+G[j][1]+Ny]
+            F[i,j]=f[G[i][0]-G[j][0]][G[i][1]+Ny,G[j][1]+Ny]
     return F
 
 
@@ -92,9 +94,11 @@ def fou_xy(Nx,Ny,G,x_list,y_list,eps_lists):
         eps_t=[eps_lists[j][i] for j in range(nx)]                
         f.append(linalg.inv(linalg.toeplitz([inter_v(j+Nx,x_list,eps_t) for j in range(-Nx,Nx+1)])))
     F=np.zeros((D,D),complex)
+    my = 4 * Ny + 1
+    f = [inter_((i + 2*Ny) % my - 2*Ny,y_list,f) for i in range(my)]
     for i in range(D):
         for j in range(D):
-            F[i,j]=inter_(G[i][1]-G[j][1],y_list,f)[G[i][0]+Nx,G[j][0]+Nx]
+            F[i,j]=f[G[i][1]-G[j][1]][G[i][0]+Nx,G[j][0]+Nx]
     return F
 
 
