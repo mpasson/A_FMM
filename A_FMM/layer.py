@@ -44,7 +44,6 @@ class Layer:
         mx = 4*self.Nx + 1
         my = 4 * self.Ny + 1
         fourier_transform = np.zeros((mx, my), dtype=complex)
-        print(np.shape(fourier_transform))
         x_list = self.creator.x_list
         y_list = self.creator.y_list
         eps_lists = self.creator.eps_lists
