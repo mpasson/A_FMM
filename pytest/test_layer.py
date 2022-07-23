@@ -10,14 +10,14 @@ def create_layer_from_creator():
     return lay
 
 def test_layer_creation():
-    with open('test_layer_creation.pkl', 'rb') as pkl:
+    with open('pickles/test_layer_creation.pkl', 'rb') as pkl:
         lay_ref = pickle.load(pkl)
     lay = create_layer_from_creator()
     for attr in ['FOUP', 'INV', 'EPS1', 'EPS2']:
         assert np.allclose(getattr(lay, attr), getattr(lay_ref, attr))
 
 def test_layer_transform():
-    with open('test_layer_transform.pkl', 'rb') as pkl:
+    with open('pickles/test_layer_transform.pkl', 'rb') as pkl:
         lay_ref = pickle.load(pkl)
     lay = create_layer_from_creator()
     lay.transform(ex=0.8, ey=0.8)
@@ -25,7 +25,7 @@ def test_layer_transform():
         assert np.allclose(getattr(lay, attr), getattr(lay_ref, attr))
 
 def test_layer_solve():
-    with open('test_layer_modes.pkl', 'rb') as pkl:
+    with open('pickles/test_layer_modes.pkl', 'rb') as pkl:
         modes_ref = pickle.load(pkl)
     lay = create_layer_from_creator()
     lay.mode(1.0)
@@ -34,11 +34,11 @@ def test_layer_solve():
 
 if __name__ == '__main__':
     lay = create_layer_from_creator()
-    with open('test_layer_creation.pkl', 'wb') as pkl:
+    with open('pickles/test_layer_creation.pkl', 'wb') as pkl:
         pickle.dump(lay, pkl, protocol=pickle.HIGHEST_PROTOCOL)
     lay.mode(1.0)
-    with open('test_layer_modes.pkl', 'wb') as pkl:
+    with open('pickles/test_layer_modes.pkl', 'wb') as pkl:
         pickle.dump(lay.get_index(), pkl, protocol=pickle.HIGHEST_PROTOCOL)
     lay.transform(ex=0.8, ey=0.8)
-    with open('test_layer_transform.pkl', 'wb') as pkl:
+    with open('pickles/test_layer_transform.pkl', 'wb') as pkl:
         pickle.dump(lay, pkl, protocol=pickle.HIGHEST_PROTOCOL)
