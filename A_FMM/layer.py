@@ -56,7 +56,7 @@ class Layer:
 
     def __create_eps(self):
         nx = 2 * self.Nx
-        ny = 2 * self.Nx
+        ny = 2 * self.Ny
         mx = 4 * self.Nx + 1
         my = 4 * self.Ny + 1
         fourier_transform = np.zeros((mx, my), dtype=complex)
@@ -169,7 +169,7 @@ class Layer:
         else:
             transform_function = sub.fou_t
 
-        if ex != 0:
+        if ex != 0.0:
             self.TX = True
             self.ex = ex
             self.FX = np.zeros((self.D, self.D), complex)
@@ -181,7 +181,7 @@ class Layer:
                     if gy1 != gy2:
                         continue
                     self.FX[i, j] = F[gx1 - gx2]
-        if ey != 0:
+        if ey != 0.0:
             self.TY = True
             self.ey = ey
             self.FY = np.zeros((self.D, self.D), complex)
@@ -390,7 +390,7 @@ class Layer:
         d = np.zeros_like(u, dtype=complex) if d is None else d
         if np.shape(u) != np.shape(d):
             raise ValueError(
-                f"Shape of u different from shape of d {nd.shape(u)}!={nd.shape(d)}"
+                f"Shape of u different from shape of d {np.shape(u)}!={np.shape(d)}"
             )
         if np.shape(x) != np.shape(y) or np.shape(x) != np.shape(z):
             raise ValueError(
@@ -931,43 +931,8 @@ class Layer_empty_st(Layer):
 
 
 if __name__ == "__main__":
-    # nx = 5
-    # x = np.array(range(4*nx +1))
-    # i = (x + 2*nx) % (4*nx +1) - 2*nx
-    # plt.plot(x,i, 'o')
-    # plt.grid()
-    # plt.show()
-    # quit()
-
     fig, ax = plt.subplots(1, 3, figsize=(12, 4))
     cr = Creator()
-    cr.rect(12.0, 2.0, 0.6, 0.3)
-    lay = Layer(10, 10, cr)
-    lay.transform(ex=0.8, ey=0.8)
-    vector = np.linspace(-1.5, 1.5, 201)
-    x, y, z = np.meshgrid(vector, vector, [0.0], indexing="ij")
-    eps = lay.calculate_epsilon(x, y, z)
-    p0 = ax[0].contourf(
-        np.squeeze(x), np.squeeze(y), np.sqrt(np.squeeze(eps)), levels=41
-    )
-    lay.mode(2.0)
-    lay.mat_plot("test")
-    data = lay.get_modal_field(3, x=vector, y=vector)
-    to_plot = data.pivot(index="y", columns="x", values="Ex")
-    p1 = ax[1].contourf(
-        to_plot.columns, to_plot.index, np.abs(to_plot.values), levels=41
-    )
-    to_plot = data.pivot(index="y", columns="x", values="Ey")
-    p2 = ax[2].contourf(
-        to_plot.columns, to_plot.index, np.abs(to_plot.values), levels=41
-    )
-    fig.colorbar(p0, ax=ax[0])
-    fig.colorbar(p1, ax=ax[1])
-    fig.colorbar(p2, ax=ax[2])
+    cr.slab(12.0, 2.0, 2.0, 0.3)
+    lay = Layer(2, 0, cr)
 
-    # to_plot.plot()
-    # plt.colorbar()
-
-    # plt.contourf(to_plot['x'].values, to_plot['y'].values, to_plot['Ey'].values)
-    # plt.contourf(X[:,0,:], Z[:,0,:], np.abs(out['Ey'][:,0,:]))
-    plt.show()
