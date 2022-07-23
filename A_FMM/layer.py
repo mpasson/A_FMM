@@ -181,6 +181,9 @@ class Layer:
                     if gy1 != gy2:
                         continue
                     self.FX[i, j] = F[gx1 - gx2]
+        else:
+            self.FX = None
+
         if ey != 0.0:
             self.TY = True
             self.ey = ey
@@ -193,6 +196,10 @@ class Layer:
                     if gx1 != gx2:
                         continue
                     self.FY[i, j] = F[gy1 - gy2]
+        else:
+            self.FY = None
+
+        return self.FX, self.FY
 
     def add_transform_matrix(
         self,
@@ -213,10 +220,14 @@ class Layer:
             self.TX = True
             self.ex = ex
             self.FX = FX
+        else:
+            self.FX = None
         if ey != 0:
             self.TY = True
             self.ey = ey
             self.FY = FY
+        else:
+            self.FY = None
 
     def mode(self, k0: float, kx: float = 0.0, ky: float = 0.0):
         """Calculates the eighenmode of the layer
@@ -935,4 +946,3 @@ if __name__ == "__main__":
     cr = Creator()
     cr.slab(12.0, 2.0, 2.0, 0.3)
     lay = Layer(2, 0, cr)
-
