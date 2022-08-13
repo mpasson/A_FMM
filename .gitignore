@@ -4,9 +4,8 @@
 *.gnu
 *.log
 *.aux
-examples/*.pdf
-test*
-examples/slow_mod
+.idea
+examples
 docs
 Docs/generated
 Docs/jupyter/.ipynb_checkpoints

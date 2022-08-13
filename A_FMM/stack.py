@@ -1,4 +1,6 @@
 import numpy as np
+
+import A_FMM.layer
 import A_FMM.sub_sm as sub
 from A_FMM.layer import Layer
 from A_FMM.scattering import S_matrix
@@ -861,6 +863,93 @@ class Stack:
             out.close()
         return None
 
+    def loop_intermediate(self, u1: np.ndarray, d2: np.ndarray) -> tuple:
+        """Generator for the intermedia modal coefficients.
+
+        Progressively yields the forward and backward modal coefficient given the external excitation.
+
+        Args:
+            u1 (np.ndarray): forward modal coefficient of the first layer (near the interface)
+            d2 ((np.ndarray):  backward modal coefficient of the last layer (near the interface)
+
+        Yields:
+            np.ndarray: forward modal amplitudes of layer
+            np.ndarray: backward modal amplitudes for layer
+            Layer: layer object
+            float: thickness of the layer
+        """
+        u2, d1 = self.S.output(u1, d2)
+        lay = self.layers[0]
+        d = self.d[0]
+        yield u1 * np.exp(-(0+2j)*np.pi*lay.k0*lay.gamma*d), d1 * np.exp((0+2j)*np.pi*lay.k0*lay.gamma*d), self.layers[0], self.d[0]
+        #yield u1 , d1 , self.layers[0], self.d[0]
+        S1 = copy.deepcopy(self.int_matrices[self.int_list.index(self.interfaces[0])])
+        for i in range(1, self.N - 1):
+            S2 = S_matrix(S1.N)
+            for l in range(i, self.N - 1):
+                S2.add_uniform(self.layers[l], self.d[l])
+                S2.add(self.int_matrices[self.int_list.index(self.interfaces[l])])
+            ul, dl = S1.int_f(S2, u1)
+            yield ul, dl, self.layers[i], self.d[i]
+            S1.add_uniform(self.layers[i], self.d[i])
+            S1.add(self.int_matrices[self.int_list.index(self.interfaces[i])])
+        yield u2, d2, self.layers[self.N-1], self.d[self.N-1]
+
+
+    def calculate_fields(
+            self,
+            x: np.ndarray,
+            y: np.ndarray,
+            z: np.ndarray,
+            u1: np.ndarray,
+            d2: np.ndarray,
+            components: list = None,
+    ) -> dict:
+        components = Layer._filter_componets(components)
+        shape = Layer._check_array_shapes(u1,d2,x,y,z)
+        field = {
+            'x' : x.copy(),
+            'y' : y.copy(),
+            'z':  z.copy(),
+        }
+        x = x.reshape(-1)
+        y = y.reshape(-1)
+        z = z.reshape(-1)
+        cumulative_t = 0
+        for comp in components:
+            field[comp] = np.zeros_like(x, dtype=complex)
+        for u, d, lay, t in self.loop_intermediate(u1, d2):
+            #print(u, d)
+            ind = np.logical_and(cumulative_t <= z, z <= cumulative_t + t)
+            if ind.size == 0:
+                continue
+            xp = x[ind]
+            yp = y[ind]
+            zp = z[ind] - cumulative_t
+            out = lay.calculate_field(xp, yp, zp, u, d, components = components)
+            #plt.plot(np.abs(out['Ex']))
+            #plt.show()
+            print(np.shape(out['Ex']))
+            for comp in components:
+                field[comp][ind] = out[comp]
+            #plt.plot(np.abs(field['Ex']))
+            cumulative_t += t
+        for comp in components:
+            field[comp] = field[comp].reshape(shape)
+        return field
+
+
+
+        # calculate_field(
+        #     self,
+        #     x: np.ndarray,
+        # y: np.ndarray,
+        # z: np.ndarray,
+        # u: np.ndarray,
+        # d: np.ndarray = None,
+        #                 components: list = None,
+        # ) -> dict
+
     def plot_E(
         self,
         i=0,
@@ -1033,7 +1122,7 @@ class Stack:
             plt.close()
             if isinstance(pdf, str):
                 out.close()
-        return None
+        return Ex, Ey
 
     def writeE(
         self,
@@ -2325,3 +2414,35 @@ class Stack:
                 print(s)
         except AttributeError:
             print("No list yet, call conut_interface before inspect")
+
+if __name__ == '__main__':
+    from monitor import Timer
+    import pickle
+
+    timer = Timer()
+
+    lay1 = A_FMM.layer.Layer_uniform(0,0,2.0)
+    lay2 = A_FMM.layer.Layer_uniform(0,0,12.0)
+    stack = Stack(
+        10 * [lay1, lay2] + [lay1],
+        [0.0] + 10*[0.5, 0.5],
+    )
+    stack.solve(0.1)
+    x, y, z = np.linspace(-0.5, 0.5, 100), [0.0], np.linspace(0.0, 10.0, 10000)
+    X,Y,Z = np.meshgrid(x,y,z, indexing='ij')
+    with timer:
+        field = stack.calculate_fields(X,Y,Z, [1.0, 0.0], [0.0, 0.0])
+    print(timer.elapsed_time)
+
+    layer = lay1.calculate_field(X,Y,Z, [1.0, 0.0], [0.0, 0.0])
+
+    plt.contourf(np.squeeze(field['z']), np.squeeze(field['x']), np.abs(np.squeeze(field['Ex'])), levels=41)
+    plt.show()
+    with timer:
+        Ex, Ey = stack.plot_E(1, func=np.abs, dz = 0.001)
+    print(timer.elapsed_time)
+    Ex = np.asarray(Ex)
+    plt.show()
+
+    plt.plot(z, np.abs(Ex[:, 50]))
+    plt.show()

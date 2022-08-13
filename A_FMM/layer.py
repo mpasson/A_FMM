@@ -365,6 +365,37 @@ class Layer:
             )
         return EPS
 
+    @staticmethod
+    def _filter_componets(components: list=None) -> list:
+        """
+        Checks if the fileds components list contains only allowed ones
+        """
+        if components is None:
+            return ["Ex", "Ey", "Hx", "Hy"]
+        for comp in components:
+            if comp not in ["Ex", "Ey", "Hx", "Hy"]:
+                raise ValueError(
+                    f"Field component f{comp} not available. Only Ex, Ey, Hx, or Hy are allowed"
+                )
+        return components
+
+    @staticmethod
+    def _check_array_shapes(u: np.ndarray, d: np.ndarray, x: np.ndarray, y: np.ndarray, z: np.ndarray) -> None:
+        """
+        Chekcs that the modal amplitudea arrays and the coordinates arrays have consistent shapes
+        """
+        if np.shape(u) != np.shape(d):
+            raise ValueError(
+                f"Shape of u different from shape of d {np.shape(u)}!={np.shape(d)}"
+            )
+        if np.shape(x) != np.shape(y) or np.shape(x) != np.shape(z):
+            raise ValueError(
+                f"Shapes of x,y, and z do not match (z: {np.shape(x)}, z: {np.shape(y)}, z: {np.shape(z)})"
+            )
+        return np.shape(x)
+
+
+
     def calculate_field(
         self,
         x: np.ndarray,
@@ -396,25 +427,17 @@ class Layer:
                 if other component than 'Ex', 'Ey', 'Hx', or 'Hy' is requested.
 
         """
-        if components is None:
-            components = ["Ex", "Ey", "Hx", "Hy"]
+        components = self._filter_componets(components)
         d = np.zeros_like(u, dtype=complex) if d is None else d
-        if np.shape(u) != np.shape(d):
-            raise ValueError(
-                f"Shape of u different from shape of d {np.shape(u)}!={np.shape(d)}"
-            )
-        if np.shape(x) != np.shape(y) or np.shape(x) != np.shape(z):
-            raise ValueError(
-                f"Shapes of x,y, and z do not match (z: {np.shape(x)}, z: {np.shape(x)}, z: {np.shape(z)})"
-            )
-        for comp in components:
-            if comp not in ["Ex", "Ey", "Hx", "Hy"]:
-                raise ValueError(
-                    f"Field component f{comp} not available. Only Ex, Ey, Hx, or Hy are allowed"
-                )
+        self._check_array_shapes(u,d,x,y,z)
 
         x, y = self._process_xy(x, y)
-        field = {comp: np.zeros_like(x, dtype=complex) for comp in components}
+        field = {
+            'x' : x,
+            'y' : y,
+            'z' : z,
+        }
+        field.update({comp: np.zeros_like(x, dtype=complex) for comp in components})
         for i, (uu, dd, n) in enumerate(zip(u, d, self.gamma)):
             if uu == 0.0 and dd == 0.0:
                 continue
@@ -427,8 +450,8 @@ class Layer:
                 )
                 for comp in components:
                     sign = 1.0 if comp[0] == "E" else -1.0
-                    coeff = uu * np.exp(2.0j * self.k0 * n * z) + sign * dd * np.exp(
-                        -2.0j * self.k0 * n * z
+                    coeff = uu * np.exp(2.0j * np.pi * self.k0 * n * z) + sign * dd * np.exp(
+                        -2.0j * np.pi * self.k0 * n * z
                     )
                     field_tmp[comp] = (
                         field_tmp[comp] + coeff * eval(f"W{comp}")[j] * EXP
