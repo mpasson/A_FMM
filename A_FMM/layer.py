@@ -380,7 +380,7 @@ class Layer:
         return components
 
     @staticmethod
-    def _check_array_shapes(u: np.ndarray, d: np.ndarray, x: np.ndarray, y: np.ndarray, z: np.ndarray) -> None:
+    def _check_array_shapes(u: np.ndarray, d: np.ndarray) -> None:
         """
         Chekcs that the modal amplitudea arrays and the coordinates arrays have consistent shapes
         """
@@ -388,32 +388,30 @@ class Layer:
             raise ValueError(
                 f"Shape of u different from shape of d {np.shape(u)}!={np.shape(d)}"
             )
-        if np.shape(x) != np.shape(y) or np.shape(x) != np.shape(z):
-            raise ValueError(
-                f"Shapes of x,y, and z do not match (z: {np.shape(x)}, z: {np.shape(y)}, z: {np.shape(z)})"
-            )
-        return np.shape(x)
 
 
 
-    def calculate_field(
+    def calculate_field_old(
         self,
-        x: np.ndarray,
-        y: np.ndarray,
-        z: np.ndarray,
         u: np.ndarray,
         d: np.ndarray = None,
+        x: np.ndarray=0,
+        y: np.ndarray=0,
+        z: np.ndarray=0,
         components: list = None,
     ) -> dict:
         """Return field given modal coefficient and coordinates
 
+        Coordinates arrays must be 1D. Fields are returned on a meshgrid of the input coordinates.
+        Older version. Slower, but may require less memory.
+
         Args:
+            u (array_like): coefficient of forward propagating modes.
+            d (array_like, optional): coefficient of backward propagating modes.
+                Default to None: no backward propagation is assumed.
             x (array_like): x coordinates.
             y (array_like): y coordinates.
             z (array_like): z coordinates.
-            u (array_like): coefficient of forward propagating modes.
-            d (array_like, optional): coefficient of backward propagating modes.
-                Default to None: no backward propagagtion is assumed.
             components (list of str, optional): field components to calculate.
                 Default to None: all components ('Ex', 'Ey', 'Hx', 'Hy') are calculated.
 
@@ -422,16 +420,15 @@ class Layer:
 
         Raises:
             ValueError:
-                if x,y,z have different shapes
-            ValueError:
                 if other component than 'Ex', 'Ey', 'Hx', or 'Hy' is requested.
 
         """
         components = self._filter_componets(components)
         d = np.zeros_like(u, dtype=complex) if d is None else d
-        self._check_array_shapes(u,d,x,y,z)
+        self._check_array_shapes(u,d)
 
         x, y = self._process_xy(x, y)
+        x,y,z = np.meshgrid(x,y,z, indexing='ij')
         field = {
             'x' : x,
             'y' : y,
@@ -459,6 +456,79 @@ class Layer:
             for comp in components:
                 field[comp] = field[comp] + field_tmp[comp]
         return field
+
+
+    def calculate_field(
+        self,
+        u: np.ndarray,
+        d: np.ndarray = None,
+        x: np.ndarray=0,
+        y: np.ndarray=0,
+        z: np.ndarray=0,
+        components: list = None,
+    ) -> dict:
+        """Return field given modal coefficient and coordinates
+
+        Coordinates arrays must be 1D. Fields are returned on a meshgrid of the input coordinates.
+
+        Args:
+            u (array_like): coefficient of forward propagating modes.
+            d (array_like, optional): coefficient of backward propagating modes.
+                Default to None: no backward propagation is assumed.
+            x (array_like): x coordinates.
+            y (array_like): y coordinates.
+            z (array_like): z coordinates.
+            components (list of str, optional): field components to calculate.
+                Default to None: all components ('Ex', 'Ey', 'Hx', 'Hy') are calculated.
+
+        Returns:
+            dict of ndarray : Desired field components. Shape of ndarray is the same as x,y, and z.
+
+        Raises:
+            ValueError:
+                if other component than 'Ex', 'Ey', 'Hx', or 'Hy' is requested.
+
+        """
+        components = self._filter_componets(components)
+        d = np.zeros_like(u, dtype=complex) if d is None else d
+        self._check_array_shapes(u,d)
+        X,Y,Z = np.meshgrid(x,y,z, indexing='ij')
+        field = {
+            'x': X,
+            'y': Y,
+            'z': Z,
+        }
+        Gx = [gs[0] for (i, gs) in self.G.items()]
+        Gy = [gs[1] for (i, gs) in self.G.items()]
+        u,d = np.asarray(u), np.asarray(d)
+        ind = [i for i, (uu,dd) in enumerate(zip(u,d)) if uu!=0.0 or dd!=0.0 ]
+        u = u[ind]
+        d = d[ind]
+        WEx, WEy = np.split(self.V, 2, axis=0)
+        WHx, WHy = np.split(self.VH, 2, axis=0)
+        W = {
+            'Ex': WEx[:,ind],
+            'Ey': WEy[:,ind],
+            'Hx': WHx[:,ind],
+            'Hy': WHy[:,ind],
+        }
+        X, Y, Gx = np.meshgrid(x, y, Gx, indexing = 'ij')
+        X, Y, Gy = np.meshgrid(x, y, Gy, indexing = 'ij')
+        EXP = np.exp(
+            2.0j * np.pi * ((Gx + self.kx) * X + (Gy + self.ky) * Y)
+        )
+        u, Z = np.meshgrid(u, z, indexing='ij')
+        d, Z = np.meshgrid(d, z, indexing='ij')
+        n, Z = np.meshgrid(self.gamma[ind], z, indexing='ij')
+        z_exp = 2.0j * np.pi * self.k0 * n * Z
+        coeff_u = u * np.exp(z_exp)
+        coeff_d = d * np.exp(-z_exp)
+        for comp in components:
+            coeff = coeff_u + coeff_d if 'E' in comp else coeff_u - coeff_d
+            EXPV = np.dot(EXP, W[comp])
+            field[comp] = np.dot(EXPV, coeff)
+        return field
+
 
     def get_modal_field(
         self, i: int, x: float = 0.0, y: float = 0.0, components: list = None

@@ -20,6 +20,22 @@ def test_1D_coefficients():
         assert np.allclose(u, uref)
         assert np.allclose(d, dref)
 
+def test_1D_field():
+    with open('pickles/test_stack_1Dfield.pkl', 'rb') as f:
+        field_ref = pickle.load(f)
+
+    lay1 = Layer_uniform(0,0,2.0)
+    lay2 = Layer_uniform(0,0,12.0)
+    stack = Stack(
+        10 * [lay1, lay2] + [lay1],
+        [0.0] + 10*[0.5, 0.5],
+    )
+    x, y, z = 0.0, 0.0, np.linspace(0.0, 10.0, 1000)
+    stack.solve(0.1)
+    field = stack.calculate_fields([1.0, 0.0], [0.0, 0.0], x, y, z)
+    for key, value in field.items():
+        assert np.allclose(value, field_ref[key])
+
 
 def test_hugonin():
     ax = 1.0
