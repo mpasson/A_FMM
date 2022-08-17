@@ -539,10 +539,6 @@ class Stack:
         else:
             raise ValueError(f"Sel {sel} not allowed. Only '11', '12', '21', '22'")
 
-    def mode_T(self, uin, uout):
-        d1 = np.zeros((2 * self.NPW), complex)
-        [u1, d1] = self.S.output(uin, d1)
-        return np.abs(np.dot(np.conj(u1), uout)) ** 2
 
     def double(self):
         """Compose the scattering matrix of the stack with itself, doubling the structure
@@ -676,8 +672,21 @@ class Stack:
             x: np.ndarray = 0,
             y: np.ndarray = 0,
             z: np.ndarray = 0,
-            components: list = None,
-    ) -> dict:
+            components: list[str] = None,
+    ) -> dict[str, np.ndarray]:
+        """Returns fields in the stack
+
+        The fields are calculated on a meshgrdi of x,y,z
+
+        Args:
+            u1 (np.ndarray): forward modal coefficient in the first layer
+            d2 (np.ndarray): backward modal coefficient in the last layer
+            x (np.ndarray): x coordinate (1D array)
+            y (np.ndarray): y coordinate (1D array)
+            z (np.ndarray): z coordinate (1D array)
+            components (list): List of modal componets to be calculated. Possible are ['Ex', 'Ey', 'Hx', 'Hz'].
+                Default to None (all of them).
+        """
         x, y, z = np.asarray(x), np.asarray(y), np.asarray(z)
         components = Layer._filter_componets(components)
         shape = Layer._check_array_shapes(u1,d2)
@@ -703,14 +712,8 @@ class Stack:
         return field
 
 
-    def create_input(self, dic):
-        u = np.zeros((2 * self.NPW), complex)
-        for i in dic:
-            u[np.argsort(self.layers[0].W)[-i]] = dic[i]
-        return u
-
-
     def inspect(self, st="", details="no"):
+        """Print some info about the Stack"""
         att = sub.get_user_attributes(self)
         print(st)
         print(22 * "_")
