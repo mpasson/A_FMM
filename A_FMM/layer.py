@@ -334,16 +334,17 @@ class Layer:
         return x, y
 
     def calculate_epsilon(
-        self, x: np.ndarray, y: np.ndarray, z: np.ndarray
-    ) -> np.ndarray:
+        self, x: np.ndarray=0.0, y: np.ndarray=0.0, z: np.ndarray=0.0
+    ) -> dict[str, np.ndarray]:
         """Return epsilon given the coordinates
 
         The epsilon returned here is the one reconstructed from the Fourier transform.
+        The epsilon is reconstructed on the meshgrid of x,y, and z.
 
         Args:
-            x (array_like): x coordinates.
-            y (array_like): y coordinates.
-            z (array_like): z coordinates.
+            x (array_like): x coordinates (1D array).
+            y (array_like): y coordinates (1D array).
+            z (array_like): z coordinates (1D array).
 
         Returns:
             ndarray : Epsilon value at coordinates. Shape of ndarray is the same as x,y, and z.
@@ -353,16 +354,31 @@ class Layer:
                 if x,y,z have different shapes
         """
 
-        if np.shape(x) != np.shape(y) or np.shape(x) != np.shape(z):
-            raise ValueError(
-                f"Shapes of x,y, and z do not match (z: {np.shape(x)}, z: {np.shape(x)}, z: {np.shape(z)})"
-            )
         x, y = self._process_xy(x, y)
-        EPS = np.zeros_like(x, dtype="complex")
-        for i, (gx, gy) in self.G.items():
-            EPS = EPS + lay.FOUP[i, self.D // 2] * np.exp(
-                (0 + 2j) * np.pi * (gx * x + gy * y)
-            )
+        eps = self.FOUP[:, self.D // 2]
+        gx, gy = zip(*[g for i, g in self.G.items()])
+        gx, gy = np.asarray(gx), np.asarray(gy)
+        xp, yp, gxp = np.meshgrid(x, y, gx, indexing='ij')
+        xp, yp, gyp = np.meshgrid(x, y, gy, indexing='ij')
+        eps_p = np.dot(
+            np.exp((0 + 2j) * np.pi * (gxp * xp + gyp * yp)),
+            eps
+        )
+        shape = np.shape(eps_p)
+        EPS, _ = np.meshgrid(eps_p, z, indexing='ij')
+        EPS = EPS.reshape(*shape, -1)
+        x,y,z = np.meshgrid(x,y,z, indexing='ij')
+        eps = {
+            'x' : x,
+            'y' : y,
+            'z' : z,
+            'eps' : EPS,
+        }
+        return eps
+
+
+
+
         return EPS
 
     @staticmethod
@@ -556,6 +572,7 @@ class Layer:
             data[k] = np.squeeze(v)
         return data
 
+
     def get_P_norm(self):
         """Creates array of single mode Poynting vector components.
 
@@ -568,6 +585,7 @@ class Layer:
         [VEx, VEy] = np.split(self.V, 2)
         [VHx, VHy] = np.split(self.VH, 2)
         self.P_norm = np.sum(VEx * np.conj(VHy) - VEy * np.conj(VHx), 0).real
+
 
     def get_Poynting_single(self, i: int, u: np.ndarray, ordered: bool = True) -> float:
         """Return the Poyinting vector of a single mode given the modal expansion in the layer
@@ -588,8 +606,7 @@ class Layer:
             j = i
         self.get_Poyinting_norm()
         return self.PP_norm[j, j].real * np.abs(u[j]) ** 2.0
-        # self.get_P_norm()
-        # return self.P_norm[j].real*np.abs(u[j])**2.0
+
 
     def get_Poyinting_norm(self):
         """Calculates the normalization matrix for the Poyinting vector calculations
@@ -750,27 +767,6 @@ class Layer:
         [X, Y] = np.meshgrid(x, y, indexing="ij")
         [Fx, Fy] = func(X, Y, *args)
 
-        try:
-            f = open(fileprint, "w")
-            for i in range(Nxp):
-                for j in range(Nyp):
-                    f.write(
-                        6
-                        * "%18.8e"
-                        % (
-                            x[i],
-                            y[j],
-                            Fx[i, j].real,
-                            Fx[i, j].imag,
-                            Fy[i, j].real,
-                            Fy[i, j].imag,
-                        )
-                    )
-                    f.write("\n")
-                f.write("\n")
-        except TypeError:
-            pass
-
         Fx = np.fft.fftshift(Fx) / (Nxp * Nyp)
         Fy = np.fft.fftshift(Fy) / (Nxp * Nyp)
 
@@ -782,11 +778,6 @@ class Layer:
             # print self.G[i][0], self.G[i][1],FOUx[self.G[i][0],self.G[i][1]]
             Estar[i] = FOUx[self.G[i][0], self.G[i][1]]
             Estar[i + self.NPW] = FOUy[self.G[i][0], self.G[i][1]]
-
-        # for i in range(-self.Nx,self.Nx+1):
-        #    for j in range(-self.Ny,self.Ny+1):
-        #        print '%4i %4i %15.8e %15.8e' % (i,j,np.abs(FOUx[i,j]),np.abs(FOUy[i,j]))
-        #    print ''
 
         u = linalg.solve(self.V, Estar)
         return u
@@ -1037,5 +1028,30 @@ class Layer_empty_st(Layer):
 if __name__ == "__main__":
     fig, ax = plt.subplots(1, 3, figsize=(12, 4))
     cr = Creator()
-    cr.slab(12.0, 2.0, 2.0, 0.3)
-    lay = Layer(2, 0, cr)
+    cr.rect(12.0, 2.0, 0.5, 0.2)
+    lay = Layer(15, 15, cr)
+    t = np.linspace(-0.5, 0.5, 101)
+    x, y, z = t, t, 0.0
+    x, y, z = t, 0.0, t
+    x, y, z = 0.0, t, t
+    x, y, z = t, t, t
+    eps = lay.calculate_epsilon(x,y,z)
+    ax[0].contourf(
+        eps['x'][:,:,50],
+        eps['y'][:,:,50],
+        eps['eps'][:,:,50],
+    )
+    ax[1].contourf(
+        eps['x'][:,50,:],
+        eps['z'][:,50,:],
+        eps['eps'][:,50,:],
+    )
+    ax[2].contourf(
+        eps['y'][50,:,:],
+        eps['z'][50,:,:],
+        eps['eps'][50,:,:],
+    )
+
+
+    plt.show()
+
