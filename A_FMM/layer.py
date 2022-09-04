@@ -298,7 +298,7 @@ class Layer:
                 except AttributeError:
                     pass
 
-    def plot_Ham(self, pdf):
+    def plot_Ham(self, pdf: PdfPages) -> None:
         """Plot the matrix of the eigenvalue problem
 
         Args:

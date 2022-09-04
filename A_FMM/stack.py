@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import numpy as np
 
 import A_FMM.layer
@@ -24,7 +26,7 @@ class Stack:
     It is built from a list of layers and thicknesses. The value of the thickness of the first and last layer is irrelevant for the simulation, and it is used only to set the plotting window.
     """
 
-    def __init__(self, layers: list[Layer] = None, d: list[float] = None):
+    def __init__(self, layers: list[Layer] = None, d: list[float] = None) -> None:
         """Creator
 
         Args:
@@ -52,7 +54,7 @@ class Stack:
 
         self.count_interface()
 
-    def add_layer(self, lay, d):
+    def add_layer(self, lay: Layer, d: float) -> None:
         """Add a layer at the end of the multilayer
 
 
@@ -69,7 +71,7 @@ class Stack:
         self.N += 1
         self.count_interface()
 
-    def transform(self, ex: float = 0, ey: float = 0, complex_transform: bool = False):
+    def transform(self, ex: float = 0, ey: float = 0, complex_transform: bool = False) -> tuple[np.ndarray]:
         """Function for adding the real coordinate transform to all layers of the stack
 
         Note: for no mapping, set the width to 0
@@ -85,22 +87,6 @@ class Stack:
         for layer in self.layers[1:]:
             layer.add_transform_matrix(ex=ex, FX=Fx, ey=ey, FY=Fy)
         return Fx, Fy
-
-    def mat_plot(self, N=100, s=1):
-        """Call matplot on every layer in the stack. Save the results in multiple pdf files
-
-        Args:
-            N (int, optional): Number of points to be used to plot the epsilon. Defaults to 100.
-            s (float, optional): Number of replicas of the unit cell to be plotted. Defaults to 1.
-
-        Returns:
-            None.
-
-        """
-        n = 1
-        for lay in self.layers:
-            lay.mat_plot("layer_%i" % (n), N=N, s=s)
-            n += 1
 
     def plot_stack(self, pdf=None, N=100, dz=0.01, y=0.0, func=np.abs, cmap="viridis"):
         """Plots the stack xz cross section
@@ -195,7 +181,7 @@ class Stack:
         plt.colorbar()
         sub.savefig(pdf, fig)
 
-    def count_interface(self):
+    def count_interface(self) -> None:
         """Helper function to identify the different layers and the needed interfaces
 
         Returns:
@@ -215,20 +201,8 @@ class Stack:
                 self.int_list.append(T_inter)
             self.interfaces.append(T_inter)
 
-    # =============================================================================
-    #     def fourier(self,threads=1):
-    #         p=Pool(threads)
-    #         mat_list=p.map(Layer_empty_st.fourier,self.lay_list)
-    #         for lay,FOUP,INV,EPS1,EPS2 in zip(self.lay_list,mat_list):
-    #             lay.FOUP=FOUP
-    #             lay.INV=INV
-    #             lay.EPS1=EPS1
-    #             lay.EPS2=EPS2
-    #         del mat_list
-    #
-    # =============================================================================
 
-    def solve(self, k0, kx=0.0, ky=0.0):
+    def solve(self, k0: float, kx:float=0.0, ky:float=0.0) -> None:
         """Calculates the scattering matrix of the multilayer (cpu friendly version)
 
         This version of solve solve the system in the "smart" way, solving fisrt the eigenvalue problem in each unique layer and the interface matrices of all the interface involved. The computaitonal time scales with the number of different layers, not with the total one.
@@ -256,7 +230,7 @@ class Stack:
             self.S.add_uniform(self.layers[i], self.d[i])
             self.S.add(self.int_matrices[self.int_list.index(self.interfaces[i])])
 
-    def solve_serial(self, k0, kx=0.0, ky=0.0):
+    def solve_serial(self, k0: float, kx:float=0.0, ky:float=0.0) -> None:
         """Calculates the scattering matrix of the multilayer (memory friendly version)
 
         This version solves sequentially the layers and the interface as they are in the stack. It is more momery efficient since onlt the data of 2 layer are kept in memory at any given time. Computational time scales with the total number of layer, regardless if they are equal or not.
@@ -286,7 +260,7 @@ class Stack:
         lay2.mode(k0, kx=kx, ky=ky)
         lay2.get_P_norm()
 
-    def solve_lay(self, k0, kx=0.0, ky=0.0):
+    def solve_lay(self, k0: float, kx:float=0.0, ky:float=0.0) -> None:
         """Solve the eigenvalue problem of all the layer in the stack
 
 
@@ -305,7 +279,7 @@ class Stack:
         self.layers[0].get_P_norm()
         self.layers[-1].get_P_norm()
 
-    def solve_S(self):
+    def solve_S(self) -> None:
         """Builds the scattering matrix of the stacks. It assumes that all the layers are alredy solved.
 
         Returns:
@@ -320,7 +294,7 @@ class Stack:
             self.S.add_uniform(self.layers[i], self.d[i])
             self.S.add(self.int_matrices[self.int_list.index(self.interfaces[i])])
 
-    def get_prop(self, u, list_lay, d=None):
+    def get_prop(self, u: np.ndarray, list_lay: list[int], d:np.ndarray=None) -> dict[int, float]:
         """Calculates the total poyinting vector in the requiested layers
 
 
@@ -364,7 +338,7 @@ class Stack:
             dic[self.N - 1] = P
         return dic
 
-    def get_energybalance(self, u, d=None):
+    def get_energybalance(self, u: np.ndarray, d:np.ndarray=None) -> tuple[float]:
         """Get total energy balance of the stack given the inputs
 
         Return total power reflected, transmitted and absorbed, normalized to the incidenc power.
@@ -395,7 +369,7 @@ class Stack:
         P2 = self.layers[-1].get_Poynting(u2, d2)
         return P1 / PN, P2 / PN, (P1 - P2) / PN
 
-    def get_inout(self, u, d=None):
+    def get_inout(self, u: np.ndarray, d:np.ndarray=None) -> dict[str, tuple[np.ndarray, np.ndarray, float]]:
         """Return data about the output of the structure given the input
 
 
@@ -421,7 +395,7 @@ class Stack:
         dic["right"] = (u2, d2, P)
         return dic
 
-    def get_R(self, i, j, ordered=True):
+    def get_R(self, i:int, j:int, ordered:bool=True) -> float:
         """Get relfection coefficient between modes
 
         Args:
@@ -445,7 +419,7 @@ class Stack:
             / self.layers[0].P_norm[j1]
         )
 
-    def get_T(self, i, j, ordered=True):
+    def get_T(self, i: int, j:int, ordered:bool=True) -> float:
         """Get transmission coefficient between modes.
 
         Args:
@@ -469,7 +443,7 @@ class Stack:
             / self.layers[0].P_norm[j1]
         )
 
-    def get_PR(self, i, j, ordered=True):
+    def get_PR(self, i:int, j:int, ordered:bool=True) -> float:
         """Get phase of the relfection coefficient between modes
 
         Args:
@@ -489,7 +463,7 @@ class Stack:
             j2 = j
         return np.angle(self.S.S21[j2, j1])
 
-    def get_PT(self, i, j, ordered=True):
+    def get_PT(self, i:int, j:int, ordered:bool=True) -> float:
         """Get phase of the transmission coefficient between modes
 
         Args:
@@ -509,7 +483,7 @@ class Stack:
             j2 = j
         return np.angle(self.S.S11[j2, j1])
 
-    def get_el(self, sel, i, j):
+    def get_el(self, sel: str, i:int, j:int) -> complex:
         """Returns element of the scattering matrix
 
         Note: Modes are ordered for decrasing effective index
@@ -540,7 +514,7 @@ class Stack:
             raise ValueError(f"Sel {sel} not allowed. Only '11', '12', '21', '22'")
 
 
-    def double(self):
+    def double(self)-> None:
         """Compose the scattering matrix of the stack with itself, doubling the structure
 
         When doing this, the lenght of the first al last layer are ignored (set to 0).
@@ -558,7 +532,7 @@ class Stack:
         except AttributeError:
             raise RuntimeError("structure not solved yet")
 
-    def join(self, st2):
+    def join(self, st2: Stack) -> None:
         """Join the scattering matrix of the structure with the one of a second structure
 
         When doing this, the lenght of the first al last layeror each stack are ignored (set to 0).
@@ -589,7 +563,7 @@ class Stack:
         l2 = st2.layers[1:]
         self.layers = l1 + l2
 
-    def flip(self):
+    def flip(self) -> None:
         """Flip a solved stack
 
         Flip the stack, swapping the left and right side
@@ -612,7 +586,7 @@ class Stack:
         self.layers = self.layers[::-1]
         self.d = self.d[::-1]
 
-    def bloch_modes(self):
+    def bloch_modes(self) -> np.ndarray:
         """Calculates Bloch modes of the stack.
 
         This function assumens the stack to represent the unit cell of a periodic structure, and calculates the corresponding Bloch modes.
@@ -712,7 +686,7 @@ class Stack:
         return field
 
 
-    def inspect(self, st="", details="no"):
+    def inspect(self, st: str="", details:str="no") -> None:
         """Print some info about the Stack"""
         att = sub.get_user_attributes(self)
         print(st)
