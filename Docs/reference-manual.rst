@@ -104,6 +104,7 @@ Methods
 
     Stack.add_layer
     Stack.bloch_modes
+    Stack.calculate_epsilon
     Stack.calculate_fields
     Stack.count_interface
     Stack.double
@@ -119,9 +120,6 @@ Methods
     Stack.inspect
     Stack.join
     Stack.loop_intermediate
-    Stack.mat_plot
-    Stack.plot_stack
-    Stack.plot_stack_y
     Stack.solve
     Stack.solve_S
     Stack.solve_lay

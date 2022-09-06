@@ -377,10 +377,6 @@ class Layer:
         return eps
 
 
-
-
-        return EPS
-
     @staticmethod
     def _filter_componets(components: list=None) -> list:
         """

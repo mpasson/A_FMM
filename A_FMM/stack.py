@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import numpy as np
 
+import A_FMM
 import A_FMM.layer
 import A_FMM.sub_sm as sub
 from A_FMM.layer import Layer
@@ -88,98 +89,6 @@ class Stack:
             layer.add_transform_matrix(ex=ex, FX=Fx, ey=ey, FY=Fy)
         return Fx, Fy
 
-    def plot_stack(self, pdf=None, N=100, dz=0.01, y=0.0, func=np.abs, cmap="viridis"):
-        """Plots the stack xz cross section
-
-
-        Args:
-            pdf (multiple, optional): Multiple choice. Each one has a diffrent meaning:
-                - (PdfPages): append figure to the PdfPages object
-                - (str): save the figure to a pdf with this name
-                - None (Default): Do not plot anything. Keep the figure as the active one.
-            N (int, optional): Number of points in the x direction. Defaults to 100.
-            dz (float, optional): Resolution in z direction (unit of ax). Defaults to 0.01.
-            y (float, optional): y coordinate at which the cross section is taken (unit of ay). Defaults to 0.0.
-            func (callable, optional): Function to be applied to eps befor plotting. Defaults to np.abs.
-            cmap (str, optional): matplotlib colormap for plotting. Defaults to 'viridis'.
-
-        Returns:
-            None.
-
-        """
-        X = np.linspace(-0.5, 0.5, N)
-        EPS = []
-        for (lay, d) in zip(self.layers, self.d):
-            # EPSt=sum([sub.fou(lay.G[i][0],lay.G[i][1],lay.creator.x_list,lay.creator.y_list,lay.creator.eps_lists)*np.exp((0+2j)*np.pi*(lay.G[i][0]*X+lay.G[i][1]*y)) for i in range(lay.D)])
-            EPSt = sum(
-                [
-                    lay.FOUP[i, lay.D // 2]
-                    * np.exp((0 + 2j) * np.pi * (lay.G[i][0] * X + lay.G[i][1] * y))
-                    for i in range(lay.D)
-                ]
-            )
-            for i in range(int(d / dz)):
-                EPS.append(EPSt)
-        EPS = np.array(EPS)
-        fig = plt.figure()
-        plt.imshow(
-            func(EPS).T,
-            origin="lower",
-            extent=[0.0, sum(self.d), -0.5, 0.5],
-            cmap=plt.get_cmap(cmap),
-        )
-        plt.colorbar()
-        sub.savefig(pdf, fig)
-
-    def plot_stack_y(
-        self, pdf=None, N=100, dz=0.01, x=0.0, func=np.abs, cmap="viridis"
-    ):
-        """Plots the stack yz cross section
-
-
-        Args:
-            pdf (multiple, optional): Multiple choice. Each one has a diffrent meaning:
-                - (PdfPages): append figure to the PdfPages object
-                - (str): save the figure to a pdf with this name
-                - None (Default): Do not plot anything. Keep the figure as the active one.
-            N (int, optional): Number of points in the x direction. Defaults to 100.
-            dz (float, optional): Resolution in z direction (unit of ax). Defaults to 0.01.
-            x (float, optional): x coordinate at which the cross section is taken (unit of ax). Defaults to 0.0.
-            func (callable, optional): Function to be applied to eps befor plotting. Defaults to np.abs.
-            cmap (str, optional): matplotlib colormap for plotting. Defaults to 'viridis'.
-
-        Returns:
-            None.
-
-        """
-        Y = np.linspace(-0.5, 0.5, N)
-        EPS = []
-        for (lay, d) in zip(self.layers, self.d):
-            EPSt = sum(
-                [
-                    sub.fou(
-                        lay.G[i][0],
-                        lay.G[i][1],
-                        lay.creator.x_list,
-                        lay.creator.y_list,
-                        lay.creator.eps_lists,
-                    )
-                    * np.exp((0 + 2j) * np.pi * (lay.G[i][0] * x + lay.G[i][1] * Y))
-                    for i in range(lay.D)
-                ]
-            )
-            for i in range(int(d / dz)):
-                EPS.append(EPSt)
-        EPS = np.array(EPS)
-        fig = plt.figure()
-        plt.imshow(
-            func(EPS).T,
-            origin="lower",
-            extent=[0.0, sum(self.d), -0.5, 0.5],
-            cmap=plt.get_cmap(cmap),
-        )
-        plt.colorbar()
-        sub.savefig(pdf, fig)
 
     def count_interface(self) -> None:
         """Helper function to identify the different layers and the needed interfaces
@@ -639,6 +548,43 @@ class Stack:
         yield u2, d2, self.layers[self.N-1], self.d[self.N-1] + 1e-6
 
 
+    def calculate_epsilon(
+        self,
+        x: np.ndarray = 0.0,
+        y: np.ndarray = 0.0,
+        z: np.ndarray = 0.0,
+    ) -> dict[str, np.ndarray]:
+        """Returns epsilon in the stack
+
+        Epsilon is calculated on a meshgrdi of x,y,z
+
+        Args:
+            x (np.ndarray): x coordinate (1D array)
+            y (np.ndarray): y coordinate (1D array)
+            z (np.ndarray): z coordinate (1D array)
+
+        Returs:
+            dict: Dictionary containing the coordinates and the epsilon
+        """
+
+        x, y, z = np.asarray(x), np.asarray(y), np.asarray(z)
+        eps = {key : [] for key in ['x', 'y', 'z', 'eps']}
+        cumulative_t = 0
+        for lay, t in zip(self.layers, self.d):
+            ind = np.logical_and(cumulative_t <= z, z < cumulative_t + t)
+            if ind.size == 0:
+                continue
+            zp = z[ind] - cumulative_t
+            out = lay.calculate_epsilon(x, y, zp)
+            out['z'] = out['z'] + cumulative_t
+            for key in eps:
+                eps[key].append(out[key])
+            cumulative_t += t
+        for key in eps:
+            eps[key] = np.concatenate(eps[key], axis=-1)
+        return eps
+
+
     def calculate_fields(
             self,
             u1: np.ndarray,
@@ -660,6 +606,9 @@ class Stack:
             z (np.ndarray): z coordinate (1D array)
             components (list): List of modal componets to be calculated. Possible are ['Ex', 'Ey', 'Hx', 'Hz'].
                 Default to None (all of them).
+
+        Returs:
+            dict: Dictionary containing the coordinates and the field components
         """
         x, y, z = np.asarray(x), np.asarray(y), np.asarray(z)
         components = Layer._filter_componets(components)
@@ -740,31 +689,50 @@ if __name__ == '__main__':
 
     timer = Timer()
 
-    lay1 = A_FMM.layer.Layer_uniform(0,0,2.0)
-    lay2 = A_FMM.layer.Layer_uniform(0,0,12.0)
+    N=50
+    cr = A_FMM.Creator()
+    cr.slab(12.0, 2.0, 2.0, 0.3)
+    lay1 = A_FMM.layer.Layer(N,0, creator=cr)
+    cr.slab(12.0, 2.0, 2.0, 0.1)
+    lay2 = A_FMM.layer.Layer(N,0, creator=cr)
+
     stack = Stack(
         10 * [lay1, lay2] + [lay1],
         [0.0] + 10*[0.5, 0.5],
     )
-    stack.solve(0.1)
-    x, y, z = 0.0, 0.0, np.linspace(0.0, 10.0, 1000)
-    with timer:
-        field = stack.calculate_fields([1.0, 0.0], [0.0, 0.0], x,y,z)
-    print(timer.elapsed_time)
-    with open('test_stack_1Dfield.pkl', 'wb') as pkl:
-        pickle.dump(field, pkl, protocol=pickle.HIGHEST_PROTOCOL)
 
-    layer = lay1.calculate_field([1.0, 0.0], [0.0, 0.0], x,y,z)
+    x, y, z = np.linspace(-0.5, 0.5, 101), 0.0, np.linspace(0.0, 10.0, 1000)
+    eps = stack.calculate_epsilon(x,y,z)
 
-    #plt.contourf(np.squeeze(field['z']), np.squeeze(field['x']), np.abs(np.squeeze(field['Ex'])), levels=41)
-    plt.show()
-    with timer:
-        Ex, Ey = stack.plot_E(1, func=np.abs, dz = 0.01)
-    print(timer.elapsed_time)
-    Ex = np.asarray(Ex)
+    print(eps.keys())
+    plt.contourf(np.squeeze(eps['z']), np.squeeze(eps['x']), np.squeeze(eps['eps']), levels=41)
     plt.show()
 
-    plt.plot(field['z'][0,0,:], np.abs(field['Ex'][0,0,:]))
-    plt.plot(z, np.abs(Ex[:, 50]))
-    print(np.shape(field['z']))
-    plt.show()
+    # lay1 = A_FMM.layer.Layer_uniform(0,0,2.0)
+    # lay2 = A_FMM.layer.Layer_uniform(0,0,12.0)
+    # stack = Stack(
+    #     10 * [lay1, lay2] + [lay1],
+    #     [0.0] + 10*[0.5, 0.5],
+    # )
+    # stack.solve(0.1)
+    # x, y, z = 0.0, 0.0, np.linspace(0.0, 10.0, 1000)
+    # with timer:
+    #     field = stack.calculate_fields([1.0, 0.0], [0.0, 0.0], x,y,z)
+    # print(timer.elapsed_time)
+    # with open('test_stack_1Dfield.pkl', 'wb') as pkl:
+    #     pickle.dump(field, pkl, protocol=pickle.HIGHEST_PROTOCOL)
+
+    # layer = lay1.calculate_field([1.0, 0.0], [0.0, 0.0], x,y,z)
+
+    # #plt.contourf(np.squeeze(field['z']), np.squeeze(field['x']), np.abs(np.squeeze(field['Ex'])), levels=41)
+    # plt.show()
+    # with timer:
+    #     Ex, Ey = stack.plot_E(1, func=np.abs, dz = 0.01)
+    # print(timer.elapsed_time)
+    # Ex = np.asarray(Ex)
+    # plt.show()
+
+    # plt.plot(field['z'][0,0,:], np.abs(field['Ex'][0,0,:]))
+    # plt.plot(z, np.abs(Ex[:, 50]))
+    # print(np.shape(field['z']))
+    # plt.show()
