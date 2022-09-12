@@ -55,6 +55,10 @@ class Stack:
 
         self.count_interface()
 
+    @property
+    def total_length(self):
+        return sum(self.d)
+
     def add_layer(self, lay: Layer, d: float) -> None:
         """Add a layer at the end of the multilayer
 
@@ -588,7 +592,7 @@ class Stack:
     def calculate_fields(
             self,
             u1: np.ndarray,
-            d2: np.ndarray,
+            d2: np.ndarray = None,
             x: np.ndarray = 0,
             y: np.ndarray = 0,
             z: np.ndarray = 0,
@@ -610,6 +614,7 @@ class Stack:
         Returs:
             dict: Dictionary containing the coordinates and the field components
         """
+        d2 = np.zeros(2 * self.NPW, dtype=complex)
         x, y, z = np.asarray(x), np.asarray(y), np.asarray(z)
         components = Layer._filter_componets(components)
         shape = Layer._check_array_shapes(u1,d2)

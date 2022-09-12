@@ -67,7 +67,8 @@ class Layer:
         for i in range(mx):
             for j in range(my):
                 fourier_transform[i, j] = sub.fou(
-                    (i + nx) % mx - nx, (j + ny) % my - ny, x_list, y_list, eps_lists
+                    (i + nx) % mx - nx, (j + ny) % my -
+                    ny, x_list, y_list, eps_lists
                 )
         D = len(G)
         F = np.zeros((D, D), complex)
@@ -140,7 +141,8 @@ class Layer:
         # plt.imshow(np.real(EPS),aspect='auto',extent=[-s*0.5,s*0.5,-self.Nyx*s*0.5,self.Nyx*s*0.5])
         plt.imshow(
             np.real(EPS),
-            extent=[-s * 0.5, s * 0.5, -self.Nyx * s * 0.5, self.Nyx * s * 0.5],
+            extent=[-s * 0.5, s * 0.5, -self.Nyx *
+                    s * 0.5, self.Nyx * s * 0.5],
             origin="lower",
         )
         plt.colorbar()
@@ -291,7 +293,8 @@ class Layer:
                     to_plot = getattr(self, attr)
                     plt.figure()
                     plt.title(attr)
-                    plt.imshow(np.abs(to_plot), aspect="auto", interpolation="nearest")
+                    plt.imshow(np.abs(to_plot), aspect="auto",
+                               interpolation="nearest")
                     plt.colorbar()
                     save.savefig()
                     plt.close()
@@ -310,7 +313,8 @@ class Layer:
         """
         plt.figure()
         plt.title("k0:%5.3f kx:%5.3f ky:%5.3f" % (self.k0, self.kx, self.ky))
-        plt.imshow(np.abs(np.abs(self.M)), aspect="auto", interpolation="nearest")
+        plt.imshow(np.abs(np.abs(self.M)), aspect="auto",
+                   interpolation="nearest")
         plt.colorbar()
         pdf.savefig()
         plt.close()
@@ -334,7 +338,7 @@ class Layer:
         return x, y
 
     def calculate_epsilon(
-        self, x: np.ndarray=0.0, y: np.ndarray=0.0, z: np.ndarray=0.0
+        self, x: np.ndarray = 0.0, y: np.ndarray = 0.0, z: np.ndarray = 0.0
     ) -> dict[str, np.ndarray]:
         """Return epsilon given the coordinates
 
@@ -367,18 +371,17 @@ class Layer:
         shape = np.shape(eps_p)
         EPS, _ = np.meshgrid(eps_p, z, indexing='ij')
         EPS = EPS.reshape(*shape, -1)
-        x,y,z = np.meshgrid(x,y,z, indexing='ij')
+        x, y, z = np.meshgrid(x, y, z, indexing='ij')
         eps = {
-            'x' : x,
-            'y' : y,
-            'z' : z,
-            'eps' : EPS,
+            'x': x,
+            'y': y,
+            'z': z,
+            'eps': EPS,
         }
         return eps
 
-
     @staticmethod
-    def _filter_componets(components: list=None) -> list:
+    def _filter_componets(components: list = None) -> list:
         """
         Checks if the fileds components list contains only allowed ones
         """
@@ -401,15 +404,13 @@ class Layer:
                 f"Shape of u different from shape of d {np.shape(u)}!={np.shape(d)}"
             )
 
-
-
     def calculate_field_old(
         self,
         u: np.ndarray,
         d: np.ndarray = None,
-        x: np.ndarray=0,
-        y: np.ndarray=0,
-        z: np.ndarray=0,
+        x: np.ndarray = 0,
+        y: np.ndarray = 0,
+        z: np.ndarray = 0,
         components: list = None,
     ) -> dict:
         """Return field given modal coefficient and coordinates
@@ -437,20 +438,22 @@ class Layer:
         """
         components = self._filter_componets(components)
         d = np.zeros_like(u, dtype=complex) if d is None else d
-        self._check_array_shapes(u,d)
+        self._check_array_shapes(u, d)
 
         x, y = self._process_xy(x, y)
-        x,y,z = np.meshgrid(x,y,z, indexing='ij')
+        x, y, z = np.meshgrid(x, y, z, indexing='ij')
         field = {
-            'x' : x,
-            'y' : y,
-            'z' : z,
+            'x': x,
+            'y': y,
+            'z': z,
         }
-        field.update({comp: np.zeros_like(x, dtype=complex) for comp in components})
+        field.update({comp: np.zeros_like(x, dtype=complex)
+                     for comp in components})
         for i, (uu, dd, n) in enumerate(zip(u, d, self.gamma)):
             if uu == 0.0 and dd == 0.0:
                 continue
-            field_tmp = {comp: np.zeros_like(x, dtype=complex) for comp in components}
+            field_tmp = {comp: np.zeros_like(
+                x, dtype=complex) for comp in components}
             for j, (gx, gy) in self.G.items():
                 [WEx, WEy] = np.split(self.V[:, i], 2)
                 [WHx, WHy] = np.split(self.VH[:, i], 2)
@@ -469,14 +472,13 @@ class Layer:
                 field[comp] = field[comp] + field_tmp[comp]
         return field
 
-
     def calculate_field(
         self,
         u: np.ndarray,
         d: np.ndarray = None,
-        x: np.ndarray=0,
-        y: np.ndarray=0,
-        z: np.ndarray=0,
+        x: np.ndarray = 0,
+        y: np.ndarray = 0,
+        z: np.ndarray = 0,
         components: list = None,
     ) -> dict:
         """Return field given modal coefficient and coordinates
@@ -503,8 +505,8 @@ class Layer:
         """
         components = self._filter_componets(components)
         d = np.zeros_like(u, dtype=complex) if d is None else d
-        self._check_array_shapes(u,d)
-        X,Y,Z = np.meshgrid(x,y,z, indexing='ij')
+        self._check_array_shapes(u, d)
+        X, Y, Z = np.meshgrid(x, y, z, indexing='ij')
         field = {
             'x': X,
             'y': Y,
@@ -512,20 +514,21 @@ class Layer:
         }
         Gx = [gs[0] for (i, gs) in self.G.items()]
         Gy = [gs[1] for (i, gs) in self.G.items()]
-        u,d = np.asarray(u), np.asarray(d)
-        ind = [i for i, (uu,dd) in enumerate(zip(u,d)) if uu!=0.0 or dd!=0.0 ]
+        u, d = np.asarray(u), np.asarray(d)
+        ind = [i for i, (uu, dd) in enumerate(
+            zip(u, d)) if uu != 0.0 or dd != 0.0]
         u = u[ind]
         d = d[ind]
         WEx, WEy = np.split(self.V, 2, axis=0)
         WHx, WHy = np.split(self.VH, 2, axis=0)
         W = {
-            'Ex': WEx[:,ind],
-            'Ey': WEy[:,ind],
-            'Hx': WHx[:,ind],
-            'Hy': WHy[:,ind],
+            'Ex': WEx[:, ind],
+            'Ey': WEy[:, ind],
+            'Hx': WHx[:, ind],
+            'Hy': WHy[:, ind],
         }
-        X, Y, Gx = np.meshgrid(x, y, Gx, indexing = 'ij')
-        X, Y, Gy = np.meshgrid(x, y, Gy, indexing = 'ij')
+        X, Y, Gx = np.meshgrid(x, y, Gx, indexing='ij')
+        X, Y, Gy = np.meshgrid(x, y, Gy, indexing='ij')
         EXP = np.exp(
             2.0j * np.pi * ((Gx + self.kx) * X + (Gy + self.ky) * Y)
         )
@@ -540,7 +543,6 @@ class Layer:
             EXPV = np.dot(EXP, W[comp])
             field[comp] = np.dot(EXPV, coeff)
         return field
-
 
     def get_modal_field(
         self, i: int, x: float = 0.0, y: float = 0.0, components: list = None
@@ -568,7 +570,6 @@ class Layer:
             data[k] = np.squeeze(v)
         return data
 
-
     def get_P_norm(self):
         """Creates array of single mode Poynting vector components.
 
@@ -581,7 +582,6 @@ class Layer:
         [VEx, VEy] = np.split(self.V, 2)
         [VHx, VHy] = np.split(self.VH, 2)
         self.P_norm = np.sum(VEx * np.conj(VHy) - VEy * np.conj(VHx), 0).real
-
 
     def get_Poynting_single(self, i: int, u: np.ndarray, ordered: bool = True) -> float:
         """Return the Poyinting vector of a single mode given the modal expansion in the layer
@@ -602,7 +602,6 @@ class Layer:
             j = i
         self.get_Poyinting_norm()
         return self.PP_norm[j, j].real * np.abs(u[j]) ** 2.0
-
 
     def get_Poyinting_norm(self):
         """Calculates the normalization matrix for the Poyinting vector calculations
@@ -1031,23 +1030,21 @@ if __name__ == "__main__":
     x, y, z = t, 0.0, t
     x, y, z = 0.0, t, t
     x, y, z = t, t, t
-    eps = lay.calculate_epsilon(x,y,z)
+    eps = lay.calculate_epsilon(x, y, z)
     ax[0].contourf(
-        eps['x'][:,:,50],
-        eps['y'][:,:,50],
-        eps['eps'][:,:,50],
+        eps['x'][:, :, 50],
+        eps['y'][:, :, 50],
+        eps['eps'][:, :, 50],
     )
     ax[1].contourf(
-        eps['x'][:,50,:],
-        eps['z'][:,50,:],
-        eps['eps'][:,50,:],
+        eps['x'][:, 50, :],
+        eps['z'][:, 50, :],
+        eps['eps'][:, 50, :],
     )
     ax[2].contourf(
-        eps['y'][50,:,:],
-        eps['z'][50,:,:],
-        eps['eps'][50,:,:],
+        eps['y'][50, :, :],
+        eps['z'][50, :, :],
+        eps['eps'][50, :, :],
     )
 
-
     plt.show()
-
