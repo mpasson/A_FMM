@@ -10,8 +10,9 @@ setup(name='A_FMM',
       packages=['A_FMM'],
       zip_safe=False,
       install_requires=[
-          # 'Sphinx',
-          # ^^^ Not sure if this is needed on readthedocs.org
-          # 'something else?',
+            "numpy",
+            "scipy",
+            "matplotlib",
+            "pandas",
           ],
       )

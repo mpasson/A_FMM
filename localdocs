@@ -1,5 +1,4 @@
 #!/bin/bash
-rm docs/*
-rm Docs/generated/*
+rm -r docs/*
 touch Docs/*.rst
 sphinx-build -b html Docs docs/
