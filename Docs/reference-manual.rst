@@ -47,8 +47,6 @@ Layer
     Layer
     Layer_ani_diag
     Layer_empty_st
-    Layer_from_hstack
-    Layer_from_xsection
     Layer_num
     Layer_uniform
 
@@ -58,7 +56,13 @@ Methods
 .. autosummary::
     :toctree: generated/
 
+    Layer._check_array_shapes
+    Layer._filter_componets
+    Layer._process_xy
     Layer.add_transform_matrix
+    Layer.calculate_epsilon
+    Layer.calculate_field
+    Layer.calculate_field_old
     Layer.clear
     Layer.coupling
     Layer.create_input
@@ -68,27 +72,17 @@ Methods
     Layer.get_Poyinting_norm
     Layer.get_Poynting
     Layer.get_Poynting_single
-    Layer.get_field
-    Layer.get_field2
     Layer.get_index
     Layer.get_input
+    Layer.get_modal_field
     Layer.inspect
     Layer.interface
     Layer.mat_plot
     Layer.mode
     Layer.overlap
-    Layer.plot_E
-    Layer.plot_Et
-    Layer.plot_H
     Layer.plot_Ham
-    Layer.plot_field
-    Layer.slim
     Layer.transform
-    Layer.transform_complex
-    Layer.writeE
-    Layer.writeH
-    Layer.write_field
-    Layer.write_fieldgeneral
+
 
 
 Stack
@@ -109,14 +103,12 @@ Methods
 
 
     Stack.add_layer
-    Stack.add_transform
-    Stack.add_transform_complex
     Stack.bloch_modes
+    Stack.calculate_epsilon
+    Stack.calculate_fields
     Stack.count_interface
-    Stack.create_input
     Stack.double
     Stack.flip
-    Stack.fourier
     Stack.get_PR
     Stack.get_PT
     Stack.get_R
@@ -127,31 +119,16 @@ Methods
     Stack.get_prop
     Stack.inspect
     Stack.join
-    Stack.line_E
-    Stack.mat_plot
-    Stack.mode_T
-    Stack.plot_E
-    Stack.plot_EY
-    Stack.plot_E_general
-    Stack.plot_E_periodic
-    Stack.plot_E_plane
-    Stack.plot_Ex
-    Stack.plot_Ey
-    Stack.plot_stack
-    Stack.plot_stack_y
+    Stack.loop_intermediate
     Stack.solve
     Stack.solve_S
     Stack.solve_lay
     Stack.solve_serial
     Stack.transform
-    Stack.transform_complex
-    Stack.writeE
-    Stack.writeE_periodic_XY
-    Stack.writeE_periodic_XZ
-    Stack.writeE_periodic_YZ
 
 
-Stack
+
+S_matrix
 +++++++++++++++
 
 

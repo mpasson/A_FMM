@@ -2,15 +2,13 @@ image: sphinxdoc/sphinx
 
 pages:
   stage: deploy
+  before_script:
+    - pip install -r requirements.txt
+    - pip install sphinx-rtd-theme
+    - pip install nbsphinx
+    - pip install notebook
+    - apt-get update && apt-get install -y git pandoc
   script:
-  - mkdir public
-  - pip install sphinx-rtd-theme
-  - pip install nbsphinx
-  - pip install notebook
-  - pip install numpy
-  - pip install scipy
-  - pip install matplotlib
-  - apt-get update && apt-get install -y pandoc
   - sphinx-build -b html Docs public/
   artifacts:
     paths:
