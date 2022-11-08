@@ -67,8 +67,7 @@ class Layer:
         for i in range(mx):
             for j in range(my):
                 fourier_transform[i, j] = sub.fou(
-                    (i + nx) % mx - nx, (j + ny) % my -
-                    ny, x_list, y_list, eps_lists
+                    (i + nx) % mx - nx, (j + ny) % my - ny, x_list, y_list, eps_lists
                 )
         D = len(G)
         F = np.zeros((D, D), complex)
@@ -141,8 +140,7 @@ class Layer:
         # plt.imshow(np.real(EPS),aspect='auto',extent=[-s*0.5,s*0.5,-self.Nyx*s*0.5,self.Nyx*s*0.5])
         plt.imshow(
             np.real(EPS),
-            extent=[-s * 0.5, s * 0.5, -self.Nyx *
-                    s * 0.5, self.Nyx * s * 0.5],
+            extent=[-s * 0.5, s * 0.5, -self.Nyx * s * 0.5, self.Nyx * s * 0.5],
             origin="lower",
         )
         plt.colorbar()
@@ -293,8 +291,7 @@ class Layer:
                     to_plot = getattr(self, attr)
                     plt.figure()
                     plt.title(attr)
-                    plt.imshow(np.abs(to_plot), aspect="auto",
-                               interpolation="nearest")
+                    plt.imshow(np.abs(to_plot), aspect="auto", interpolation="nearest")
                     plt.colorbar()
                     save.savefig()
                     plt.close()
@@ -313,8 +310,7 @@ class Layer:
         """
         plt.figure()
         plt.title("k0:%5.3f kx:%5.3f ky:%5.3f" % (self.k0, self.kx, self.ky))
-        plt.imshow(np.abs(np.abs(self.M)), aspect="auto",
-                   interpolation="nearest")
+        plt.imshow(np.abs(np.abs(self.M)), aspect="auto", interpolation="nearest")
         plt.colorbar()
         pdf.savefig()
         plt.close()
@@ -362,21 +358,18 @@ class Layer:
         eps = self.FOUP[:, self.D // 2]
         gx, gy = zip(*[g for i, g in self.G.items()])
         gx, gy = np.asarray(gx), np.asarray(gy)
-        xp, yp, gxp = np.meshgrid(x, y, gx, indexing='ij')
-        xp, yp, gyp = np.meshgrid(x, y, gy, indexing='ij')
-        eps_p = np.dot(
-            np.exp((0 + 2j) * np.pi * (gxp * xp + gyp * yp)),
-            eps
-        )
+        xp, yp, gxp = np.meshgrid(x, y, gx, indexing="ij")
+        xp, yp, gyp = np.meshgrid(x, y, gy, indexing="ij")
+        eps_p = np.dot(np.exp((0 + 2j) * np.pi * (gxp * xp + gyp * yp)), eps)
         shape = np.shape(eps_p)
-        EPS, _ = np.meshgrid(eps_p, z, indexing='ij')
+        EPS, _ = np.meshgrid(eps_p, z, indexing="ij")
         EPS = EPS.reshape(*shape, -1)
-        x, y, z = np.meshgrid(x, y, z, indexing='ij')
+        x, y, z = np.meshgrid(x, y, z, indexing="ij")
         eps = {
-            'x': x,
-            'y': y,
-            'z': z,
-            'eps': EPS,
+            "x": x,
+            "y": y,
+            "z": z,
+            "eps": EPS,
         }
         return eps
 
@@ -441,19 +434,17 @@ class Layer:
         self._check_array_shapes(u, d)
 
         x, y = self._process_xy(x, y)
-        x, y, z = np.meshgrid(x, y, z, indexing='ij')
+        x, y, z = np.meshgrid(x, y, z, indexing="ij")
         field = {
-            'x': x,
-            'y': y,
-            'z': z,
+            "x": x,
+            "y": y,
+            "z": z,
         }
-        field.update({comp: np.zeros_like(x, dtype=complex)
-                     for comp in components})
+        field.update({comp: np.zeros_like(x, dtype=complex) for comp in components})
         for i, (uu, dd, n) in enumerate(zip(u, d, self.gamma)):
             if uu == 0.0 and dd == 0.0:
                 continue
-            field_tmp = {comp: np.zeros_like(
-                x, dtype=complex) for comp in components}
+            field_tmp = {comp: np.zeros_like(x, dtype=complex) for comp in components}
             for j, (gx, gy) in self.G.items():
                 [WEx, WEy] = np.split(self.V[:, i], 2)
                 [WHx, WHy] = np.split(self.VH[:, i], 2)
@@ -462,9 +453,9 @@ class Layer:
                 )
                 for comp in components:
                     sign = 1.0 if comp[0] == "E" else -1.0
-                    coeff = uu * np.exp(2.0j * np.pi * self.k0 * n * z) + sign * dd * np.exp(
-                        -2.0j * np.pi * self.k0 * n * z
-                    )
+                    coeff = uu * np.exp(
+                        2.0j * np.pi * self.k0 * n * z
+                    ) + sign * dd * np.exp(-2.0j * np.pi * self.k0 * n * z)
                     field_tmp[comp] = (
                         field_tmp[comp] + coeff * eval(f"W{comp}")[j] * EXP
                     )
@@ -503,43 +494,41 @@ class Layer:
                 if other component than 'Ex', 'Ey', 'Hx', or 'Hy' is requested.
 
         """
+        x, y = self._process_xy(x, y)
         components = self._filter_componets(components)
         d = np.zeros_like(u, dtype=complex) if d is None else d
         self._check_array_shapes(u, d)
-        X, Y, Z = np.meshgrid(x, y, z, indexing='ij')
+        X, Y, Z = np.meshgrid(x, y, z, indexing="ij")
         field = {
-            'x': X,
-            'y': Y,
-            'z': Z,
+            "x": X,
+            "y": Y,
+            "z": Z,
         }
         Gx = [gs[0] for (i, gs) in self.G.items()]
         Gy = [gs[1] for (i, gs) in self.G.items()]
         u, d = np.asarray(u), np.asarray(d)
-        ind = [i for i, (uu, dd) in enumerate(
-            zip(u, d)) if uu != 0.0 or dd != 0.0]
+        ind = [i for i, (uu, dd) in enumerate(zip(u, d)) if uu != 0.0 or dd != 0.0]
         u = u[ind]
         d = d[ind]
         WEx, WEy = np.split(self.V, 2, axis=0)
         WHx, WHy = np.split(self.VH, 2, axis=0)
         W = {
-            'Ex': WEx[:, ind],
-            'Ey': WEy[:, ind],
-            'Hx': WHx[:, ind],
-            'Hy': WHy[:, ind],
+            "Ex": WEx[:, ind],
+            "Ey": WEy[:, ind],
+            "Hx": WHx[:, ind],
+            "Hy": WHy[:, ind],
         }
-        X, Y, Gx = np.meshgrid(x, y, Gx, indexing='ij')
-        X, Y, Gy = np.meshgrid(x, y, Gy, indexing='ij')
-        EXP = np.exp(
-            2.0j * np.pi * ((Gx + self.kx) * X + (Gy + self.ky) * Y)
-        )
-        u, Z = np.meshgrid(u, z, indexing='ij')
-        d, Z = np.meshgrid(d, z, indexing='ij')
-        n, Z = np.meshgrid(self.gamma[ind], z, indexing='ij')
+        X, Y, Gx = np.meshgrid(x, y, Gx, indexing="ij")
+        X, Y, Gy = np.meshgrid(x, y, Gy, indexing="ij")
+        EXP = np.exp(2.0j * np.pi * ((Gx + self.kx) * X + (Gy + self.ky) * Y))
+        u, Z = np.meshgrid(u, z, indexing="ij")
+        d, Z = np.meshgrid(d, z, indexing="ij")
+        n, Z = np.meshgrid(self.gamma[ind], z, indexing="ij")
         z_exp = 2.0j * np.pi * self.k0 * n * Z
         coeff_u = u * np.exp(z_exp)
         coeff_d = d * np.exp(-z_exp)
         for comp in components:
-            coeff = coeff_u + coeff_d if 'E' in comp else coeff_u - coeff_d
+            coeff = coeff_u + coeff_d if "E" in comp else coeff_u - coeff_d
             EXPV = np.dot(EXP, W[comp])
             field[comp] = np.dot(EXPV, coeff)
         return field
@@ -1032,19 +1021,19 @@ if __name__ == "__main__":
     x, y, z = t, t, t
     eps = lay.calculate_epsilon(x, y, z)
     ax[0].contourf(
-        eps['x'][:, :, 50],
-        eps['y'][:, :, 50],
-        eps['eps'][:, :, 50],
+        eps["x"][:, :, 50],
+        eps["y"][:, :, 50],
+        eps["eps"][:, :, 50],
     )
     ax[1].contourf(
-        eps['x'][:, 50, :],
-        eps['z'][:, 50, :],
-        eps['eps'][:, 50, :],
+        eps["x"][:, 50, :],
+        eps["z"][:, 50, :],
+        eps["eps"][:, 50, :],
     )
     ax[2].contourf(
-        eps['y'][50, :, :],
-        eps['z'][50, :, :],
-        eps['eps'][50, :, :],
+        eps["y"][50, :, :],
+        eps["z"][50, :, :],
+        eps["eps"][50, :, :],
     )
 
     plt.show()
