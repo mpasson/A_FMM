@@ -1,14 +1,15 @@
-import numpy as np
-from scipy import linalg
+import copy
+
 import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
+from matplotlib.backends.backend_pdf import PdfPages
+from scipy import linalg
 
 import A_FMM
 import A_FMM.sub_sm as sub
 from A_FMM.creator import Creator
-from matplotlib.backends.backend_pdf import PdfPages
 from A_FMM.scattering import S_matrix
-import copy
 
 
 class Layer:
@@ -272,7 +273,7 @@ class Layer:
             ordered (bool): if True (default) the modes are ordered by decreasing effective index
         """
         if ordered:
-            Neff = np.sort(self.gamma)[::-1]
+            Neff = self.gamma[np.argsort(self.W)[::-1]]
         else:
             Neff = self.gamma
         return Neff
