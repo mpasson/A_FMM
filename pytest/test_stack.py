@@ -1,4 +1,3 @@
-import aptdaemon.console
 import numpy as np
 import pickle
 
