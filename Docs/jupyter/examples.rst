@@ -10,7 +10,7 @@ Mode Solver
    1D_mode_solver.ipynb
    
 1D Scattering Matrix
-+++++++++++++++++++
+++++++++++++++++++++++++++
 
 .. toctree::
    :maxdepth: 1
@@ -24,4 +24,5 @@ Full Calculation
    :maxdepth: 1
 
    PML test.ipynb
+   2D_grating.ipynb
 
