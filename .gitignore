@@ -6,6 +6,6 @@
 *.aux
 .idea
 examples
-docs
+docs-build
 Docs/generated
 Docs/jupyter/.ipynb_checkpoints

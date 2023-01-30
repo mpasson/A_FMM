@@ -6,8 +6,10 @@
 A_FMM's documentation
 ==============================================
 
+This is a Python implementation the Aperiodic-Fourier Modal Method, a fully vectorial method for solving Maxwell equations that combines a Fourier-based mode solver and a scattering matrix recursion algorithm to model full 3D structures. This approach is well suited to calculate modes, transmission, reflection, scattering and absorption of multi-layered structures. Moreover, support for Bloch modes of periodic structures allows for the simulation of photonic crystals or waveguide Bragg gratings.
+
 .. toctree::
-   :maxdepth: 3
+   :maxdepth: 2
    :caption: Contents:
    :numbered:
 
