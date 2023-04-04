@@ -14,7 +14,6 @@ This is a Python implementation the Aperiodic-Fourier Modal Method, a fully vect
    :numbered:
 
    intro
-   api_summary
    jupyter/examples
    reference-manual
    
