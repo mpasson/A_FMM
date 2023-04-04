@@ -76,7 +76,9 @@ class Stack:
         self.N += 1
         self.count_interface()
 
-    def transform(self, ex: float = 0, ey: float = 0, complex_transform: bool = False) -> tuple[np.ndarray]:
+    def transform(
+        self, ex: float = 0, ey: float = 0, complex_transform: bool = False
+    ) -> tuple[np.ndarray]:
         """Function for adding the real coordinate transform to all layers of the stack
 
         Note: for no mapping, set the width to 0
@@ -92,7 +94,6 @@ class Stack:
         for layer in self.layers[1:]:
             layer.add_transform_matrix(ex=ex, FX=Fx, ey=ey, FY=Fy)
         return Fx, Fy
-
 
     def count_interface(self) -> None:
         """Helper function to identify the different layers and the needed interfaces
@@ -114,8 +115,7 @@ class Stack:
                 self.int_list.append(T_inter)
             self.interfaces.append(T_inter)
 
-
-    def solve(self, k0: float, kx:float=0.0, ky:float=0.0) -> None:
+    def solve(self, k0: float, kx: float = 0.0, ky: float = 0.0) -> None:
         """Calculates the scattering matrix of the multilayer (cpu friendly version)
 
         This version of solve solve the system in the "smart" way, solving fisrt the eigenvalue problem in each unique layer and the interface matrices of all the interface involved. The computaitonal time scales with the number of different layers, not with the total one.
@@ -143,7 +143,7 @@ class Stack:
             self.S.add_uniform(self.layers[i], self.d[i])
             self.S.add(self.int_matrices[self.int_list.index(self.interfaces[i])])
 
-    def solve_serial(self, k0: float, kx:float=0.0, ky:float=0.0) -> None:
+    def solve_serial(self, k0: float, kx: float = 0.0, ky: float = 0.0) -> None:
         """Calculates the scattering matrix of the multilayer (memory friendly version)
 
         This version solves sequentially the layers and the interface as they are in the stack. It is more momery efficient since onlt the data of 2 layer are kept in memory at any given time. Computational time scales with the total number of layer, regardless if they are equal or not.
@@ -173,7 +173,7 @@ class Stack:
         lay2.mode(k0, kx=kx, ky=ky)
         lay2.get_P_norm()
 
-    def solve_lay(self, k0: float, kx:float=0.0, ky:float=0.0) -> None:
+    def solve_lay(self, k0: float, kx: float = 0.0, ky: float = 0.0) -> None:
         """Solve the eigenvalue problem of all the layer in the stack
 
 
@@ -207,7 +207,9 @@ class Stack:
             self.S.add_uniform(self.layers[i], self.d[i])
             self.S.add(self.int_matrices[self.int_list.index(self.interfaces[i])])
 
-    def get_prop(self, u: np.ndarray, list_lay: list[int], d:np.ndarray=None) -> dict[int, float]:
+    def get_prop(
+        self, u: np.ndarray, list_lay: list[int], d: np.ndarray = None
+    ) -> dict[int, float]:
         """Calculates the total poyinting vector in the requiested layers
 
 
@@ -251,7 +253,7 @@ class Stack:
             dic[self.N - 1] = P
         return dic
 
-    def get_energybalance(self, u: np.ndarray, d:np.ndarray=None) -> tuple[float]:
+    def get_energybalance(self, u: np.ndarray, d: np.ndarray = None) -> tuple[float]:
         """Get total energy balance of the stack given the inputs
 
         Return total power reflected, transmitted and absorbed, normalized to the incidenc power.
@@ -282,7 +284,9 @@ class Stack:
         P2 = self.layers[-1].get_Poynting(u2, d2)
         return P1 / PN, P2 / PN, (P1 - P2) / PN
 
-    def get_inout(self, u: np.ndarray, d:np.ndarray=None) -> dict[str, tuple[np.ndarray, np.ndarray, float]]:
+    def get_inout(
+        self, u: np.ndarray, d: np.ndarray = None
+    ) -> dict[str, tuple[np.ndarray, np.ndarray, float]]:
         """Return data about the output of the structure given the input
 
 
@@ -308,7 +312,7 @@ class Stack:
         dic["right"] = (u2, d2, P)
         return dic
 
-    def get_R(self, i:int, j:int, ordered:bool=True) -> float:
+    def get_R(self, i: int, j: int, ordered: bool = True) -> float:
         """Get relfection coefficient between modes
 
         Args:
@@ -332,7 +336,7 @@ class Stack:
             / self.layers[0].P_norm[j1]
         )
 
-    def get_T(self, i: int, j:int, ordered:bool=True) -> float:
+    def get_T(self, i: int, j: int, ordered: bool = True) -> float:
         """Get transmission coefficient between modes.
 
         Args:
@@ -356,7 +360,7 @@ class Stack:
             / self.layers[0].P_norm[j1]
         )
 
-    def get_PR(self, i:int, j:int, ordered:bool=True) -> float:
+    def get_PR(self, i: int, j: int, ordered: bool = True) -> float:
         """Get phase of the relfection coefficient between modes
 
         Args:
@@ -376,7 +380,7 @@ class Stack:
             j2 = j
         return np.angle(self.S.S21[j2, j1])
 
-    def get_PT(self, i:int, j:int, ordered:bool=True) -> float:
+    def get_PT(self, i: int, j: int, ordered: bool = True) -> float:
         """Get phase of the transmission coefficient between modes
 
         Args:
@@ -396,7 +400,7 @@ class Stack:
             j2 = j
         return np.angle(self.S.S11[j2, j1])
 
-    def get_el(self, sel: str, i:int, j:int) -> complex:
+    def get_el(self, sel: str, i: int, j: int) -> complex:
         """Returns element of the scattering matrix
 
         Note: Modes are ordered for decrasing effective index
@@ -426,8 +430,7 @@ class Stack:
         else:
             raise ValueError(f"Sel {sel} not allowed. Only '11', '12', '21', '22'")
 
-
-    def double(self)-> None:
+    def double(self) -> None:
         """Compose the scattering matrix of the stack with itself, doubling the structure
 
         When doing this, the lenght of the first al last layer are ignored (set to 0).
@@ -518,7 +521,6 @@ class Stack:
         self.BV[:, :] = self.BV[:, ind]
         return self.Bk
 
-
     def loop_intermediate(self, u1: np.ndarray, d2: np.ndarray) -> tuple:
         """Generator for the intermedia modal coefficients.
 
@@ -537,8 +539,10 @@ class Stack:
         u2, d1 = self.S.output(u1, d2)
         lay = self.layers[0]
         d = self.d[0]
-        yield u1 * np.exp(-(0+2j)*np.pi*lay.k0*lay.gamma*d), d1 * np.exp((0+2j)*np.pi*lay.k0*lay.gamma*d), self.layers[0], self.d[0]
-        #yield u1 , d1 , self.layers[0], self.d[0]
+        yield u1 * np.exp(-(0 + 2j) * np.pi * lay.k0 * lay.gamma * d), d1 * np.exp(
+            (0 + 2j) * np.pi * lay.k0 * lay.gamma * d
+        ), self.layers[0], self.d[0]
+        # yield u1 , d1 , self.layers[0], self.d[0]
         S1 = copy.deepcopy(self.int_matrices[self.int_list.index(self.interfaces[0])])
         for i in range(1, self.N - 1):
             S2 = S_matrix(S1.N)
@@ -549,8 +553,7 @@ class Stack:
             yield ul, dl, self.layers[i], self.d[i]
             S1.add_uniform(self.layers[i], self.d[i])
             S1.add(self.int_matrices[self.int_list.index(self.interfaces[i])])
-        yield u2, d2, self.layers[self.N-1], self.d[self.N-1] + 1e-6
-
+        yield u2, d2, self.layers[self.N - 1], self.d[self.N - 1] + 1e-6
 
     def calculate_epsilon(
         self,
@@ -572,15 +575,15 @@ class Stack:
         """
 
         x, y, z = np.asarray(x), np.asarray(y), np.asarray(z)
-        eps = {key : [] for key in ['x', 'y', 'z', 'eps']}
+        eps = {key: [] for key in ["x", "y", "z", "eps"]}
         cumulative_t = 0
-        for lay, t in zip(self.layers, self.d):
+        for lay, t in zip(self.layers + [self.layers[-1]], self.d + [np.inf]):
             ind = np.logical_and(cumulative_t <= z, z < cumulative_t + t)
             if ind.size == 0:
                 continue
             zp = z[ind] - cumulative_t
             out = lay.calculate_epsilon(x, y, zp)
-            out['z'] = out['z'] + cumulative_t
+            out["z"] = out["z"] + cumulative_t
             for key in eps:
                 eps[key].append(out[key])
             cumulative_t += t
@@ -588,15 +591,14 @@ class Stack:
             eps[key] = np.concatenate(eps[key], axis=-1)
         return eps
 
-
     def calculate_fields(
-            self,
-            u1: np.ndarray,
-            d2: np.ndarray = None,
-            x: np.ndarray = 0,
-            y: np.ndarray = 0,
-            z: np.ndarray = 0,
-            components: list[str] = None,
+        self,
+        u1: np.ndarray,
+        d2: np.ndarray = None,
+        x: np.ndarray = 0,
+        y: np.ndarray = 0,
+        z: np.ndarray = 0,
+        components: list[str] = None,
     ) -> dict[str, np.ndarray]:
         """Returns fields in the stack
 
@@ -617,30 +619,29 @@ class Stack:
         d2 = np.zeros(2 * self.NPW, dtype=complex)
         x, y, z = np.asarray(x), np.asarray(y), np.asarray(z)
         components = Layer._filter_componets(components)
-        shape = Layer._check_array_shapes(u1,d2)
-        keys = ['x', 'y', 'z'] + components
-        field = {key : [] for key in keys}
+        shape = Layer._check_array_shapes(u1, d2)
+        keys = ["x", "y", "z"] + components
+        field = {key: [] for key in keys}
         cumulative_t = 0
         for u, d, lay, t in self.loop_intermediate(u1, d2):
-            #print(u, d)
+            # print(u, d)
             ind = np.logical_and(cumulative_t <= z, z < cumulative_t + t)
             if ind.size == 0:
                 continue
             zp = z[ind] - cumulative_t
-            out = lay.calculate_field(u, d, x, y, zp, components = components)
-            out['z'] = out['z'] + cumulative_t
+            out = lay.calculate_field(u, d, x, y, zp, components=components)
+            out["z"] = out["z"] + cumulative_t
             for key in keys:
                 field[key].append(out[key])
-            #plt.plot(np.abs(out['Ex']))
-            #plt.show()
-            #plt.plot(np.abs(field['Ex']))
+            # plt.plot(np.abs(out['Ex']))
+            # plt.show()
+            # plt.plot(np.abs(field['Ex']))
             cumulative_t += t
         for key in keys:
             field[key] = np.concatenate(field[key], axis=-1)
         return field
 
-
-    def inspect(self, st: str="", details:str="no") -> None:
+    def inspect(self, st: str = "", details: str = "no") -> None:
         """Print some info about the Stack"""
         att = sub.get_user_attributes(self)
         print(st)
@@ -688,29 +689,32 @@ class Stack:
         except AttributeError:
             print("No list yet, call conut_interface before inspect")
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     from monitor import Timer
     import pickle
 
     timer = Timer()
 
-    N=50
+    N = 50
     cr = A_FMM.Creator()
     cr.slab(12.0, 2.0, 2.0, 0.3)
-    lay1 = A_FMM.layer.Layer(N,0, creator=cr)
+    lay1 = A_FMM.layer.Layer(N, 0, creator=cr)
     cr.slab(12.0, 2.0, 2.0, 0.1)
-    lay2 = A_FMM.layer.Layer(N,0, creator=cr)
+    lay2 = A_FMM.layer.Layer(N, 0, creator=cr)
 
     stack = Stack(
         10 * [lay1, lay2] + [lay1],
-        [0.0] + 10*[0.5, 0.5],
+        [0.0] + 10 * [0.5, 0.5],
     )
 
     x, y, z = np.linspace(-0.5, 0.5, 101), 0.0, np.linspace(0.0, 10.0, 1000)
-    eps = stack.calculate_epsilon(x,y,z)
+    eps = stack.calculate_epsilon(x, y, z)
 
     print(eps.keys())
-    plt.contourf(np.squeeze(eps['z']), np.squeeze(eps['x']), np.squeeze(eps['eps']), levels=41)
+    plt.contourf(
+        np.squeeze(eps["z"]), np.squeeze(eps["x"]), np.squeeze(eps["eps"]), levels=41
+    )
     plt.show()
 
     # lay1 = A_FMM.layer.Layer_uniform(0,0,2.0)
