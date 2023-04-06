@@ -22,6 +22,7 @@ This implementation aims at providing easy access to the A-FMM method to as many
 Moreover, this implementation was battle tasted on HPC system and was employed during research activities leading to published papers [#]_ [#]_ [#]_.
 
 .. image:: images/A_FMM_structure.png
+
 Structure of the A-FMM code. Blocks  represent Python classes and arrows the relations between them.
 
 .. [#] Hugonin, J. P., et al. "Fourier modal methods for modeling optical dielectric waveguides." Optical and quantum electronics 37.1 (2005): 107-119.
@@ -35,4 +36,3 @@ Structure of the A-FMM code. Blocks  represent Python classes and arrows the rel
 .. [#] Passoni, Marco, et al. "Optimizing band-edge slow light in silicon-on-insulator waveguide gratings." Optics Express 26.7 (2018): 8470-8478.
 .. [#] Passoni, Marco, et al. "Slow light with interleaved pn junction to enhance performance of integrated Mach-Zehnder silicon modulators." Nanophotonics 8.9 (2019): 1485-1494.
 .. [#] Fornasari, Lucia, et al. "Angular dependence and absorption properties of the anapole mode of Si nano-disks." Journal of Applied Physics 129.2 (2021): 023102.
-
