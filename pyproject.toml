@@ -1,0 +1,47 @@
+[build-system]
+requires = [ "setuptools>=41", "wheel", "setuptools-git-versioning<2", ]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools-git-versioning]
+enabled = true
+
+[tool.setuptools]
+py-modules = ['A_FMM']
+
+[project]
+name = "A_FMM"
+description = "Python implementation of the Aperiodic-Fourier Modal Method for electromagnetic simulation"
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.10"
+authors = [
+  { name = "Marco Passoni", email = "mpasson91@gmail.com" },
+]
+keywords = [
+  'photonics',
+  'simulation',
+  'scattering matrix',
+  'fourier modal methods',
+]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Environment :: Console",
+  "Intended Audience :: Developers",
+  "Intended Audience :: Education",
+  "Intended Audience :: Science/Research",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Topic :: Scientific/Engineering :: Physics",
+]
+dependencies = [
+    "matplotlib>=3.5.1",
+    "numpy>=1.23.1",
+    "pandas>=1.4.2",
+    "scipy>=1.8.0",
+    "setuptools_git_versioning>=1.13.1",
+]
+dynamic = ["version"]

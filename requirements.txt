@@ -2,3 +2,4 @@ numpy>=1.21.5
 scipy>=1.8.0
 matplotlib>=3.5.1
 pandas>=1.4.2
+setuptools-git-versioning>=1.13.1
