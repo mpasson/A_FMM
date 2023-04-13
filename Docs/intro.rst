@@ -6,12 +6,14 @@ This is the draft documentation for the A_FMM package. It is a work in progress.
 
 Installation
 -------------
-The package depends on the following python package:
- * **Python** (tested 3.6.9)
- * **NumPy** (tested on 1.18.2)
- * **SciPy** (tested on 1.4.1)
+To install the packages dependencies, just use the provided **requirements.txt** file, by running:
 
-After cloning the repository, just make sure the folder A_FMM is in the PYTHONPATH.
+
+.. code-block::
+    
+    pin install -r requirements.txt
+
+Then, just make sure the folder A_FMM is added to the PYTHONPATH environment variable.
 
 Method Overview
 -----------------
