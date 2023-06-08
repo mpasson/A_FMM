@@ -25,4 +25,5 @@ Full Calculation
 
    PML test.ipynb
    2D_grating.ipynb
+   Layer from function and PhC slab.ipynb
 
