@@ -4,6 +4,7 @@
 *.gnu
 *.log
 *.aux
+dist/*
 .idea
 examples
 docs-build
