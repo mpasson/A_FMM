@@ -6,14 +6,13 @@ This is the draft documentation for the A_FMM package. It is a work in progress.
 
 Installation
 -------------
-To install the packages dependencies, just use the provided **requirements.txt** file, by running:
+You can install A_FMM directly from pypi by running:
 
 
 .. code-block::
     
-    pin install -r requirements.txt
+    pip install A_FMM
 
-Then, just make sure the folder A_FMM is added to the PYTHONPATH environment variable.
 
 Method Overview
 -----------------
