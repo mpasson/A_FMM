@@ -1,12 +1,6 @@
 [build-system]
-requires = [ "setuptools>=41", "wheel", "setuptools-git-versioning<2", ]
-build-backend = "setuptools.build_meta"
-
-[tool.setuptools-git-versioning]
-enabled = true
-
-[tool.setuptools]
-py-modules = ['A_FMM']
+requires = ["hatchling>=1.17.1", "hatch-vcs>=0.3.0"]
+build-backend = "hatchling.build"
 
 [project]
 name = "A_FMM"
@@ -42,6 +36,31 @@ dependencies = [
     "numpy>=1.23.1",
     "pandas>=1.4.2",
     "scipy>=1.8.0",
-    "setuptools_git_versioning>=1.13.1",
 ]
 dynamic = ["version"]
+
+[project.optional-dependencies]
+dev = [
+  "toml>=0.10.2",
+  "hatch-vcs==0.3.0",
+]
+doc = [
+  "sphinx>=5.3.0",
+  "sphinx-rtd-theme>=1.1.1",
+  "nbsphinx>=0.8.12",
+  "notebook>=6.5.2",
+]
+
+[tool.hatch.build]
+include = [
+  "A_FMM/*",
+]
+
+[tool.hatch.version]
+source = "vcs"
+
+[tool.hatch.version.raw-options]
+version_scheme = "post-release"
+
+[tool.hatch.build.hooks.vcs]
+version-file = "A_FMM/_version.py"
