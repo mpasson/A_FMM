@@ -1,4 +1,4 @@
-from __future__ import annotations
+from typing import Self
 
 import numpy as np
 
@@ -448,7 +448,7 @@ class Stack:
         except AttributeError:
             raise RuntimeError("structure not solved yet")
 
-    def join(self, st2: Stack) -> None:
+    def join(self, st2: Self) -> None:
         """Join the scattering matrix of the structure with the one of a second structure
 
         When doing this, the lenght of the first al last layeror each stack are ignored (set to 0).

@@ -12,13 +12,5 @@ from A_FMM.creator import Creator
 from A_FMM.stack import Stack
 import A_FMM.inputs as inputs
 
-try:
-    from ._version import __version__
-except ModuleNotFoundError:
-    from hatch_vcs.version_source import VCSVersionSource
-    import toml
 
-    basedir = os.path.split(os.path.dirname(__file__))[0]
-    config = toml.load(os.path.join(basedir, "pyproject.toml"))
-    vcs_version = VCSVersionSource(basedir, config["tool"]["hatch"]["version"])
-    __version__ = vcs_version.get_version_data()["version"]
+from ._version import __version__
