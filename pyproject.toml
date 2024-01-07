@@ -8,9 +8,7 @@ description = "Python implementation of the Aperiodic-Fourier Modal Method for e
 readme = "README.md"
 license = { text = "MIT" }
 requires-python = ">=3.10"
-authors = [
-  { name = "Marco Passoni", email = "mpasson91@gmail.com" },
-]
+authors = [{ name = "Marco Passoni", email = "mpasson91@gmail.com" }]
 keywords = [
   'photonics',
   'simulation',
@@ -32,18 +30,15 @@ classifiers = [
   "Topic :: Scientific/Engineering :: Physics",
 ]
 dependencies = [
-    "matplotlib>=3.5.1",
-    "numpy>=1.23.1",
-    "pandas>=1.4.2",
-    "scipy>=1.8.0",
+  "matplotlib>=3.5.1",
+  "numpy>=1.23.1",
+  "pandas>=1.4.2",
+  "scipy>=1.8.0",
 ]
 dynamic = ["version"]
 
 [project.optional-dependencies]
-dev = [
-  "toml>=0.10.2",
-  "hatch-vcs==0.3.0",
-]
+dev = ["toml>=0.10.2", "hatch-vcs==0.3.0", "pytest>=7.2.0"]
 doc = [
   "sphinx>=5.3.0",
   "sphinx-rtd-theme>=1.1.1",
@@ -52,9 +47,7 @@ doc = [
 ]
 
 [tool.hatch.build]
-include = [
-  "A_FMM/*",
-]
+include = ["A_FMM/*"]
 
 [tool.hatch.version]
 source = "vcs"
