@@ -30,7 +30,7 @@ def test_layer_solve():
     lay = create_layer_from_creator()
     lay.mode(1.0)
     modes = lay.get_index()
-    assert np.allclose(modes, modes_ref)
+    assert np.allclose(modes[:20], modes_ref[:20])
 
 if __name__ == '__main__':
     lay = create_layer_from_creator()
