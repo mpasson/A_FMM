@@ -10,3 +10,4 @@ examples
 docs-build
 Docs/generated
 Docs/jupyter/.ipynb_checkpoints
+test_venv
